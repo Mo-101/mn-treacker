@@ -174,3 +174,76 @@ const addRadarLayer = (map) => {
     }
   });
 };
+
+export const addXweatherRadarAnimation = (map) => {
+  const clientId = import.meta.env.VITE_XWEATHER_CLIENT_ID;
+  const clientSecret = import.meta.env.VITE_XWEATHER_CLIENT_SECRET;
+  const wxLayer = 'radar';
+  const frameCount = 10;
+  const intervalStep = 10;
+  let currentImageOffset = 0;
+  let lastImageOffset = currentImageOffset;
+
+  const getPath = (server, offset) => {
+    return `https://maps${server}.aerisapi.com/${clientId}_${clientSecret}/${wxLayer}/{z}/{x}/{y}/${(offset * intervalStep) * -1}min.png`;
+  };
+
+  const getTilePaths = (offset) => {
+    return [
+      getPath(1, offset),
+      getPath(2, offset),
+      getPath(3, offset),
+      getPath(4, offset),
+    ];
+  };
+
+  const addRasterLayer = (i) => {
+    map.addSource(wxLayer + i, {
+      "type": 'raster',
+      "tiles": getTilePaths(i),
+      "tileSize": 256,
+      "attribution": "<a href='https://www.xweather.com/'>Xweather</a>"
+    });
+
+    map.addLayer({
+      "id": wxLayer + i,
+      "type": "raster",
+      "source": wxLayer + i,
+      "minzoom": 0,
+      "maxzoom": 22,
+      "paint": {
+        'raster-opacity': 0
+      }
+    });
+  };
+
+  const setRasterLayerVisibility = (id, opacity, transition = { duration: 0, delay: 0 }) => {
+    map.setPaintProperty(id, 'raster-opacity-transition', transition);
+    map.setPaintProperty(id, 'raster-opacity', opacity);
+  };
+
+  const showRasterLayer = (id) => {
+    setRasterLayerVisibility(id, 1);
+  };
+
+  const hideRasterLayer = (id) => {
+    setRasterLayerVisibility(id, 0);
+  };
+
+  addRasterLayer(0);
+  showRasterLayer(wxLayer + currentImageOffset);
+
+  for (let i = frameCount - 1; i > 0; i--) {
+    addRasterLayer(i);
+  }
+
+  setInterval(() => {
+    lastImageOffset = currentImageOffset;
+    currentImageOffset--;
+    
+    if (currentImageOffset < 0) currentImageOffset = frameCount - 1;
+    
+    hideRasterLayer(wxLayer + lastImageOffset);
+    showRasterLayer(wxLayer + currentImageOffset);
+  }, 1000);
+};

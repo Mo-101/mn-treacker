@@ -10,7 +10,7 @@ import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { initializeMap, updateMapState } from '../utils/mapUtils';
-import { addCustomLayers } from './MapLayers';
+import { addCustomLayers, addXweatherRadarAnimation } from './MapLayers';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
@@ -29,6 +29,11 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return;
     initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
+    
+    // Add Xweather radar animation after map initialization
+    map.current.on('load', () => {
+      addXweatherRadarAnimation(map.current);
+    });
   }, []);
 
   useEffect(() => {

@@ -16,7 +16,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwN
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [mapState, setMapState] = useState({ lng: 20, lat: 0, zoom: 3.5 }); // Centered on Africa
   const [activeLayer, setActiveLayer] = useState('default');
   const [ratSightings, setRatSightings] = useState([]);
   const { toast } = useToast();
@@ -97,10 +97,10 @@ const WeatherMap = () => {
       }
       const data = await response.json();
       
-      // For demonstration, we'll use random coordinates
+      // For demonstration, we'll use random coordinates within Africa
       const newSighting = {
-        latitude: 7 + Math.random() * 2,
-        longitude: 9 + Math.random() * 2,
+        latitude: -35 + Math.random() * 70, // Roughly covers Africa's latitude range
+        longitude: -20 + Math.random() * 70, // Roughly covers Africa's longitude range
         confidence: Math.random()
       };
       setRatSightings(prevSightings => [...prevSightings, newSighting]);

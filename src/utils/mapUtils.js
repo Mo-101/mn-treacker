@@ -6,7 +6,8 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addMapLa
       container: mapContainer.current,
       style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default style
       center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
+      zoom: mapState.zoom,
+      maxBounds: [[-25, -40], [65, 40]] // Restrict map panning to around Africa
     });
 
     map.current.on('load', () => addMapLayers(map.current));

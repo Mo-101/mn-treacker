@@ -16,7 +16,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwN
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 20, lat: 0, zoom: 3.5 }); // Centered on Africa
+  const [mapState, setMapState] = useState({ lng: 20, lat: 0, zoom: 3.5 });
   const [activeLayer, setActiveLayer] = useState('default');
   const [ratSightings, setRatSightings] = useState([]);
   const { toast } = useToast();
@@ -32,6 +32,7 @@ const WeatherMap = () => {
 
   const addCustomLayers = (map) => {
     map.on('load', () => {
+      addMapLayers(map);
       // Add wind layer
       map.addSource('raster-array-source', {
         type: 'raster-array',
@@ -147,9 +148,6 @@ const WeatherMap = () => {
         }
       });
     });
-
-    // Add other map layers
-    addMapLayers(map);
   };
 
   useEffect(() => {

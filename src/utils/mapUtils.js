@@ -30,3 +30,21 @@ export const updateMapState = (map, setMapState) => {
     zoom: map.getZoom().toFixed(2)
   });
 };
+
+export const addMapLayers = (map) => {
+  // Add your map layers here
+  // For example:
+  map.addSource('temperature', {
+    type: 'raster',
+    url: 'mapbox://mapbox.temperature-v2'
+  });
+  map.addLayer({
+    id: 'temperature',
+    type: 'raster',
+    source: 'temperature',
+    paint: {
+      'raster-opacity': 0.5
+    }
+  });
+  // Add more layers as needed
+};

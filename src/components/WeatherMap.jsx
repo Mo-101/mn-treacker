@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
-import WeatherLayerToggle from './WeatherLayerToggle';
-import RatDetectionPanel from './RatDetectionPanel';
+import MapControls from './MapControls';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -14,7 +13,6 @@ const WeatherMap = () => {
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayer, setActiveLayer] = useState('default');
   const { toast } = useToast();
-  const [ratSightings, setRatSightings] = useState([]);
 
   useEffect(() => {
     if (map.current) return;
@@ -38,65 +36,12 @@ const WeatherMap = () => {
     });
   };
 
-  const handleSearch = async (query) => {
+  const handleSearch = () => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/predict?query=${encodeURIComponent(query)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setRatSightings(data.predictions);
-      
-      // Remove existing markers
-      if (map.current) {
-        const markers = map.current.getLayer('rat-markers');
-        if (markers) {
-          map.current.removeLayer('rat-markers');
-          map.current.removeSource('rat-markers');
-        }
-      }
-
-      // Add markers for each prediction
-      if (map.current && data.predictions.length > 0) {
-        map.current.addSource('rat-markers', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: data.predictions.map(prediction => ({
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [prediction.longitude, prediction.latitude]
-              },
-              properties: {
-                description: `Confidence: ${(prediction.confidence * 100).toFixed(2)}%`
-              }
-            }))
-          }
-        });
-
-        map.current.addLayer({
-          id: 'rat-markers',
-          type: 'circle',
-          source: 'rat-markers',
-          paint: {
-            'circle-radius': 6,
-            'circle-color': '#B42222'
-          }
-        });
-      }
-
-      toast({
-        title: "Search Complete",
-        description: `Found ${data.predictions.length} potential rat sightings.`,
-      });
+      console.log('Searching for Mastomys natalensis...');
+      new mapboxgl.Marker()
+        .setLngLat([7 + Math.random() * 2, 9 + Math.random() * 2])
+        .addTo(map.current);
     } catch (error) {
       console.error('Error during search:', error);
       toast({
@@ -108,11 +53,14 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full">
-      <div ref={mapContainer} className="absolute inset-0" />
-      <WeatherLayerToggle activeLayer={activeLayer} onLayerChange={handleLayerChange} />
-      <RatDetectionPanel sightings={ratSightings} onSearch={handleSearch} />
-      <div className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded shadow text-white">
+    <div className="relative w-full h-[calc(100vh-64px)]">
+      <div ref={mapContainer} className="absolute top-0 right-0 left-0 bottom-0" />
+      <MapControls
+        activeLayer={activeLayer}
+        onLayerChange={handleLayerChange}
+        onSearch={handleSearch}
+      />
+      <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded shadow">
         Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}
       </div>
     </div>

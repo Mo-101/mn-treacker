@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
-import MapControls from './MapControls';
+import WeatherLayerToggle from './WeatherLayerToggle';
+import RatDetectionPanel from './RatDetectionPanel';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -12,6 +13,7 @@ const WeatherMap = () => {
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayer, setActiveLayer] = useState('default');
+  const [ratSightings, setRatSightings] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -36,11 +38,17 @@ const WeatherMap = () => {
     });
   };
 
-  const handleSearch = () => {
+  const handleSearch = (query) => {
     try {
-      console.log('Searching for Mastomys natalensis...');
+      console.log('Searching for Mastomys natalensis:', query);
+      const newSighting = {
+        latitude: 7 + Math.random() * 2,
+        longitude: 9 + Math.random() * 2,
+        confidence: Math.random()
+      };
+      setRatSightings(prevSightings => [...prevSightings, newSighting]);
       new mapboxgl.Marker()
-        .setLngLat([7 + Math.random() * 2, 9 + Math.random() * 2])
+        .setLngLat([newSighting.longitude, newSighting.latitude])
         .addTo(map.current);
     } catch (error) {
       console.error('Error during search:', error);
@@ -53,16 +61,16 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)]">
-      <div ref={mapContainer} className="absolute top-0 right-0 left-0 bottom-0" />
-      <MapControls
+    <div className="relative w-full h-screen">
+      <div ref={mapContainer} className="absolute inset-0" />
+      <WeatherLayerToggle
         activeLayer={activeLayer}
         onLayerChange={handleLayerChange}
+      />
+      <RatDetectionPanel
+        sightings={ratSightings}
         onSearch={handleSearch}
       />
-      <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded shadow">
-        Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}
-      </div>
     </div>
   );
 };

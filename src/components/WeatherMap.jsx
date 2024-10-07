@@ -52,17 +52,20 @@ const WeatherMap = () => {
   }, [activeLayer]);
 
   const updateLayerVisibility = () => {
-    const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar', 'wind-layer', 'vegetation-layer', 'precipitation-layer'];
+    const layers = ['temperature', 'vegetation-layer', 'precipitation', 'wind', 'clouds', 'radar', 'wind-layer', 'precipitation-layer'];
     layers.forEach(layer => {
       if (map.current.getLayer(layer)) {
         map.current.setLayoutProperty(layer, 'visibility', layer === activeLayer ? 'visible' : 'none');
       }
     });
 
-    const baseStyle = activeLayer === 'temperature' 
-      ? 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
-      : 'mapbox://styles/mapbox/dark-v10';
-    map.current.setStyle(baseStyle);
+    // Update base style only if not switching to vegetation layer
+    if (activeLayer !== 'vegetation-layer') {
+      const baseStyle = activeLayer === 'temperature' 
+        ? 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+        : 'mapbox://styles/mapbox/dark-v10';
+      map.current.setStyle(baseStyle);
+    }
   };
 
   const handleLayerChange = (layer) => {

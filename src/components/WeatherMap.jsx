@@ -87,9 +87,17 @@ const WeatherMap = () => {
     setActiveLayer(layer);
   };
 
-  const handleSearch = (query) => {
+  const handleSearch = async (query) => {
     try {
       console.log('Searching for Mastomys natalensis:', query);
+      // Simulating an API call
+      const response = await fetch(`https://api.example.com/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      
+      // For demonstration, we'll use random coordinates
       const newSighting = {
         latitude: 7 + Math.random() * 2,
         longitude: 9 + Math.random() * 2,

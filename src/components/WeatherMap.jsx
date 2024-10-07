@@ -49,7 +49,7 @@ const WeatherMap = () => {
     }
 
     const baseStyle = activeLayer === 'temperature' 
-      ? 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
+      ? 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
       : 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m';
     
     const fadeTransition = () => {

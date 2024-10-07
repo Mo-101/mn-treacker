@@ -1,6 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
@@ -13,9 +11,8 @@ import AerisWeather from '@aerisweather/javascript-sdk';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
-  const map = useRef(null);
   const aerisApp = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 }); // Updated to center on Nigeria
+  const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
@@ -30,8 +27,8 @@ const WeatherMap = () => {
     aeris.apps().then((apps) => {
       aerisApp.current = new apps.InteractiveMapApp(mapContainer.current, {
         map: {
-          strategy: "mapbox",
-          accessToken: "pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g",
+          strategy: 'mapbox',
+          accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
           zoom: mapState.zoom,
           center: {
             lat: mapState.lat,
@@ -112,8 +109,16 @@ const WeatherMap = () => {
           aerisApp.current.showInfoAtCoord(e.data.coord, 'localweather', 'Local Weather');
         });
 
+        // Add layers after the map is ready
         aerisApp.current.map.addLayers(['radar', 'radar-global', 'fradar', 'satellite-geocolor', 'satellite-infrared-color', 'fsatellite']);
         aerisApp.current.map.timeline.play();
+      });
+    }).catch(error => {
+      console.error('Error initializing Aeris Weather SDK:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize weather map. Please try again later.",
+        variant: "destructive",
       });
     });
 

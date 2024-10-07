@@ -12,7 +12,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }
     { id: 'soilMoisture', label: 'Soil Moisture' },
     { id: 'waterSources', label: 'Water Sources' },
     { id: 'humanDensity', label: 'Human Density' },
-    { id: 'diseaseData', label: 'Disease Data' },
+    { id: 'temperature', label: 'Temperature' },
   ];
 
   return (

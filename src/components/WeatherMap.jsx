@@ -88,6 +88,7 @@ const WeatherMap = () => {
   };
 
   const handleSearch = (query) => {
+    try {
       console.log('Searching for Mastomys natalensis:', query);
       const newSighting = {
         latitude: 7 + Math.random() * 2,

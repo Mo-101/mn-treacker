@@ -28,7 +28,22 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      pitch: 45, // Enable 3D view
+      bearing: 0,
+      antialias: true // Smoother edges in 3D
+    });
+
+    map.current.on('load', () => {
+      addCustomLayers(map.current);
+      map.current.addControl(new mapboxgl.NavigationControl());
+    });
+
+    map.current.on('move', () => updateMapState(map.current, setMapState));
   }, []);
 
   useEffect(() => {
@@ -78,7 +93,7 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-black text-white">
+    <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}

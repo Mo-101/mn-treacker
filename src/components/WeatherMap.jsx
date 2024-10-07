@@ -108,7 +108,7 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen">
+    <div className="fixed inset-0 w-full h-full">
       <div ref={mapContainer} className="absolute inset-0" />
       <WeatherLayerToggle activeLayer={activeLayer} onLayerChange={handleLayerChange} />
       <RatDetectionPanel sightings={ratSightings} onSearch={handleSearch} />

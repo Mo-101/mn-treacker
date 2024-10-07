@@ -1,39 +1,59 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from './ui/button';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { WiDaySunny, WiThermometer, WiTreedown } from 'react-icons/wi';
 
-const FloatingInsightsButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const insights = [
+  { icon: WiDaySunny, text: "Average sighting density: 3.2 per km²" },
+  { icon: WiThermometer, text: "Temperature trend: +1.5°C over 5 years" },
+  { icon: WiTreedown, text: "Habitat loss: 12% in the last decade" },
+];
+
+const FloatingInsightsBar = () => {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      const scrollWidth = scrollElement.scrollWidth;
+      const animationDuration = scrollWidth / 50; // Adjust speed here
+
+      const animation = scrollElement.animate(
+        [
+          { transform: 'translateX(100%)' },
+          { transform: `translateX(-${scrollWidth}px)` }
+        ],
+        {
+          duration: animationDuration * 1000, // Convert to milliseconds
+          iterations: Infinity,
+          easing: 'linear'
+        }
+      );
+
+      return () => {
+        if (animation) {
+          animation.cancel();
+        }
+      };
+    }
+  }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 z-30">
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-blue-500 hover:bg-blue-600 text-white"
-      >
-        {isOpen ? <ChevronDown className="mr-2 h-4 w-4" /> : <ChevronUp className="mr-2 h-4 w-4" />}
-        Insights
-      </Button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-full right-0 mb-2 w-64 bg-white p-4 rounded-lg shadow-lg"
-          >
-            <h3 className="text-lg font-semibold mb-2">Data Insights</h3>
-            <ul className="list-disc list-inside">
-              <li>Average sighting density: 3.2 per km²</li>
-              <li>Temperature trend: +1.5°C over 5 years</li>
-              <li>Habitat loss: 12% in the last decade</li>
-            </ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="fixed bottom-0 left-0 right-0 bg-blue-500 text-white py-2 overflow-hidden z-30">
+      <div ref={scrollRef} className="whitespace-nowrap">
+        {insights.concat(insights).map((insight, index) => (
+          <span key={index} className="inline-flex items-center mx-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <insight.icon className="mr-2 text-2xl" />
+            </motion.div>
+            {insight.text}
+          </span>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default FloatingInsightsButton;
+export default FloatingInsightsBar;

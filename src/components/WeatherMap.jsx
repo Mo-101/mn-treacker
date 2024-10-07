@@ -8,7 +8,7 @@ import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
-import FloatingInsightsButton from './FloatingInsightsButton';
+import FloatingInsightsBar from './FloatingInsightsButton';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -100,8 +100,8 @@ const WeatherMap = () => {
           selectedPoint={selectedPoint}
         />
         <BottomPanel />
-        <FloatingInsightsButton />
       </div>
+      <FloatingInsightsBar />
     </div>
   );
 };

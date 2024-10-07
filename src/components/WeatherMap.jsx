@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
+import MapControls from './MapControls';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
@@ -108,30 +109,11 @@ const WeatherMap = () => {
   return (
     <div className="relative w-full h-[calc(100vh-64px)]">
       <div ref={mapContainer} className="absolute top-0 right-0 left-0 bottom-0" />
-      <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg flex flex-col space-y-2">
-        <Button 
-          onClick={() => handleLayerChange('temperature')}
-          variant={activeLayer === 'temperature' ? 'default' : 'outline'}
-        >
-          Temperature
-        </Button>
-        <Button 
-          onClick={() => handleLayerChange('wind')}
-          variant={activeLayer === 'wind' ? 'default' : 'outline'}
-        >
-          Wind
-        </Button>
-        <Button 
-          onClick={() => handleLayerChange('precipitation')}
-          variant={activeLayer === 'precipitation' ? 'default' : 'outline'}
-        >
-          Precipitation
-        </Button>
-        <div className="flex space-x-2 mt-4">
-          <Input placeholder="Search for rat sightings..." />
-          <Button onClick={handleSearch}>Search</Button>
-        </div>
-      </div>
+      <MapControls
+        activeLayer={activeLayer}
+        onLayerChange={handleLayerChange}
+        onSearch={handleSearch}
+      />
       <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded shadow">
         Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}
       </div>

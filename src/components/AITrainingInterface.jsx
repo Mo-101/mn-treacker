@@ -1,31 +1,27 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Slider } from './ui/slider';
-import { Switch } from './ui/switch';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { Card, CardContent } from './ui/card';
+import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
+import DataUploadSection from './AITrainingComponents/DataUploadSection';
+import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
+import DataVisualizationPanel from './AITrainingComponents/DataVisualizationPanel';
+import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
+import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
+import BottomConsole from './AITrainingComponents/BottomConsole';
+import HelpSection from './AITrainingComponents/HelpSection';
 
 const AITrainingInterface = ({ isOpen, onClose }) => {
-  const [dataSource, setDataSource] = useState('');
-  const [modelAccuracy, setModelAccuracy] = useState(85);
-  const [isAutoRetraining, setIsAutoRetraining] = useState(true);
+  const [activeSection, setActiveSection] = useState('upload');
+  const [showHelp, setShowHelp] = useState(false);
 
-  const performanceData = [
-    { name: 'Precision', value: 0.89 },
-    { name: 'Recall', value: 0.92 },
-    { name: 'F1 Score', value: 0.90 },
+  const navItems = [
+    { icon: Upload, label: 'Upload', section: 'upload' },
+    { icon: BarChart2, label: 'Performance', section: 'performance' },
+    { icon: Map, label: 'Visualization', section: 'visualization' },
+    { icon: Settings, label: 'Settings', section: 'settings' },
   ];
-
-  const handleDataUpload = () => {
-    // This would typically involve an API call to the backend
-    console.log('Uploading data from:', dataSource);
-    // Simulating a response
-    setTimeout(() => {
-      setModelAccuracy(prev => Math.min(prev + 2, 100));
-    }, 1000);
-  };
 
   return (
     <motion.div
@@ -33,75 +29,90 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg z-40 h-2/3 overflow-y-auto"
+      className="fixed inset-0 bg-gray-900 text-white overflow-hidden z-50 flex flex-col"
     >
-      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
-        X
-      </Button>
-      <h2 className="text-2xl font-bold mb-4">AI Training Interface</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Upload</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Input 
-              placeholder="Enter data source URL" 
-              value={dataSource}
-              onChange={(e) => setDataSource(e.target.value)}
-              className="mb-2"
-            />
-            <Button onClick={handleDataUpload}>Upload Data</Button>
-          </CardContent>
-        </Card>
+      <TopNavigationBar 
+        navItems={navItems} 
+        activeSection={activeSection} 
+        setActiveSection={setActiveSection} 
+        onClose={onClose}
+      />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Model Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChart width={300} height={200} data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </CardContent>
-        </Card>
+      <div className="flex-grow flex overflow-hidden">
+        <InteractiveSidebar />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Model Accuracy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Slider 
-              value={[modelAccuracy]}
-              max={100}
-              step={1}
-              className="mb-2"
-            />
-            <p>Current Accuracy: {modelAccuracy}%</p>
-          </CardContent>
-        </Card>
+        <div className="flex-grow overflow-auto p-4 space-y-4">
+          <AnimatePresence mode="wait">
+            {activeSection === 'upload' && (
+              <motion.div
+                key="upload"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <DataUploadSection />
+              </motion.div>
+            )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Auto-Retraining</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <Switch 
-                checked={isAutoRetraining}
-                onCheckedChange={setIsAutoRetraining}
-              />
-              <span>{isAutoRetraining ? 'Enabled' : 'Disabled'}</span>
-            </div>
-          </CardContent>
-        </Card>
+            {activeSection === 'performance' && (
+              <motion.div
+                key="performance"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <ModelPerformanceDashboard />
+              </motion.div>
+            )}
+
+            {activeSection === 'visualization' && (
+              <motion.div
+                key="visualization"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <DataVisualizationPanel />
+              </motion.div>
+            )}
+
+            {activeSection === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Card>
+                  <CardContent>
+                    <h2 className="text-xl font-bold mb-4">Settings</h2>
+                    {/* Add settings controls here */}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <TrainingControlsPanel />
+        </div>
       </div>
+
+      <BottomConsole />
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 rounded-full"
+        onClick={() => setShowHelp(true)}
+      >
+        <HelpCircle className="h-6 w-6" />
+      </Button>
+
+      <AnimatePresence>
+        {showHelp && (
+          <HelpSection onClose={() => setShowHelp(false)} />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

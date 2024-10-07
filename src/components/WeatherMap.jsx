@@ -3,10 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from './ui/use-toast';
 
-// Updated Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
 const WeatherMap = () => {
@@ -43,7 +41,6 @@ const WeatherMap = () => {
   };
 
   const addMapLayers = () => {
-    // Updated temperature layer with custom style
     addLayer('temperature', 'raster', 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd');
     addLayer('wind', 'vector', 'mapbox://mapbox.mapbox-terrain-v2', 'contour');
     addLayer('precipitation', 'raster', 'mapbox://mapbox.precipitation-v1');
@@ -77,14 +74,18 @@ const WeatherMap = () => {
     });
   };
 
-  const handleLayerChange = (value) => {
-    setActiveLayer(value);
-    ['temperature', 'wind', 'precipitation'].forEach(layer => {
-      map.current.setLayoutProperty(
-        `${layer}-layer`,
-        'visibility',
-        layer === value ? 'visible' : 'none'
-      );
+  const handleLayerChange = (layer) => {
+    setActiveLayer(layer);
+    ['temperature', 'wind', 'precipitation'].forEach(l => {
+      if (l === 'temperature') {
+        map.current.setStyle(l === layer ? 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd' : 'mapbox://styles/mapbox/light-v10');
+      } else {
+        map.current.setLayoutProperty(
+          `${l}-layer`,
+          'visibility',
+          l === layer ? 'visible' : 'none'
+        );
+      }
     });
   };
 
@@ -107,20 +108,26 @@ const WeatherMap = () => {
   return (
     <div className="relative w-full h-[calc(100vh-64px)]">
       <div ref={mapContainer} className="absolute top-0 right-0 left-0 bottom-0" />
-      <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg">
-        <div className="mb-2">
-          <Select value={activeLayer} onValueChange={handleLayerChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select layer" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="temperature">Temperature</SelectItem>
-              <SelectItem value="wind">Wind</SelectItem>
-              <SelectItem value="precipitation">Precipitation</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex space-x-2">
+      <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg flex flex-col space-y-2">
+        <Button 
+          onClick={() => handleLayerChange('temperature')}
+          variant={activeLayer === 'temperature' ? 'default' : 'outline'}
+        >
+          Temperature
+        </Button>
+        <Button 
+          onClick={() => handleLayerChange('wind')}
+          variant={activeLayer === 'wind' ? 'default' : 'outline'}
+        >
+          Wind
+        </Button>
+        <Button 
+          onClick={() => handleLayerChange('precipitation')}
+          variant={activeLayer === 'precipitation' ? 'default' : 'outline'}
+        >
+          Precipitation
+        </Button>
+        <div className="flex space-x-2 mt-4">
           <Input placeholder="Search for rat sightings..." />
           <Button onClick={handleSearch}>Search</Button>
         </div>

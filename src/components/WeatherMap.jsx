@@ -6,8 +6,8 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from './ui/use-toast';
 
-// Replace with your actual Mapbox access token
-mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
+// Updated Mapbox access token
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -43,24 +43,29 @@ const WeatherMap = () => {
   };
 
   const addMapLayers = () => {
-    addLayer('temperature', 'raster', 'mapbox://mapbox.temperature-v2');
+    // Updated temperature layer with custom style
+    addLayer('temperature', 'raster', 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd');
     addLayer('wind', 'vector', 'mapbox://mapbox.mapbox-terrain-v2', 'contour');
     addLayer('precipitation', 'raster', 'mapbox://mapbox.precipitation-v1');
   };
 
   const addLayer = (name, type, url, sourceLayer = null) => {
-    map.current.addSource(name, { type, url });
-    map.current.addLayer({
-      id: `${name}-layer`,
-      type: type === 'vector' ? 'line' : 'raster',
-      source: name,
-      'source-layer': sourceLayer,
-      layout: { visibility: name === 'temperature' ? 'visible' : 'none' },
-      paint: type === 'vector' ? {
-        'line-color': '#ff69b4',
-        'line-width': 1
-      } : undefined
-    });
+    if (name === 'temperature') {
+      map.current.setStyle(url);
+    } else {
+      map.current.addSource(name, { type, url });
+      map.current.addLayer({
+        id: `${name}-layer`,
+        type: type === 'vector' ? 'line' : 'raster',
+        source: name,
+        'source-layer': sourceLayer,
+        layout: { visibility: name === activeLayer ? 'visible' : 'none' },
+        paint: type === 'vector' ? {
+          'line-color': '#ff69b4',
+          'line-width': 1
+        } : undefined
+      });
+    }
   };
 
   const updateMapState = () => {

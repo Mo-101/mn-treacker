@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './ui/button';
-import { Layers, Settings, Clock } from 'lucide-react';
+import { Layers, Settings, Clock, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AnimatedIcon = ({ children }) => (
@@ -12,7 +12,7 @@ const AnimatedIcon = ({ children }) => (
   </motion.div>
 );
 
-const TopNavigationBar = ({ onLayerToggle }) => {
+const TopNavigationBar = ({ onLayerToggle, onAITrainingToggle }) => {
   return (
     <div className="w-full bg-black p-4 shadow-lg z-20 flex justify-between items-center">
       <div className="flex items-center space-x-2">
@@ -28,6 +28,11 @@ const TopNavigationBar = ({ onLayerToggle }) => {
         <Button variant="ghost" size="icon">
           <AnimatedIcon>
             <Clock className="h-5 w-5 text-yellow-400" />
+          </AnimatedIcon>
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onAITrainingToggle}>
+          <AnimatedIcon>
+            <Brain className="h-5 w-5 text-yellow-400" />
           </AnimatedIcon>
         </Button>
         <Button variant="ghost" size="icon">

@@ -10,6 +10,7 @@ import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
+import AITrainingInterface from './AITrainingInterface';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -24,6 +25,7 @@ const WeatherMap = () => {
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
+  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
@@ -50,7 +52,6 @@ const WeatherMap = () => {
       ? 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
       : 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m';
     
-    // Use a fade transition when changing the map style
     const fadeTransition = () => {
       const fadeOverlay = document.createElement('div');
       fadeOverlay.style.position = 'absolute';
@@ -64,22 +65,18 @@ const WeatherMap = () => {
       fadeOverlay.style.pointerEvents = 'none';
       mapContainer.current.appendChild(fadeOverlay);
 
-      // Fade in
       setTimeout(() => {
         fadeOverlay.style.opacity = '1';
       }, 50);
 
-      // Change map style
       setTimeout(() => {
         map.current.setStyle(baseStyle);
       }, 250);
 
-      // Fade out
       setTimeout(() => {
         fadeOverlay.style.opacity = '0';
       }, 500);
 
-      // Remove overlay
       setTimeout(() => {
         mapContainer.current.removeChild(fadeOverlay);
       }, 1000);
@@ -121,7 +118,10 @@ const WeatherMap = () => {
 
   return (
     <div className="relative w-full h-screen flex flex-col">
-      <TopNavigationBar onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)} />
+      <TopNavigationBar 
+        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+        onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+      />
       <div className="flex-grow relative">
         <div ref={mapContainer} className="absolute inset-0" />
         <AnimatePresence>
@@ -147,6 +147,14 @@ const WeatherMap = () => {
         <BottomPanel />
       </div>
       <FloatingInsightsBar />
+      <AnimatePresence>
+        {aiTrainingOpen && (
+          <AITrainingInterface
+            isOpen={aiTrainingOpen}
+            onClose={() => setAiTrainingOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

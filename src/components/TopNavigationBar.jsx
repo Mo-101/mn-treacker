@@ -14,30 +14,30 @@ const AnimatedIcon = ({ children }) => (
 
 const TopNavigationBar = ({ onLayerToggle, onAITrainingToggle }) => {
   return (
-    <div className="w-full bg-black p-4 shadow-lg z-20 flex justify-between items-center border-b-2 border-yellow-400">
+    <div className="w-full bg-black p-2 shadow-lg z-20 flex justify-between items-center border-b-2 border-yellow-400">
       <div className="flex items-center space-x-2">
-        <img src="/wizard-logo.png" alt="Wizard Logo" className="h-12 w-12" />
-        <h1 className="text-xl font-bold text-yellow-400">Mastomys Habitat & Risk Assessment</h1>
+        <img src="/wizard-logo.png" alt="Wizard Logo" className="h-8 w-8" />
+        <h1 className="text-lg font-bold text-yellow-400">Mastomys Habitat & Risk Assessment</h1>
       </div>
       <div className="flex space-x-2">
-        <Button variant="ghost" size="icon" onClick={onLayerToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
+        <Button variant="ghost" size="sm" onClick={onLayerToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
           <AnimatedIcon>
-            <Layers className="h-5 w-5 text-yellow-400" />
+            <Layers className="h-4 w-4 text-yellow-400" />
           </AnimatedIcon>
         </Button>
-        <Button variant="ghost" size="icon" className="hover:bg-yellow-400 hover:text-black transition-colors">
+        <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
           <AnimatedIcon>
-            <Clock className="h-5 w-5 text-yellow-400" />
+            <Clock className="h-4 w-4 text-yellow-400" />
           </AnimatedIcon>
         </Button>
-        <Button variant="ghost" size="icon" onClick={onAITrainingToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
+        <Button variant="ghost" size="sm" onClick={onAITrainingToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
           <AnimatedIcon>
-            <Brain className="h-5 w-5 text-yellow-400" />
+            <Brain className="h-4 w-4 text-yellow-400" />
           </AnimatedIcon>
         </Button>
-        <Button variant="ghost" size="icon" className="hover:bg-yellow-400 hover:text-black transition-colors">
+        <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
           <AnimatedIcon>
-            <Settings className="h-5 w-5 text-yellow-400" />
+            <Settings className="h-4 w-4 text-yellow-400" />
           </AnimatedIcon>
         </Button>
       </div>

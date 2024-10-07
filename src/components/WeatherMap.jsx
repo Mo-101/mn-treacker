@@ -9,15 +9,13 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { initializeMap, updateMapState } from '../utils/mapUtils';
-import { addCustomLayers, addXweatherRadarAnimation } from './MapLayers';
-
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
+import AerisWeather from '@aerisweather/javascript-sdk';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: -28, lat: 47, zoom: 2 });
+  const aerisApp = useRef(null);
+  const [mapState, setMapState] = useState({ lng: 13.6472, lat: 5.7022, zoom: 3 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
@@ -26,57 +24,105 @@ const WeatherMap = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
 
-  const updateWeatherData = useCallback(() => {
-    if (!map.current) return;
-    
-    // Update weather data every 15 minutes
-    const currentTime = Date.now();
-    const lastUpdate = localStorage.getItem('lastWeatherUpdate');
-    
-    if (!lastUpdate || currentTime - parseInt(lastUpdate) > 15 * 60 * 1000) {
-      addXweatherRadarAnimation(map.current);
-      localStorage.setItem('lastWeatherUpdate', currentTime.toString());
-    }
-  }, []);
-
   useEffect(() => {
-    if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-      maxZoom: 5,
-      minZoom: 2
-    });
+    const aeris = new AerisWeather('r8ZBl3l7eRPGBVBs3B2GD', 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW');
 
-    map.current.on('load', () => {
-      addCustomLayers(map.current);
-      updateWeatherData();
-    });
-
-    map.current.on('move', () => {
-      updateMapState(map.current, setMapState);
-    });
-
-    // Update weather data periodically
-    const intervalId = setInterval(updateWeatherData, 15 * 60 * 1000); // Every 15 minutes
-
-    return () => clearInterval(intervalId);
-  }, [updateWeatherData]);
-
-  const updateLayerVisibility = () => {
-    const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar'];
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        const visibility = activeLayers.includes(layer) ? 'visible' : 'none';
-        map.current.setLayoutProperty(layer, 'visibility', visibility);
-        if (visibility === 'visible') {
-          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+    aeris.apps().then((apps) => {
+      aerisApp.current = new apps.InteractiveMapApp(mapContainer.current, {
+        map: {
+          strategy: "mapbox",
+          accessToken: "pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g",
+          zoom: mapState.zoom,
+          center: {
+            lat: mapState.lat,
+            lon: mapState.lng
+          },
+          timeline: {
+            from: -7200,
+            to: 0
+          }
+        },
+        panels: {
+          layers: {
+            buttons: [
+              { title: "Radar", value: "radar" },
+              { title: "Radar - Global (Derived)", value: "radar-global" },
+              { title: "Forecast Radar", value: "fradar" },
+              { title: "Satellite - GeoColor", value: "satellite-geocolor" },
+              { title: "Satellite - Infrared (Color)", value: "satellite-infrared-color" },
+              { title: "Forecast Satellite", value: "fsatellite" }
+            ],
+            enabled: true,
+            toggleable: false,
+            position: {
+              pin: "topright",
+              translate: { x: 2, y: 15 }
+            }
+          },
+          timeline: {
+            enabled: true,
+            toggleable: false,
+            position: {
+              pin: "bottom",
+              translate: { x: 0, y: -16 }
+            }
+          },
+          search: {
+            enabled: true,
+            toggleable: false,
+            position: {
+              pin: "bottomright",
+              translate: { x: -10, y: -10 }
+            }
+          },
+          legends: {
+            enabled: true,
+            toggleable: true,
+            position: {
+              pin: "bottomright",
+              translate: { x: -10, y: -10 }
+            }
+          },
+          info: {
+            enabled: true,
+            position: {
+              pin: "topleft",
+              translate: { x: 10, y: 10 }
+            },
+            metric: true
+          }
         }
-      }
+      });
+
+      aerisApp.current.on('ready', () => {
+        aerisApp.current.panels.info.setContentView('localweather', {
+          views: [
+            { renderer: "place" },
+            { renderer: "obs" },
+            { renderer: "threats" },
+            { renderer: "forecast" },
+            { renderer: "alerts" },
+            { renderer: "outlook" },
+            { renderer: "hazards" },
+            { renderer: "units" }
+          ]
+        });
+
+        aerisApp.current.map.on('click', (e) => {
+          aerisApp.current.showInfoAtCoord(e.data.coord, 'localweather', 'Local Weather');
+        });
+
+        aerisApp.current.map.addLayers(['radar', 'radar-global', 'fradar', 'satellite-geocolor', 'satellite-infrared-color', 'fsatellite']);
+        aerisApp.current.map.timeline.play();
+      });
     });
-  };
+
+    return () => {
+      if (aerisApp.current) {
+        aerisApp.current.destroy();
+      }
+    };
+  }, []);
 
   const handleLayerChange = (layer) => {
     setActiveLayers(prev => 
@@ -89,9 +135,8 @@ const WeatherMap = () => {
   };
 
   const handleSearch = async (query) => {
-    // Implement search functionality here
     console.log('Searching for:', query);
-    // You can add markers or highlight areas based on the search results
+    // Implement search functionality using Aeris SDK if needed
   };
 
   return (

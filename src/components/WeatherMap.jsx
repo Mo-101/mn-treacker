@@ -48,8 +48,8 @@ const WeatherMap = () => {
 
     const baseStyle = activeLayer === 'temperature' 
       ? 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
-      : 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m';
-    
+      : 'mapbox://styles/mapbox/dark-v10'; // Changed to a dark style for better contrast
+
     const fadeTransition = () => {
       const fadeOverlay = document.createElement('div');
       fadeOverlay.style.position = 'absolute';
@@ -117,13 +117,8 @@ const WeatherMap = () => {
     }
   };
 
-  const handlePointClick = (point) => {
-    setSelectedPoint(point);
-    setRightPanelOpen(true);
-  };
-
   return (
-    <div className="relative w-full h-screen flex flex-col">
+    <div className="relative w-full h-screen flex flex-col bg-black text-white">
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}

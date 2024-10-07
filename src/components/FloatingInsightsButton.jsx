@@ -38,18 +38,24 @@ const FloatingInsightsBar = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black text-yellow-400 py-1 overflow-hidden z-30">
+    <div className="fixed bottom-0 left-0 right-0 bg-black text-yellow-400 py-2 overflow-hidden z-30 border-t-2 border-yellow-400">
       <div ref={scrollRef} className="whitespace-nowrap">
         {insights.concat(insights).map((insight, index) => (
-          <span key={index} className="inline-flex items-center mx-4">
+          <motion.span
+            key={index}
+            className="inline-flex items-center mx-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.2 }}
+          >
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              <insight.icon className="mr-2 text-xl" style={{ color: insight.color }} />
+              <insight.icon className="mr-2 text-2xl" style={{ color: insight.color }} />
             </motion.div>
-            <span className="text-sm">{insight.text}</span>
-          </span>
+            <span className="text-sm font-semibold" style={{ color: insight.color }}>{insight.text}</span>
+          </motion.span>
         ))}
       </div>
     </div>

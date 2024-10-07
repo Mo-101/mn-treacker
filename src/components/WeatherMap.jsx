@@ -10,14 +10,14 @@ import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { initializeMap, updateMapState } from '../utils/mapUtils';
-import { addCustomLayers, addXweatherRadarAnimation } from './MapLayers';
+import { addCustomLayers, addXweatherRadarAnimation, addWindLayer } from './MapLayers';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 20, lat: 5, zoom: 2.5 }); // Updated initial state
+  const [mapState, setMapState] = useState({ lng: -28, lat: 47, zoom: 2 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
@@ -28,11 +28,23 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
-    
-    // Add Xweather radar animation after map initialization
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      maxZoom: 5,
+      minZoom: 2
+    });
+
     map.current.on('load', () => {
+      addCustomLayers(map.current);
       addXweatherRadarAnimation(map.current);
+      addWindLayer(map.current);
+    });
+
+    map.current.on('move', () => {
+      updateMapState(map.current, setMapState);
     });
   }, []);
 

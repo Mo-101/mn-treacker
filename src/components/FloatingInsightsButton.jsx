@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { WiDaySunny, WiThermometer, WiHumidity } from 'react-icons/wi';
 
 const insights = [
-  { icon: WiDaySunny, text: "Average sighting density: 3.2 per km²" },
-  { icon: WiThermometer, text: "Temperature trend: +1.5°C over 5 years" },
-  { icon: WiHumidity, text: "Habitat moisture: 12% increase in the last decade" },
+  { icon: WiDaySunny, text: "Average sighting density: 3.2 per km²", color: "#FFD700" },
+  { icon: WiThermometer, text: "Temperature trend: +1.5°C over 5 years", color: "#FF6347" },
+  { icon: WiHumidity, text: "Habitat moisture: 12% increase in the last decade", color: "#4169E1" },
 ];
 
 const FloatingInsightsBar = () => {
@@ -38,7 +38,7 @@ const FloatingInsightsBar = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-blue-500 text-white py-2 overflow-hidden z-30">
+    <div className="fixed bottom-0 left-0 right-0 bg-black text-yellow-400 py-1 overflow-hidden z-30">
       <div ref={scrollRef} className="whitespace-nowrap">
         {insights.concat(insights).map((insight, index) => (
           <span key={index} className="inline-flex items-center mx-4">
@@ -46,9 +46,9 @@ const FloatingInsightsBar = () => {
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              <insight.icon className="mr-2 text-2xl" />
+              <insight.icon className="mr-2 text-xl" style={{ color: insight.color }} />
             </motion.div>
-            {insight.text}
+            <span className="text-sm">{insight.text}</span>
           </span>
         ))}
       </div>

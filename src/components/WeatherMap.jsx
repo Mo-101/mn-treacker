@@ -17,7 +17,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwN
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 20, lat: 0, zoom: 3.5 });
+  const [mapState, setMapState] = useState({ lng: 20, lat: 5, zoom: 2.5 }); // Updated initial state
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();

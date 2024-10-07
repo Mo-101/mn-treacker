@@ -7,7 +7,7 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
       style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default style
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
-      maxBounds: [[-25, -40], [65, 40]] // Restrict map panning to around Africa
+      maxBounds: [[-30, -40], [60, 40]] // Adjusted to allow viewing the entire African continent
     });
 
     map.current.on('load', () => addCustomLayers(map.current));

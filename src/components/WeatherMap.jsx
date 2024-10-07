@@ -40,16 +40,58 @@ const WeatherMap = () => {
 
   const handleSearch = async (query) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/predict?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`http://127.0.0.1:5000/predict?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setRatSightings(data.predictions);
       
+      // Remove existing markers
+      if (map.current) {
+        const markers = map.current.getLayer('rat-markers');
+        if (markers) {
+          map.current.removeLayer('rat-markers');
+          map.current.removeSource('rat-markers');
+        }
+      }
+
       // Add markers for each prediction
-      data.predictions.forEach(prediction => {
-        new mapboxgl.Marker()
-          .setLngLat([prediction.longitude, prediction.latitude])
-          .addTo(map.current);
-      });
+      if (map.current && data.predictions.length > 0) {
+        map.current.addSource('rat-markers', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: data.predictions.map(prediction => ({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [prediction.longitude, prediction.latitude]
+              },
+              properties: {
+                description: `Confidence: ${(prediction.confidence * 100).toFixed(2)}%`
+              }
+            }))
+          }
+        });
+
+        map.current.addLayer({
+          id: 'rat-markers',
+          type: 'circle',
+          source: 'rat-markers',
+          paint: {
+            'circle-radius': 6,
+            'circle-color': '#B42222'
+          }
+        });
+      }
 
       toast({
         title: "Search Complete",

@@ -6,6 +6,13 @@ const MapControls = ({ activeLayer, onLayerChange, onSearch }) => {
   return (
     <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg flex flex-col space-y-2">
       <Button 
+        onClick={() => onLayerChange('default')}
+        variant={activeLayer === 'default' ? 'default' : 'outline'}
+        className="w-full"
+      >
+        Default
+      </Button>
+      <Button 
         onClick={() => onLayerChange('temperature')}
         variant={activeLayer === 'temperature' ? 'default' : 'outline'}
         className="w-full"

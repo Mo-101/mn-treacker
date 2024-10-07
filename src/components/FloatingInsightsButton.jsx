@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { WiDaySunny, WiThermometer, WiTree } from 'react-icons/wi';
+import { WiDaySunny, WiThermometer, WiForest } from 'react-icons/wi';
 
 const insights = [
   { icon: WiDaySunny, text: "Average sighting density: 3.2 per km²" },
   { icon: WiThermometer, text: "Temperature trend: +1.5°C over 5 years" },
-  { icon: WiTree, text: "Habitat loss: 12% in the last decade" },
+  { icon: WiForest, text: "Habitat loss: 12% in the last decade" },
 ];
 
 const FloatingInsightsBar = () => {

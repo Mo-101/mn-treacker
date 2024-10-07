@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import WeatherLayerToggle from './WeatherLayerToggle';
 import RatDetectionPanel from './RatDetectionPanel';
@@ -48,7 +49,43 @@ const WeatherMap = () => {
     const baseStyle = activeLayer === 'temperature' 
       ? 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
       : 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m';
-    map.current.setStyle(baseStyle);
+    
+    // Use a fade transition when changing the map style
+    const fadeTransition = () => {
+      const fadeOverlay = document.createElement('div');
+      fadeOverlay.style.position = 'absolute';
+      fadeOverlay.style.top = '0';
+      fadeOverlay.style.left = '0';
+      fadeOverlay.style.width = '100%';
+      fadeOverlay.style.height = '100%';
+      fadeOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+      fadeOverlay.style.opacity = '0';
+      fadeOverlay.style.pointerEvents = 'none';
+      mapContainer.current.appendChild(fadeOverlay);
+
+      // Fade in
+      setTimeout(() => {
+        fadeOverlay.style.opacity = '1';
+      }, 50);
+
+      // Change map style
+      setTimeout(() => {
+        map.current.setStyle(baseStyle);
+      }, 250);
+
+      // Fade out
+      setTimeout(() => {
+        fadeOverlay.style.opacity = '0';
+      }, 500);
+
+      // Remove overlay
+      setTimeout(() => {
+        mapContainer.current.removeChild(fadeOverlay);
+      }, 1000);
+    };
+
+    fadeTransition();
   }, [activeLayer]);
 
   const handleLayerChange = (layer) => {
@@ -87,18 +124,26 @@ const WeatherMap = () => {
       <TopNavigationBar onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)} />
       <div className="flex-grow relative">
         <div ref={mapContainer} className="absolute inset-0" />
-        <LeftSidePanel 
-          isOpen={leftPanelOpen} 
-          onClose={() => setLeftPanelOpen(false)}
-          activeLayer={activeLayer}
-          onLayerChange={handleLayerChange}
-          onSearch={handleSearch}
-        />
-        <RightSidePanel 
-          isOpen={rightPanelOpen} 
-          onClose={() => setRightPanelOpen(false)}
-          selectedPoint={selectedPoint}
-        />
+        <AnimatePresence>
+          {leftPanelOpen && (
+            <LeftSidePanel 
+              isOpen={leftPanelOpen} 
+              onClose={() => setLeftPanelOpen(false)}
+              activeLayer={activeLayer}
+              onLayerChange={handleLayerChange}
+              onSearch={handleSearch}
+            />
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {rightPanelOpen && (
+            <RightSidePanel 
+              isOpen={rightPanelOpen} 
+              onClose={() => setRightPanelOpen(false)}
+              selectedPoint={selectedPoint}
+            />
+          )}
+        </AnimatePresence>
         <BottomPanel />
       </div>
       <FloatingInsightsBar />

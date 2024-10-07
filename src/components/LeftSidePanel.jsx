@@ -17,9 +17,10 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }
 
   return (
     <motion.div
-      initial={{ x: '-100%' }}
-      animate={{ x: isOpen ? 0 : '-100%' }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, x: '-100%' }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: '-100%' }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="fixed left-0 top-0 h-full w-64 bg-black/70 backdrop-blur-lg text-white p-4 z-30"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
@@ -32,13 +33,19 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }
         onChange={(e) => onSearch(e.target.value)}
       />
       {layers.map((layer) => (
-        <div key={layer.id} className="flex items-center justify-between mb-2">
+        <motion.div 
+          key={layer.id} 
+          className="flex items-center justify-between mb-2"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
           <span>{layer.label}</span>
           <Switch 
             checked={activeLayer === layer.id}
             onCheckedChange={() => onLayerChange(layer.id)}
           />
-        </div>
+        </motion.div>
       ))}
       <div className="mt-4">
         <h3 className="text-sm font-semibold mb-2">Opacity</h3>

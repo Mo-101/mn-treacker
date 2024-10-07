@@ -1,11 +1,64 @@
-import React from 'react';
 import mapboxgl from 'mapbox-gl';
 
 export const addCustomLayers = (map) => {
   map.on('load', () => {
-    addWindLayer(map);
+    addTemperatureLayer(map);
     addVegetationLayer(map);
     addPrecipitationLayer(map);
+    addWindLayer(map);
+    addCloudsLayer(map);
+    addRadarLayer(map);
+  });
+};
+
+const addTemperatureLayer = (map) => {
+  map.addSource('temperature-source', {
+    type: 'raster',
+    url: 'mapbox://mapbox.temperature-v2'
+  });
+  map.addLayer({
+    id: 'temperature',
+    type: 'raster',
+    source: 'temperature-source',
+    paint: {
+      'raster-opacity': 0.7
+    }
+  });
+};
+
+const addVegetationLayer = (map) => {
+  map.addSource('vegetation-source', {
+    type: 'raster',
+    url: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m'
+  });
+  map.addLayer({
+    id: 'vegetation',
+    type: 'raster',
+    source: 'vegetation-source',
+    paint: {
+      'raster-opacity': 0.7
+    }
+  });
+};
+
+const addPrecipitationLayer = (map) => {
+  map.addSource('precipitation-source', {
+    type: 'image',
+    url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
+    coordinates: [
+      [-80.425, 46.437],
+      [-71.516, 46.437],
+      [-71.516, 37.936],
+      [-80.425, 37.936]
+    ]
+  });
+  map.addLayer({
+    id: 'precipitation',
+    type: 'raster',
+    source: 'precipitation-source',
+    paint: {
+      'raster-opacity': 0.7
+    }
   });
 };
 
@@ -86,25 +139,25 @@ const addWindLayer = (map) => {
   });
 };
 
-const addVegetationLayer = (map) => {
-  map.addSource('vegetation-source', {
+const addCloudsLayer = (map) => {
+  map.addSource('clouds-source', {
     type: 'raster',
-    url: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m'
+    url: 'mapbox://mapbox.satellite'  // This is a placeholder. Replace with actual cloud data source
   });
   map.addLayer({
-    id: 'vegetation-layer',
+    id: 'clouds',
     type: 'raster',
-    source: 'vegetation-source',
+    source: 'clouds-source',
     paint: {
-      'raster-opacity': 0.7
+      'raster-opacity': 0.5
     }
   });
 };
 
-const addPrecipitationLayer = (map) => {
-  map.addSource('precipitation-source', {
+const addRadarLayer = (map) => {
+  map.addSource('radar-source', {
     type: 'image',
-    url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
+    url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',  // Replace with actual radar data
     coordinates: [
       [-80.425, 46.437],
       [-71.516, 46.437],
@@ -113,11 +166,11 @@ const addPrecipitationLayer = (map) => {
     ]
   });
   map.addLayer({
-    id: 'precipitation-layer',
+    id: 'radar',
     type: 'raster',
-    source: 'precipitation-source',
+    source: 'radar-source',
     paint: {
-      'raster-fade-duration': 0
+      'raster-opacity': 0.7
     }
   });
 };

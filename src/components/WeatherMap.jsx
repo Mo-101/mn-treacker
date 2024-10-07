@@ -4,6 +4,11 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
 import WeatherLayerToggle from './WeatherLayerToggle';
 import RatDetectionPanel from './RatDetectionPanel';
+import TopNavigationBar from './TopNavigationBar';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
+import BottomPanel from './BottomPanel';
+import FloatingInsightsButton from './FloatingInsightsButton';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -15,6 +20,9 @@ const WeatherMap = () => {
   const [activeLayer, setActiveLayer] = useState('default');
   const [ratSightings, setRatSightings] = useState([]);
   const { toast } = useToast();
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState(null);
 
   useEffect(() => {
     if (map.current) return;
@@ -37,7 +45,6 @@ const WeatherMap = () => {
       toggleLayer(`${activeLayer}-layer`, 'visible');
     }
 
-    // Update the base map style
     const baseStyle = activeLayer === 'temperature' 
       ? 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
       : 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m';
@@ -70,18 +77,30 @@ const WeatherMap = () => {
     }
   };
 
+  const handlePointClick = (point) => {
+    setSelectedPoint(point);
+    setRightPanelOpen(true);
+  };
+
   return (
     <div className="relative w-full h-screen flex flex-col">
-      <WeatherLayerToggle
-        activeLayer={activeLayer}
-        onLayerChange={handleLayerChange}
-      />
+      <TopNavigationBar onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)} />
       <div className="flex-grow relative">
         <div ref={mapContainer} className="absolute inset-0" />
-        <RatDetectionPanel
-          sightings={ratSightings}
+        <LeftSidePanel 
+          isOpen={leftPanelOpen} 
+          onClose={() => setLeftPanelOpen(false)}
+          activeLayer={activeLayer}
+          onLayerChange={handleLayerChange}
           onSearch={handleSearch}
         />
+        <RightSidePanel 
+          isOpen={rightPanelOpen} 
+          onClose={() => setRightPanelOpen(false)}
+          selectedPoint={selectedPoint}
+        />
+        <BottomPanel />
+        <FloatingInsightsButton />
       </div>
     </div>
   );

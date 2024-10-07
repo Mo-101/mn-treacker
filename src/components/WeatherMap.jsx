@@ -15,7 +15,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const aerisApp = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 13.6472, lat: 5.7022, zoom: 3 });
+  const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 }); // Updated to center on Nigeria
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();

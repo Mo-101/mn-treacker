@@ -8,11 +8,12 @@ import { Switch } from './ui/switch';
 
 const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }) => {
   const layers = [
-    { id: 'vegetation', label: 'Vegetation' },
-    { id: 'soilMoisture', label: 'Soil Moisture' },
-    { id: 'waterSources', label: 'Water Sources' },
-    { id: 'humanDensity', label: 'Human Density' },
     { id: 'temperature', label: 'Temperature' },
+    { id: 'vegetation', label: 'Vegetation' },
+    { id: 'precipitation', label: 'Precipitation' },
+    { id: 'wind', label: 'Wind' },
+    { id: 'clouds', label: 'Clouds' },
+    { id: 'radar', label: 'Radar' },
   ];
 
   return (
@@ -26,7 +27,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
         <X className="h-5 w-5" />
       </Button>
-      <h2 className="text-xl font-bold mb-4">Layers & Filters</h2>
+      <h2 className="text-xl font-bold mb-4">Map Layers</h2>
       <Input 
         placeholder="Search for sightings..." 
         className="mb-4"
@@ -48,7 +49,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onSearch }
         </motion.div>
       ))}
       <div className="mt-4">
-        <h3 className="text-sm font-semibold mb-2">Opacity</h3>
+        <h3 className="text-sm font-semibold mb-2">Layer Opacity</h3>
         <Slider defaultValue={[100]} max={100} step={1} />
       </div>
     </motion.div>

@@ -22,8 +22,12 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addMapLa
 };
 
 export const addMapLayers = (map) => {
-  addLayer(map, 'wind', 'vector', 'mapbox://mapbox.mapbox-terrain-v2', 'contour');
+  addLayer(map, 'temperature', 'raster', 'mapbox://mapbox.temperature-v1');
+  addLayer(map, 'vegetation', 'raster', 'mapbox://mapbox.vegetation-v1');
   addLayer(map, 'precipitation', 'raster', 'mapbox://mapbox.precipitation-v1');
+  addLayer(map, 'wind', 'vector', 'mapbox://mapbox.mapbox-terrain-v2', 'contour');
+  addLayer(map, 'clouds', 'raster', 'mapbox://mapbox.clouds-v1');
+  addLayer(map, 'radar', 'raster', 'mapbox://mapbox.radar-v1');
 };
 
 const addLayer = (map, name, type, url, sourceLayer = null) => {

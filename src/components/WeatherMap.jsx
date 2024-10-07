@@ -3,8 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
-import WeatherLayerToggle from './WeatherLayerToggle';
-import RatDetectionPanel from './RatDetectionPanel';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -41,8 +39,8 @@ const WeatherMap = () => {
       }
     };
 
-    const layers = ['temperature-layer', 'wind-layer', 'precipitation-layer'];
-    layers.forEach(layer => toggleLayer(layer, 'none'));
+    const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar'];
+    layers.forEach(layer => toggleLayer(`${layer}-layer`, 'none'));
 
     if (activeLayer !== 'default') {
       toggleLayer(`${activeLayer}-layer`, 'visible');
@@ -90,7 +88,6 @@ const WeatherMap = () => {
   };
 
   const handleSearch = (query) => {
-    try {
       console.log('Searching for Mastomys natalensis:', query);
       const newSighting = {
         latitude: 7 + Math.random() * 2,

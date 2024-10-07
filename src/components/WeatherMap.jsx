@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { useToast } from './ui/use-toast';
 
 // Replace with your actual Mapbox access token
 mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
@@ -11,99 +12,91 @@ mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [lng, setLng] = useState(8);
-  const [lat, setLat] = useState(10);
-  const [zoom, setZoom] = useState(5);
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayer, setActiveLayer] = useState('temperature');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v10',
-      center: [lng, lat],
-      zoom: zoom
-    });
-
-    map.current.on('load', () => {
-      // Add temperature layer
-      map.current.addSource('temperature', {
-        type: 'raster',
-        url: 'mapbox://mapbox.temperature-v2'
-      });
-      map.current.addLayer({
-        id: 'temperature-layer',
-        type: 'raster',
-        source: 'temperature',
-        layout: {
-          visibility: 'visible'
-        }
-      });
-
-      // Add wind layer
-      map.current.addSource('wind', {
-        type: 'vector',
-        url: 'mapbox://mapbox.mapbox-terrain-v2'
-      });
-      map.current.addLayer({
-        id: 'wind-layer',
-        type: 'line',
-        source: 'wind',
-        'source-layer': 'contour',
-        layout: {
-          visibility: 'none',
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#ff69b4',
-          'line-width': 1
-        }
-      });
-
-      // Add precipitation layer
-      map.current.addSource('precipitation', {
-        type: 'raster',
-        url: 'mapbox://mapbox.precipitation-v1'
-      });
-      map.current.addLayer({
-        id: 'precipitation-layer',
-        type: 'raster',
-        source: 'precipitation',
-        layout: {
-          visibility: 'none'
-        }
-      });
-    });
+    initializeMap();
   }, []);
 
-  useEffect(() => {
-    if (!map.current) return;
-    map.current.on('move', () => {
-      setLng(map.current.getCenter().lng.toFixed(4));
-      setLat(map.current.getCenter().lat.toFixed(4));
-      setZoom(map.current.getZoom().toFixed(2));
+  const initializeMap = () => {
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v10',
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom
+      });
+
+      map.current.on('load', addMapLayers);
+      map.current.on('move', updateMapState);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addMapLayers = () => {
+    addLayer('temperature', 'raster', 'mapbox://mapbox.temperature-v2');
+    addLayer('wind', 'vector', 'mapbox://mapbox.mapbox-terrain-v2', 'contour');
+    addLayer('precipitation', 'raster', 'mapbox://mapbox.precipitation-v1');
+  };
+
+  const addLayer = (name, type, url, sourceLayer = null) => {
+    map.current.addSource(name, { type, url });
+    map.current.addLayer({
+      id: `${name}-layer`,
+      type: type === 'vector' ? 'line' : 'raster',
+      source: name,
+      'source-layer': sourceLayer,
+      layout: { visibility: name === 'temperature' ? 'visible' : 'none' },
+      paint: type === 'vector' ? {
+        'line-color': '#ff69b4',
+        'line-width': 1
+      } : undefined
     });
-  });
+  };
+
+  const updateMapState = () => {
+    const center = map.current.getCenter();
+    setMapState({
+      lng: center.lng.toFixed(4),
+      lat: center.lat.toFixed(4),
+      zoom: map.current.getZoom().toFixed(2)
+    });
+  };
 
   const handleLayerChange = (value) => {
     setActiveLayer(value);
-    ['temperature-layer', 'wind-layer', 'precipitation-layer'].forEach(layer => {
+    ['temperature', 'wind', 'precipitation'].forEach(layer => {
       map.current.setLayoutProperty(
-        layer,
+        `${layer}-layer`,
         'visibility',
-        layer === `${value}-layer` ? 'visible' : 'none'
+        layer === value ? 'visible' : 'none'
       );
     });
   };
 
   const handleSearch = () => {
-    // This is where your AI implementation for rat spotting would go
-    console.log('Searching for Mastomys natalensis...');
-    // For demonstration, let's add a marker at a random location in Nigeria
-    const marker = new mapboxgl.Marker()
-      .setLngLat([7 + Math.random() * 2, 9 + Math.random() * 2])
-      .addTo(map.current);
+    try {
+      console.log('Searching for Mastomys natalensis...');
+      new mapboxgl.Marker()
+        .setLngLat([7 + Math.random() * 2, 9 + Math.random() * 2])
+        .addTo(map.current);
+    } catch (error) {
+      console.error('Error during search:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to perform search. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -128,7 +121,7 @@ const WeatherMap = () => {
         </div>
       </div>
       <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded shadow">
-        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
+        Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
 import WeatherLayerToggle from './WeatherLayerToggle';
-import RatTracker from './RatTracker';
+import RatDetectionPanel from './RatDetectionPanel';
 import { initializeMap, addMapLayers, updateMapState } from '../utils/mapUtils';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
@@ -108,10 +108,10 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)] bg-gradient-to-br from-blue-900 to-purple-900">
-      <div ref={mapContainer} className="absolute top-0 right-0 left-0 bottom-0" />
+    <div className="relative w-screen h-screen">
+      <div ref={mapContainer} className="absolute inset-0" />
       <WeatherLayerToggle activeLayer={activeLayer} onLayerChange={handleLayerChange} />
-      <RatTracker sightings={ratSightings} />
+      <RatDetectionPanel sightings={ratSightings} onSearch={handleSearch} />
       <div className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded shadow text-white">
         Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}
       </div>

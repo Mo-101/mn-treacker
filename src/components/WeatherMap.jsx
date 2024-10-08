@@ -6,6 +6,7 @@ import LayerPanel from './LayerPanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
+import LayerButtons from './LayerButtons';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -73,6 +74,17 @@ const WeatherMap = () => {
       />
       <div className="absolute inset-0">
         <div ref={mapContainer} className="w-full h-full" />
+        
+        {/* Add heading */}
+        <h1 className="absolute top-16 left-4 text-2xl font-bold text-white bg-black/50 p-2 rounded">
+          Mastomys Habitat & Risk Assessment
+        </h1>
+        
+        {/* Add LayerButtons */}
+        <div className="absolute top-28 left-4">
+          <LayerButtons />
+        </div>
+        
         <AnimatePresence>
           {layerPanelOpen && (
             <LayerPanel 

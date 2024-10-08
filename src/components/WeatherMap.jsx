@@ -6,19 +6,40 @@ import LayerPanel from './LayerPanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
+import { AerisMapsGL } from '@aerisweather/mapsgl';
+import '@aerisweather/mapsgl/dist/styles/styles.css';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
-  const aerisApp = useRef(null);
+  const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 });
   const [layerPanelOpen, setLayerPanelOpen] = useState(false);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    initializeAerisMap(mapContainer, aerisApp, mapState, toast);
-    return () => cleanupAerisMap(aerisApp);
+    if (map.current) return; // Initialize map only once
+
+    map.current = new AerisMapsGL({
+      container: mapContainer.current,
+      accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      account: 'r8ZBl3l7eRPGBVBs3B2GD',
+      secret: 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW',
+      layers: ['radar', 'temperatures']
+    });
+
+    map.current.on('load', () => {
+      console.log('Map is loaded');
+    });
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
 
   return (
@@ -34,7 +55,7 @@ const WeatherMap = () => {
             <LayerPanel 
               isOpen={layerPanelOpen} 
               onClose={() => setLayerPanelOpen(false)}
-              aerisApp={aerisApp.current}
+              map={map.current}
             />
           )}
         </AnimatePresence>

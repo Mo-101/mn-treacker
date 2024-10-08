@@ -6,36 +6,32 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LayerPanel = ({ isOpen, onClose, aerisApp }) => {
+const LayerPanel = ({ isOpen, onClose, map }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
     { id: 'radar', label: 'Radar' },
-    { id: 'radar-global', label: 'Radar - Global (Derived)' },
-    { id: 'fradar', label: 'Forecast Radar' },
-    { id: 'satellite-geocolor', label: 'Satellite - GeoColor' },
-    { id: 'satellite-infrared-color', label: 'Satellite - Infrared (Color)' },
-    { id: 'fsatellite', label: 'Forecast Satellite' },
-    { id: 'temperature', label: 'Temperature' },
-    { id: 'wind', label: 'Wind' },
+    { id: 'satellite', label: 'Satellite' },
+    { id: 'temperatures', label: 'Temperature' },
+    { id: 'wind-particles', label: 'Wind' },
     { id: 'precipitation', label: 'Precipitation' },
     { id: 'clouds', label: 'Clouds' },
   ];
 
   const handleLayerToggle = (layerId) => {
-    if (aerisApp && aerisApp.map) {
-      const layer = aerisApp.map.getLayer(layerId);
+    if (map) {
+      const layer = map.getLayer(layerId);
       if (layer) {
         layer.setVisible(!layer.isVisible());
       } else {
-        aerisApp.map.addLayer(layerId);
+        map.addLayer(layerId);
       }
     }
   };
 
   const handleOpacityChange = (layerId, opacity) => {
-    if (aerisApp && aerisApp.map) {
-      const layer = aerisApp.map.getLayer(layerId);
+    if (map) {
+      const layer = map.getLayer(layerId);
       if (layer) {
         layer.setOpacity(opacity / 100);
       }
@@ -44,9 +40,8 @@ const LayerPanel = ({ isOpen, onClose, aerisApp }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (aerisApp && aerisApp.panels.search) {
-      aerisApp.panels.search.submit(searchQuery);
-    }
+    // Implement search functionality here
+    console.log('Searching for:', searchQuery);
   };
 
   return (
@@ -80,7 +75,7 @@ const LayerPanel = ({ isOpen, onClose, aerisApp }) => {
             <div className="flex items-center justify-between">
               <span>{layer.label}</span>
               <Switch
-                checked={aerisApp?.map?.getLayer(layer.id)?.isVisible() || false}
+                checked={map?.getLayer(layer.id)?.isVisible() || false}
                 onCheckedChange={() => handleLayerToggle(layer.id)}
               />
             </div>

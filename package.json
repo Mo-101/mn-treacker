@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aerisweather/javascript-sdk": "^1.8.6",
+    "@aerisweather/mapsgl": "^1.5.4",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.0",

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,7 @@ import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { initializeMap, updateMapState } from '../utils/mapUtils';
-import { addCustomLayers, addXweatherRadarAnimation } from './MapLayers';
+import { addCustomLayers, addXweatherRadarAnimation, addWindLayer } from './MapLayers';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
@@ -26,19 +26,6 @@ const WeatherMap = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
 
-  const updateWeatherData = useCallback(() => {
-    if (!map.current) return;
-    
-    // Update weather data every 15 minutes
-    const currentTime = Date.now();
-    const lastUpdate = localStorage.getItem('lastWeatherUpdate');
-    
-    if (!lastUpdate || currentTime - parseInt(lastUpdate) > 15 * 60 * 1000) {
-      addXweatherRadarAnimation(map.current);
-      localStorage.setItem('lastWeatherUpdate', currentTime.toString());
-    }
-  }, []);
-
   useEffect(() => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
@@ -52,18 +39,19 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
-      updateWeatherData();
+      addXweatherRadarAnimation(map.current);
+      addWindLayer(map.current);
     });
 
     map.current.on('move', () => {
       updateMapState(map.current, setMapState);
     });
+  }, []);
 
-    // Update weather data periodically
-    const intervalId = setInterval(updateWeatherData, 15 * 60 * 1000); // Every 15 minutes
-
-    return () => clearInterval(intervalId);
-  }, [updateWeatherData]);
+  useEffect(() => {
+    if (!map.current) return;
+    updateLayerVisibility();
+  }, [activeLayers, layerOpacity]);
 
   const updateLayerVisibility = () => {
     const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar'];

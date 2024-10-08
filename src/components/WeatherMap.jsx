@@ -1,96 +1,124 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
-import LayerPanel from './LayerPanel';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import LayerButtons from './LayerButtons';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { initializeMap, updateMapState } from '../utils/mapUtils';
+import { addCustomLayers, addXweatherRadarAnimation } from './MapLayers';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 });
-  const [layerPanelOpen, setLayerPanelOpen] = useState(false);
-  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [mapState, setMapState] = useState({ lng: -28, lat: 47, zoom: 2 });
+  const [activeLayers, setActiveLayers] = useState([]);
+  const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+
+  const updateWeatherData = useCallback(() => {
+    if (!map.current) return;
+    
+    // Update weather data every 15 minutes
+    const currentTime = Date.now();
+    const lastUpdate = localStorage.getItem('lastWeatherUpdate');
+    
+    if (!lastUpdate || currentTime - parseInt(lastUpdate) > 15 * 60 * 1000) {
+      addXweatherRadarAnimation(map.current);
+      localStorage.setItem('lastWeatherUpdate', currentTime.toString());
+    }
+  }, []);
 
   useEffect(() => {
-    if (map.current) return; // Initialize map only once
+    if (map.current) return;
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      maxZoom: 5,
+      minZoom: 2
+    });
 
-    const initializeMap = async () => {
-      try {
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/dark-v10',
-          center: [mapState.lng, mapState.lat],
-          zoom: mapState.zoom
-        });
+    map.current.on('load', () => {
+      addCustomLayers(map.current);
+      updateWeatherData();
+    });
 
-        map.current.on('load', () => {
-          console.log('Map is loaded');
-          // Add layers or additional setup here
-        });
+    map.current.on('move', () => {
+      updateMapState(map.current, setMapState);
+    });
 
-        map.current.on('move', () => {
-          const center = map.current.getCenter();
-          setMapState({
-            lng: center.lng.toFixed(4),
-            lat: center.lat.toFixed(4),
-            zoom: map.current.getZoom().toFixed(2)
-          });
-        });
+    // Update weather data periodically
+    const intervalId = setInterval(updateWeatherData, 15 * 60 * 1000); // Every 15 minutes
 
-      } catch (error) {
-        console.error('Error initializing map:', error);
-        toast({
-          title: "Error",
-          description: "Failed to initialize the map. Please try again later.",
-          variant: "destructive",
-        });
+    return () => clearInterval(intervalId);
+  }, [updateWeatherData]);
+
+  const updateLayerVisibility = () => {
+    const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar'];
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        const visibility = activeLayers.includes(layer) ? 'visible' : 'none';
+        map.current.setLayoutProperty(layer, 'visibility', visibility);
+        if (visibility === 'visible') {
+          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+        }
       }
-    };
+    });
+  };
 
-    initializeMap();
+  const handleLayerChange = (layer) => {
+    setActiveLayers(prev => 
+      prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
+    );
+  };
 
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [toast]);
+  const handleOpacityChange = (opacity) => {
+    setLayerOpacity(opacity);
+  };
+
+  const handleSearch = async (query) => {
+    // Implement search functionality here
+    console.log('Searching for:', query);
+    // You can add markers or highlight areas based on the search results
+  };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
       <TopNavigationBar 
-        onLayerToggle={() => setLayerPanelOpen(!layerPanelOpen)}
+        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
       />
-      <div className="absolute inset-0">
-        <div ref={mapContainer} className="w-full h-full" />
-        
-        {/* Add heading */}
-        <h1 className="absolute top-16 left-4 text-2xl font-bold text-white bg-black/50 p-2 rounded">
-          Mastomys Habitat & Risk Assessment
-        </h1>
-        
-        {/* Add LayerButtons */}
-        <div className="absolute top-28 left-4">
-          <LayerButtons />
-        </div>
-        
+      <div className="flex-grow relative">
+        <div ref={mapContainer} className="absolute inset-0" />
         <AnimatePresence>
-          {layerPanelOpen && (
-            <LayerPanel 
-              isOpen={layerPanelOpen} 
-              onClose={() => setLayerPanelOpen(false)}
-              map={map.current}
+          {leftPanelOpen && (
+            <LeftSidePanel 
+              isOpen={leftPanelOpen} 
+              onClose={() => setLeftPanelOpen(false)}
+              activeLayers={activeLayers}
+              onLayerChange={handleLayerChange}
+              onOpacityChange={handleOpacityChange}
+            />
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {rightPanelOpen && (
+            <RightSidePanel 
+              isOpen={rightPanelOpen} 
+              onClose={() => setRightPanelOpen(false)}
+              selectedPoint={selectedPoint}
             />
           )}
         </AnimatePresence>

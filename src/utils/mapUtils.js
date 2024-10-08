@@ -46,12 +46,12 @@ export const addMapLayers = (map) => {
   // Add more layers as needed
 };
 
-// Updated function to safely report errors
+// New function to safely report errors
 const reportSafeError = (error, toast) => {
   const safeErrorObject = {
     message: error.message,
-    name: error.name,
-    // Avoid including the stack trace as it might contain non-clonable information
+    stack: error.stack,
+    // Add any other safe, cloneable properties here
   };
 
   // Use the toast function to display the error
@@ -61,11 +61,11 @@ const reportSafeError = (error, toast) => {
     variant: "destructive",
   });
 
-  // If you want to send the error to a server, use a safe method that doesn't involve postMessage
-  // For example, you could use the Fetch API directly:
-  fetch('/api/report-error', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(safeErrorObject)
-  }).catch(console.error);
+  // If you still want to send the error to a server, ensure you're only sending cloneable data
+  // For example:
+  // fetch('/api/report-error', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify(safeErrorObject)
+  // }).catch(console.error);
 };

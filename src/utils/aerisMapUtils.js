@@ -84,9 +84,25 @@ export const cleanupAerisMap = (aerisApp) => {
     if (aerisApp.current.map.timeline) {
       aerisApp.current.map.timeline.stop();
     }
-    aerisApp.current.map.removeLayers();
-    aerisApp.current.map.off();
-    aerisApp.current.map.remove();
+    
+    // Check if removeLayers method exists before calling it
+    if (typeof aerisApp.current.map.removeLayers === 'function') {
+      aerisApp.current.map.removeLayers();
+    } else {
+      console.warn('removeLayers method not found on map object');
+    }
+
+    // Remove event listeners
+    if (typeof aerisApp.current.map.off === 'function') {
+      aerisApp.current.map.off();
+    }
+
+    // Remove the map
+    if (typeof aerisApp.current.map.remove === 'function') {
+      aerisApp.current.map.remove();
+    }
+  } else {
+    console.warn('Aeris map or map object not found during cleanup');
   }
   aerisApp.current = null;
 };

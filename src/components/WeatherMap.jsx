@@ -129,7 +129,7 @@ const WeatherMap = () => {
 
     return () => {
       if (aerisApp.current) {
-        aerisApp.current.destroy();
+        aerisApp.current.unload();
       }
     };
   }, []);
@@ -150,13 +150,13 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
+    <div className="relative w-full h-screen overflow-hidden">
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
       />
-      <div className="flex-grow relative">
-        <div ref={mapContainer} className="absolute inset-0" />
+      <div className="absolute inset-0 top-14"> {/* Adjust top value based on your TopNavigationBar height */}
+        <div ref={mapContainer} className="w-full h-full" />
         <AnimatePresence>
           {leftPanelOpen && (
             <LeftSidePanel 

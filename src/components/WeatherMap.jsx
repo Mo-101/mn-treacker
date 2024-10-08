@@ -128,9 +128,20 @@ const WeatherMap = () => {
     });
 
     return () => {
-      if (aerisApp.current) {
-        aerisApp.current.unload();
+      if (aerisApp.current && aerisApp.current.map) {
+        // Stop the timeline if it's playing
+        if (aerisApp.current.map.timeline) {
+          aerisApp.current.map.timeline.stop();
+        }
+        // Remove all layers
+        aerisApp.current.map.removeLayers();
+        // Remove all event listeners
+        aerisApp.current.map.off();
+        // Remove the map
+        aerisApp.current.map.remove();
       }
+      // Clear the reference
+      aerisApp.current = null;
     };
   }, []);
 

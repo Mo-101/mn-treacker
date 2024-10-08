@@ -20,19 +20,39 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return; // Initialize map only once
 
-    map.current = new AerisMapsGL({
-      container: mapContainer.current,
-      accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-      account: 'r8ZBl3l7eRPGBVBs3B2GD',
-      secret: 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW',
-      layers: ['radar', 'temperatures']
-    });
+    const initializeMap = async () => {
+      try {
+        map.current = new AerisMapsGL({
+          container: mapContainer.current,
+          accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
+          center: [mapState.lng, mapState.lat],
+          zoom: mapState.zoom,
+          account: 'r8ZBl3l7eRPGBVBs3B2GD',
+          secret: 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW',
+          layers: ['radar', 'temperatures'],
+          strategy: 'mapbox',
+          mapboxStyle: 'mapbox://styles/mapbox/dark-v10'
+        });
 
-    map.current.on('load', () => {
-      console.log('Map is loaded');
-    });
+        await map.current.load();
+        console.log('Map is loaded');
+
+        // Add event listeners or additional setup here
+        map.current.on('click', (e) => {
+          console.log('Map clicked at:', e.lngLat);
+        });
+
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize the map. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    initializeMap();
 
     return () => {
       if (map.current) {
@@ -40,7 +60,7 @@ const WeatherMap = () => {
         map.current = null;
       }
     };
-  }, []);
+  }, [toast]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">

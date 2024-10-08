@@ -92,6 +92,7 @@ const WeatherMap = () => {
       });
 
       aerisApp.current.on('ready', () => {
+        console.log('Map is ready');
         aerisApp.current.panels.info.setContentView('localweather', {
           views: [
             { renderer: "place" },
@@ -111,7 +112,11 @@ const WeatherMap = () => {
 
         // Add layers after the map is ready
         aerisApp.current.map.addLayers(['radar', 'radar-global', 'fradar', 'satellite-geocolor', 'satellite-infrared-color', 'fsatellite']);
-        aerisApp.current.map.timeline.play();
+        
+        // Start the timeline play after a short delay to ensure all layers are loaded
+        setTimeout(() => {
+          aerisApp.current.map.timeline.play();
+        }, 1000);
       });
     }).catch(error => {
       console.error('Error initializing Aeris Weather SDK:', error);

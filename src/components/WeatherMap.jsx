@@ -7,7 +7,9 @@ import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { AerisMapsGL } from '@aerisweather/mapsgl';
-import '@aerisweather/mapsgl/dist/styles/styles.css';
+
+// Remove the CSS import
+// import '@aerisweather/mapsgl/dist/styles/styles.css';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -22,6 +24,12 @@ const WeatherMap = () => {
 
     const initializeMap = async () => {
       try {
+        // Load the CSS dynamically
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.aerisapi.com/mapsgl/latest/aerisweather.mapsgl.css';
+        document.head.appendChild(link);
+
         map.current = new AerisMapsGL({
           container: mapContainer.current,
           accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',

@@ -1,190 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
-import LeftSidePanel from './LeftSidePanel';
-import RightSidePanel from './RightSidePanel';
+import LayerPanel from './LayerPanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import AerisWeather from '@aerisweather/javascript-sdk';
+import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
-  const [layerOpacity, setLayerOpacity] = useState(100);
-  const { toast } = useToast();
-  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [layerPanelOpen, setLayerPanelOpen] = useState(false);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const aeris = new AerisWeather('r8ZBl3l7eRPGBVBs3B2GD', 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW');
-
-    aeris.apps().then((apps) => {
-      aerisApp.current = new apps.InteractiveMapApp(mapContainer.current, {
-        map: {
-          strategy: 'mapbox',
-          accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
-          zoom: mapState.zoom,
-          center: {
-            lat: mapState.lat,
-            lon: mapState.lng
-          },
-          timeline: {
-            from: -7200,
-            to: 0
-          }
-        },
-        panels: {
-          layers: {
-            buttons: [
-              { title: "Radar", value: "radar" },
-              { title: "Radar - Global (Derived)", value: "radar-global" },
-              { title: "Forecast Radar", value: "fradar" },
-              { title: "Satellite - GeoColor", value: "satellite-geocolor" },
-              { title: "Satellite - Infrared (Color)", value: "satellite-infrared-color" },
-              { title: "Forecast Satellite", value: "fsatellite" }
-            ],
-            enabled: true,
-            toggleable: false,
-            position: {
-              pin: "topright",
-              translate: { x: 2, y: 15 }
-            }
-          },
-          timeline: {
-            enabled: true,
-            toggleable: false,
-            position: {
-              pin: "bottom",
-              translate: { x: 0, y: -16 }
-            }
-          },
-          search: {
-            enabled: true,
-            toggleable: false,
-            position: {
-              pin: "bottomright",
-              translate: { x: -10, y: -10 }
-            }
-          },
-          legends: {
-            enabled: true,
-            toggleable: true,
-            position: {
-              pin: "bottomright",
-              translate: { x: -10, y: -10 }
-            }
-          },
-          info: {
-            enabled: true,
-            position: {
-              pin: "topleft",
-              translate: { x: 10, y: 10 }
-            },
-            metric: true
-          }
-        }
-      });
-
-      aerisApp.current.on('ready', () => {
-        console.log('Map is ready');
-        aerisApp.current.panels.info.setContentView('localweather', {
-          views: [
-            { renderer: "place" },
-            { renderer: "obs" },
-            { renderer: "threats" },
-            { renderer: "forecast" },
-            { renderer: "alerts" },
-            { renderer: "outlook" },
-            { renderer: "hazards" },
-            { renderer: "units" }
-          ]
-        });
-
-        aerisApp.current.map.on('click', (e) => {
-          aerisApp.current.showInfoAtCoord(e.data.coord, 'localweather', 'Local Weather');
-        });
-
-        // Add layers after the map is ready
-        aerisApp.current.map.addLayers(['radar', 'radar-global', 'fradar', 'satellite-geocolor', 'satellite-infrared-color', 'fsatellite']);
-        
-        // Start the timeline play after a short delay to ensure all layers are loaded
-        setTimeout(() => {
-          aerisApp.current.map.timeline.play();
-        }, 1000);
-      });
-    }).catch(error => {
-      console.error('Error initializing Aeris Weather SDK:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize weather map. Please try again later.",
-        variant: "destructive",
-      });
-    });
-
-    return () => {
-      if (aerisApp.current && aerisApp.current.map) {
-        // Stop the timeline if it's playing
-        if (aerisApp.current.map.timeline) {
-          aerisApp.current.map.timeline.stop();
-        }
-        // Remove all layers
-        aerisApp.current.map.removeLayers();
-        // Remove all event listeners
-        aerisApp.current.map.off();
-        // Remove the map
-        aerisApp.current.map.remove();
-      }
-      // Clear the reference
-      aerisApp.current = null;
-    };
+    initializeAerisMap(mapContainer, aerisApp, mapState, toast);
+    return () => cleanupAerisMap(aerisApp);
   }, []);
-
-  const handleLayerChange = (layer) => {
-    setActiveLayers(prev => 
-      prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
-    );
-  };
-
-  const handleOpacityChange = (opacity) => {
-    setLayerOpacity(opacity);
-  };
-
-  const handleSearch = async (query) => {
-    console.log('Searching for:', query);
-    // Implement search functionality using Aeris SDK if needed
-  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <TopNavigationBar 
-        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+        onLayerToggle={() => setLayerPanelOpen(!layerPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
       />
-      <div className="absolute inset-0 top-14"> {/* Adjust top value based on your TopNavigationBar height */}
+      <div className="absolute inset-0">
         <div ref={mapContainer} className="w-full h-full" />
         <AnimatePresence>
-          {leftPanelOpen && (
-            <LeftSidePanel 
-              isOpen={leftPanelOpen} 
-              onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
-              onLayerChange={handleLayerChange}
-              onOpacityChange={handleOpacityChange}
-            />
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {rightPanelOpen && (
-            <RightSidePanel 
-              isOpen={rightPanelOpen} 
-              onClose={() => setRightPanelOpen(false)}
-              selectedPoint={selectedPoint}
+          {layerPanelOpen && (
+            <LayerPanel 
+              isOpen={layerPanelOpen} 
+              onClose={() => setLayerPanelOpen(false)}
+              aerisApp={aerisApp.current}
             />
           )}
         </AnimatePresence>

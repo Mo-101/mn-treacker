@@ -9,15 +9,16 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { initializeMap, updateMapState } from '../utils/mapUtils';
-import { addCustomLayers, addXweatherRadarAnimation, addWindLayer } from './MapLayers';
+import { addCustomLayers, toggleWindLayer } from './MapLayers';
+import { Button } from './ui/button';
+import { Wind } from 'lucide-react';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: -28, lat: 47, zoom: 2 });
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 }); // Centered on Nigeria
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
@@ -25,6 +26,7 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [windLayerVisible, setWindLayerVisible] = useState(true);
 
   useEffect(() => {
     if (map.current) return;
@@ -33,38 +35,31 @@ const WeatherMap = () => {
       style: 'mapbox://styles/mapbox/dark-v11',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
-      maxZoom: 5,
-      minZoom: 2
     });
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
-      addXweatherRadarAnimation(map.current);
-      addWindLayer(map.current);
     });
 
     map.current.on('move', () => {
-      updateMapState(map.current, setMapState);
+      const center = map.current.getCenter();
+      setMapState({
+        lng: center.lng.toFixed(4),
+        lat: center.lat.toFixed(4),
+        zoom: map.current.getZoom().toFixed(2)
+      });
     });
   }, []);
 
   useEffect(() => {
     if (!map.current) return;
-    updateLayerVisibility();
-  }, [activeLayers, layerOpacity]);
-
-  const updateLayerVisibility = () => {
-    const layers = ['temperature', 'vegetation', 'precipitation', 'wind', 'clouds', 'radar'];
-    layers.forEach(layer => {
+    activeLayers.forEach(layer => {
       if (map.current.getLayer(layer)) {
-        const visibility = activeLayers.includes(layer) ? 'visible' : 'none';
-        map.current.setLayoutProperty(layer, 'visibility', visibility);
-        if (visibility === 'visible') {
-          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
-        }
+        map.current.setLayoutProperty(layer, 'visibility', 'visible');
+        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
       }
     });
-  };
+  }, [activeLayers, layerOpacity]);
 
   const handleLayerChange = (layer) => {
     setActiveLayers(prev => 
@@ -79,7 +74,13 @@ const WeatherMap = () => {
   const handleSearch = async (query) => {
     // Implement search functionality here
     console.log('Searching for:', query);
-    // You can add markers or highlight areas based on the search results
+  };
+
+  const handleWindLayerToggle = () => {
+    setWindLayerVisible(!windLayerVisible);
+    if (map.current) {
+      toggleWindLayer(map.current, !windLayerVisible);
+    }
   };
 
   return (
@@ -111,6 +112,14 @@ const WeatherMap = () => {
           )}
         </AnimatePresence>
         <BottomPanel />
+        <Button
+          className="absolute top-20 right-4 z-10"
+          onClick={handleWindLayerToggle}
+          variant={windLayerVisible ? "default" : "outline"}
+        >
+          <Wind className="mr-2 h-4 w-4" />
+          Wind Layer
+        </Button>
       </div>
       <FloatingInsightsBar />
       <AnimatePresence>

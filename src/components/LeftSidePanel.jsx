@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Search } from 'lucide-react';
+import { X, Search, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacityChange, windLayerVisible, onWindLayerToggle }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
     { id: 'temperature', label: 'Temperature' },
     { id: 'vegetation', label: 'Vegetation' },
     { id: 'precipitation', label: 'Precipitation' },
-    { id: 'wind', label: 'Wind' },
     { id: 'clouds', label: 'Clouds' },
     { id: 'radar', label: 'Radar' },
   ];
@@ -59,6 +58,13 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacity
             />
           </div>
         ))}
+        <div className="flex items-center justify-between">
+          <span>Wind Layer</span>
+          <Switch
+            checked={windLayerVisible}
+            onCheckedChange={onWindLayerToggle}
+          />
+        </div>
       </div>
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>
@@ -70,6 +76,13 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacity
           onValueChange={(value) => onOpacityChange(value[0])}
         />
       </div>
+      <Button
+        className="mt-4 w-full flex items-center justify-center"
+        variant="outline"
+      >
+        <Wind className="mr-2 h-4 w-4" />
+        Weather
+      </Button>
     </motion.div>
   );
 };

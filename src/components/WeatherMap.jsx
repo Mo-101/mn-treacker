@@ -10,8 +10,6 @@ import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { addCustomLayers, toggleWindLayer } from './MapLayers';
-import { Button } from './ui/button';
-import { Wind } from 'lucide-react';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
@@ -100,6 +98,8 @@ const WeatherMap = () => {
               activeLayers={activeLayers}
               onLayerChange={handleLayerChange}
               onOpacityChange={handleOpacityChange}
+              windLayerVisible={windLayerVisible}
+              onWindLayerToggle={handleWindLayerToggle}
             />
           )}
         </AnimatePresence>
@@ -113,14 +113,6 @@ const WeatherMap = () => {
           )}
         </AnimatePresence>
         <BottomPanel />
-        <Button
-          className="absolute top-20 right-4 z-10"
-          onClick={handleWindLayerToggle}
-          variant={windLayerVisible ? "default" : "outline"}
-        >
-          <Wind className="mr-2 h-4 w-4" />
-          Wind Layer
-        </Button>
       </div>
       <FloatingInsightsBar />
       <AnimatePresence>

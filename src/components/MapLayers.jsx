@@ -79,23 +79,23 @@ export const addWindLayer = (map) => {
     'source': 'raster-array-source',
     'source-layer': '10winds',
     'paint': {
-      'raster-particle-speed-factor': 0.4,
-      'raster-particle-fade-opacity-factor': 0.9,
-      'raster-particle-reset-rate-factor': 0.4,
-      'raster-particle-count': 4000,
-      'raster-particle-max-speed': 40,
-      'raster-particle-stroke-width': 0.7, // Reduced stroke width
+      'raster-particle-speed-factor': 0.3,
+      'raster-particle-fade-opacity-factor': 0.95,
+      'raster-particle-reset-rate-factor': 0.3,
+      'raster-particle-count': 2000,
+      'raster-particle-max-speed': 30,
+      'raster-particle-stroke-width': 0.3,
       'raster-particle-color': [
         'interpolate',
         ['linear'],
         ['raster-particle-speed'],
-        1.5, 'rgba(134,163,171,256)',
-        10.29, 'rgba(57,163,57,256)',
-        20.06, 'rgba(215,0,50,256)',
-        31.89, 'rgba(68,105,141,256)',
-        43.72, 'rgba(241,255,109,256)',
-        57.61, 'rgba(256,256,256,256)',
-        69.44, 'rgba(256,37,256,256)'
+        1.5, 'rgba(134,163,171,128)',
+        10.29, 'rgba(57,163,57,128)',
+        20.06, 'rgba(215,0,50,128)',
+        31.89, 'rgba(68,105,141,128)',
+        43.72, 'rgba(241,255,109,128)',
+        57.61, 'rgba(256,256,256,128)',
+        69.44, 'rgba(256,37,256,128)'
       ]
     }
   });

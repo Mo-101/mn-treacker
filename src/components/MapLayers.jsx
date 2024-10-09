@@ -101,12 +101,42 @@ export const addWindLayer = (map) => {
 
   updateWindLayer();
   map.on('zoom', updateWindLayer);
+
+  // Add animated weather layer
+  addAnimatedWeatherLayer(map);
+};
+
+const addAnimatedWeatherLayer = (map) => {
+  if (!map.getSource('animated-weather-source')) {
+    map.addSource('animated-weather-source', {
+      type: 'image',
+      url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
+      coordinates: [
+        [-80.425, 46.437],
+        [-71.516, 46.437],
+        [-71.516, 37.936],
+        [-80.425, 37.936]
+      ]
+    });
+  }
+
+  if (!map.getLayer('animated-weather-layer')) {
+    map.addLayer({
+      id: 'animated-weather-layer',
+      type: 'raster',
+      source: 'animated-weather-source',
+      paint: {
+        'raster-opacity': 0.7
+      }
+    });
+  }
 };
 
 export const toggleWindLayer = (map, visible) => {
   if (map.getLayer('wind-layer')) {
     map.setLayoutProperty('wind-layer', 'visibility', visible ? 'visible' : 'none');
   }
+  if (map.getLayer('animated-weather-layer')) {
+    map.setLayoutProperty('animated-weather-layer', 'visibility', visible ? 'visible' : 'none');
+  }
 };
-
-// Remove the addXweatherRadarAnimation function as it's no longer needed

@@ -39,6 +39,7 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
+      toggleWindLayer(map.current, windLayerVisible);
     });
 
     map.current.on('move', () => {

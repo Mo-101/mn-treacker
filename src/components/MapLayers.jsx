@@ -27,7 +27,7 @@ export const addCustomLayers = (map) => {
 const addTemperatureLayer = (map) => {
   addLayer(map, 'temperature', {
     type: 'raster',
-    url: 'mapbox://mapbox.temperature-v2'
+    url: 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 

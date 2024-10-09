@@ -84,7 +84,7 @@ export const addWindLayer = (map) => {
       'raster-particle-reset-rate-factor': 0.3,
       'raster-particle-count': 2000,
       'raster-particle-max-speed': 30,
-      'raster-particle-stroke-width': 0.3,
+      'raster-particle-stroke-width': 0.15, // Reduced from 0.3 to 0.15 (half the original size)
       'raster-particle-color': [
         'interpolate',
         ['linear'],

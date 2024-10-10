@@ -17,7 +17,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState({});
+  const [activeLayer, setActiveLayer] = useState(null);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -51,19 +51,18 @@ const WeatherMap = () => {
   useEffect(() => {
     if (!map.current) return;
     
-    Object.entries(activeLayers).forEach(([layerId, isActive]) => {
-      toggleLayer(map.current, layerId, isActive);
-      if (isActive) {
-        map.current.setPaintProperty(layerId, 'raster-opacity', layerOpacity / 100);
+    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
+    
+    layers.forEach(layer => {
+      toggleLayer(map.current, layer, layer === activeLayer);
+      if (layer === activeLayer) {
+        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayers, layerOpacity]);
+  }, [activeLayer, layerOpacity]);
 
-  const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => ({
-      ...prev,
-      [layerId]: !prev[layerId]
-    }));
+  const handleLayerToggle = (layer) => {
+    setActiveLayer(prevLayer => prevLayer === layer ? null : layer);
   };
 
   const handleOpacityChange = (opacity) => {
@@ -71,7 +70,6 @@ const WeatherMap = () => {
   };
 
   const handleSearch = async (query) => {
-    // Implement search functionality here
     console.log('Searching for:', query);
   };
 
@@ -88,7 +86,7 @@ const WeatherMap = () => {
             <LeftSidePanel 
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
+              activeLayer={activeLayer}
               onLayerToggle={handleLayerToggle}
               onOpacityChange={handleOpacityChange}
             />

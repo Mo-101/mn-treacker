@@ -1,14 +1,14 @@
 import mapboxgl from 'mapbox-gl';
 
 const addLayer = (map, id, source, type, paint) => {
-  if (!map.getSource(id + '-source')) {
-    map.addSource(id + '-source', source);
+  if (!map.getSource(id)) {
+    map.addSource(id, source);
   }
   if (!map.getLayer(id)) {
     map.addLayer({
       id,
       type,
-      source: id + '-source',
+      source: id,
       paint,
       layout: { visibility: 'none' } // Start with all layers hidden
     });
@@ -16,7 +16,6 @@ const addLayer = (map, id, source, type, paint) => {
 };
 
 export const addCustomLayers = (map) => {
-  addDefaultLayer(map);
   addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
@@ -24,26 +23,17 @@ export const addCustomLayers = (map) => {
   addRadarLayer(map);
 };
 
-const addDefaultLayer = (map) => {
-  map.setStyle('mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m');
-};
-
 const addTemperatureLayer = (map) => {
-  map.addLayer({
-    id: 'temperature',
+  addLayer(map, 'temperature', {
     type: 'raster',
-    source: {
-      type: 'raster',
-      url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
-    },
-    paint: { 'raster-opacity': 0.7 }
-  });
+    url: 'mapbox://mapbox.temperature-v2'
+  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addVegetationLayer = (map) => {
   addLayer(map, 'vegetation', {
     type: 'raster',
-    url: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m'
+    url: 'mapbox://mapbox.terrain-rgb'
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 
@@ -63,14 +53,8 @@ const addCloudsLayer = (map) => {
 
 const addRadarLayer = (map) => {
   addLayer(map, 'radar', {
-    type: 'image',
-    url: 'https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif',
-    coordinates: [
-      [-80.425, 46.437],
-      [-71.516, 46.437],
-      [-71.516, 37.936],
-      [-80.425, 37.936]
-    ]
+    type: 'raster',
+    url: 'mapbox://mapbox.radar'
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 

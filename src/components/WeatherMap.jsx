@@ -34,7 +34,7 @@ const WeatherMap = () => {
       zoom: mapState.zoom,
     });
 
-    map.current.on('load', () => {
+    map.current.on('style.load', () => {
       addCustomLayers(map.current);
       console.log('Custom layers added');
     });

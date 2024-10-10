@@ -1,21 +1,44 @@
 // Function to safely clone an object
 function safeClone(obj) {
-  if (obj instanceof Request) {
-    // For Request objects, we'll create a new object with its properties
-    return {
-      url: obj.url,
-      method: obj.method,
-      headers: Object.fromEntries(obj.headers.entries()),
-      // Add other properties as needed
-    };
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
   }
+
+  if (obj instanceof Date) {
+    return new Date(obj.getTime());
+  }
+
+  if (obj instanceof Array) {
+    return obj.map(safeClone);
+  }
+
+  if (obj instanceof Object) {
+    if (obj.constructor !== Object) {
+      // Handle non-plain objects (like Request)
+      if (obj instanceof Request) {
+        return {
+          url: obj.url,
+          method: obj.method,
+          headers: Object.fromEntries(obj.headers.entries()),
+          // Add other properties as needed
+        };
+      }
+      // For other custom objects, return a plain object with their properties
+      return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, safeClone(value)]));
+    }
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, safeClone(value)])
+    );
+  }
+
+  // If we can't clone it, return the object itself
   return obj;
 }
 
 // Modified postMessage function
 function postMessage(message) {
   try {
-    const cloneableMessage = JSON.parse(JSON.stringify(safeClone(message)));
+    const cloneableMessage = safeClone(message);
     window.parent.postMessage(cloneableMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);

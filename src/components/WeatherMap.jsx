@@ -9,7 +9,7 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { addCustomLayers, toggleWindLayer } from './MapLayers';
+import { addCustomLayers, toggleLayer } from './MapLayers';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
 
@@ -24,20 +24,18 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
-  const [windLayerVisible, setWindLayerVisible] = useState(true);
 
   useEffect(() => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default style
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
     });
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
-      toggleWindLayer(map.current, windLayerVisible);
     });
 
     map.current.on('move', () => {
@@ -56,12 +54,9 @@ const WeatherMap = () => {
     const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
     
     layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        const visibility = activeLayers.includes(layer) ? 'visible' : 'none';
-        map.current.setLayoutProperty(layer, 'visibility', visibility);
-        if (visibility === 'visible') {
-          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
-        }
+      toggleLayer(map.current, layer, activeLayers.includes(layer));
+      if (activeLayers.includes(layer)) {
+        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
       }
     });
   }, [activeLayers, layerOpacity]);
@@ -81,13 +76,6 @@ const WeatherMap = () => {
     console.log('Searching for:', query);
   };
 
-  const handleWindLayerToggle = () => {
-    setWindLayerVisible(!windLayerVisible);
-    if (map.current) {
-      toggleWindLayer(map.current, !windLayerVisible);
-    }
-  };
-
   return (
     <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
       <TopNavigationBar 
@@ -104,8 +92,6 @@ const WeatherMap = () => {
               activeLayers={activeLayers}
               onLayerChange={handleLayerChange}
               onOpacityChange={handleOpacityChange}
-              windLayerVisible={windLayerVisible}
-              onWindLayerToggle={handleWindLayerToggle}
             />
           )}
         </AnimatePresence>

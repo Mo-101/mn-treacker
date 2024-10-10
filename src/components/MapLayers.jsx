@@ -16,6 +16,7 @@ const addLayer = (map, id, source, type, paint) => {
 };
 
 export const addCustomLayers = (map) => {
+  addDefaultLayer(map);
   addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
@@ -23,10 +24,14 @@ export const addCustomLayers = (map) => {
   addRadarLayer(map);
 };
 
+const addDefaultLayer = (map) => {
+  map.setStyle('mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m');
+};
+
 const addTemperatureLayer = (map) => {
   addLayer(map, 'temperature', {
     type: 'raster',
-    url: 'mapbox://styles/akanimo1/cm1xrp15a015001qr2z1d54sd'
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 
@@ -64,8 +69,8 @@ const addRadarLayer = (map) => {
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 
-export const toggleWindLayer = (map, visible) => {
-  if (map.getLayer('wind-layer')) {
-    map.setLayoutProperty('wind-layer', 'visibility', visible ? 'visible' : 'none');
+export const toggleLayer = (map, layerId, visible) => {
+  if (map.getLayer(layerId)) {
+    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
   }
 };

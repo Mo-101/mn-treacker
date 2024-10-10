@@ -36,6 +36,7 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
+      console.log('Custom layers added');
     });
 
     map.current.on('move', () => {
@@ -53,6 +54,7 @@ const WeatherMap = () => {
     
     const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
     layers.forEach(layer => {
+      console.log(`Toggling layer ${layer}: ${activeLayers.includes(layer)}`);
       toggleLayer(map.current, layer, activeLayers.includes(layer));
       if (activeLayers.includes(layer)) {
         map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
@@ -61,11 +63,14 @@ const WeatherMap = () => {
   }, [activeLayers, layerOpacity]);
 
   const handleLayerToggle = (layer) => {
-    setActiveLayers(prevLayers => 
-      prevLayers.includes(layer)
+    console.log(`Toggling layer: ${layer}`);
+    setActiveLayers(prevLayers => {
+      const newLayers = prevLayers.includes(layer)
         ? prevLayers.filter(l => l !== layer)
-        : [...prevLayers, layer]
-    );
+        : [...prevLayers, layer];
+      console.log('New active layers:', newLayers);
+      return newLayers;
+    });
   };
 
   const handleOpacityChange = (opacity) => {

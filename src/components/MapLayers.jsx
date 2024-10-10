@@ -75,11 +75,15 @@ const addRadarLayer = (map) => {
 };
 
 export const toggleLayer = (map, layerId, visible) => {
+  console.log(`Attempting to toggle layer ${layerId} to ${visible ? 'visible' : 'hidden'}`);
   if (map.getLayer(layerId)) {
     const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
+    console.log(`Current visibility of ${layerId}: ${currentVisibility}`);
     if (currentVisibility !== (visible ? 'visible' : 'none')) {
       map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
       console.log(`Layer ${layerId} is now ${visible ? 'visible' : 'hidden'}`);
+    } else {
+      console.log(`Layer ${layerId} visibility unchanged`);
     }
   } else {
     console.warn(`Layer ${layerId} not found on the map.`);

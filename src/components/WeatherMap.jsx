@@ -17,7 +17,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 }); // Centered on Nigeria
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [activeLayer, setActiveLayer] = useState(null);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -54,17 +54,15 @@ const WeatherMap = () => {
     const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
     
     layers.forEach(layer => {
-      toggleLayer(map.current, layer, activeLayers.includes(layer));
-      if (activeLayers.includes(layer)) {
+      toggleLayer(map.current, layer, layer === activeLayer);
+      if (layer === activeLayer) {
         map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayers, layerOpacity]);
+  }, [activeLayer, layerOpacity]);
 
   const handleLayerChange = (layer) => {
-    setActiveLayers(prev => 
-      prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
-    );
+    setActiveLayer(prevLayer => prevLayer === layer ? null : layer);
   };
 
   const handleOpacityChange = (opacity) => {
@@ -89,7 +87,7 @@ const WeatherMap = () => {
             <LeftSidePanel 
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
+              activeLayer={activeLayer}
               onLayerChange={handleLayerChange}
               onOpacityChange={handleOpacityChange}
             />

@@ -6,7 +6,7 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacityChange, windLayerVisible, onWindLayerToggle }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onOpacityChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
@@ -53,18 +53,11 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerChange, onOpacity
           <div key={layer.id} className="flex items-center justify-between">
             <span>{layer.label}</span>
             <Switch
-              checked={activeLayers.includes(layer.id)}
+              checked={activeLayer === layer.id}
               onCheckedChange={() => onLayerChange(layer.id)}
             />
           </div>
         ))}
-        <div className="flex items-center justify-between">
-          <span>Wind Layer</span>
-          <Switch
-            checked={windLayerVisible}
-            onCheckedChange={onWindLayerToggle}
-          />
-        </div>
       </div>
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>

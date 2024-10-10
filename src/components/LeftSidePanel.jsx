@@ -6,7 +6,7 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerToggle, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
@@ -20,6 +20,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerToggle, onOpacityC
   const handleSearch = (e) => {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
+    // Implement search functionality here
   };
 
   return (
@@ -52,7 +53,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerToggle, onOpacityC
           <div key={layer.id} className="flex items-center justify-between">
             <span>{layer.label}</span>
             <Switch
-              checked={activeLayer === layer.id}
+              checked={activeLayers.includes(layer.id)}
               onCheckedChange={() => onLayerToggle(layer.id)}
             />
           </div>

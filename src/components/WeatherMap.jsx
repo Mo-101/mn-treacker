@@ -17,7 +17,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayer, setActiveLayer] = useState(null);
+  const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -54,15 +54,19 @@ const WeatherMap = () => {
     const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
     
     layers.forEach(layer => {
-      toggleLayer(map.current, layer, layer === activeLayer);
-      if (layer === activeLayer) {
+      toggleLayer(map.current, layer, activeLayers.includes(layer));
+      if (activeLayers.includes(layer)) {
         map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayer, layerOpacity]);
+  }, [activeLayers, layerOpacity]);
 
   const handleLayerToggle = (layer) => {
-    setActiveLayer(prevLayer => prevLayer === layer ? null : layer);
+    setActiveLayers(prevLayers => 
+      prevLayers.includes(layer)
+        ? prevLayers.filter(l => l !== layer)
+        : [...prevLayers, layer]
+    );
   };
 
   const handleOpacityChange = (opacity) => {
@@ -71,6 +75,7 @@ const WeatherMap = () => {
 
   const handleSearch = async (query) => {
     console.log('Searching for:', query);
+    // Implement search functionality here
   };
 
   return (
@@ -86,7 +91,7 @@ const WeatherMap = () => {
             <LeftSidePanel 
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
-              activeLayer={activeLayer}
+              activeLayers={activeLayers}
               onLayerToggle={handleLayerToggle}
               onOpacityChange={handleOpacityChange}
             />

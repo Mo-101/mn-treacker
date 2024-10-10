@@ -20,7 +20,7 @@ function safeClone(obj) {
           url: obj.url,
           method: obj.method,
           headers: Object.fromEntries(obj.headers.entries()),
-          // Add other properties as needed
+          // Add other properties as needed, but avoid methods or complex objects
         };
       }
       // For other custom objects, return a plain object with their properties
@@ -31,8 +31,8 @@ function safeClone(obj) {
     );
   }
 
-  // If we can't clone it, return the object itself
-  return obj;
+  // If we can't clone it, return a string representation
+  return String(obj);
 }
 
 // Modified postMessage function
@@ -46,6 +46,7 @@ function postMessage(message) {
     window.parent.postMessage({
       type: 'error',
       message: 'Failed to send message due to cloning issue',
+      originalError: String(error)
     }, '*');
   }
 }
@@ -55,7 +56,7 @@ function reportHTTPError(error) {
   const errorDetails = {
     message: error.message,
     stack: error.stack,
-    // Add any other relevant error details
+    // Add any other relevant error details that can be safely cloned
   };
   
   postMessage({

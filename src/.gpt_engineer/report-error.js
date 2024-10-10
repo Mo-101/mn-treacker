@@ -1,3 +1,15 @@
+// Function to safely extract data from a Request object
+function extractRequestData(request) {
+  if (request instanceof Request) {
+    return {
+      url: request.url,
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries()),
+    };
+  }
+  return request;
+}
+
 // Function to safely clone an object
 function safeClone(obj) {
   if (obj === null || typeof obj !== 'object') {
@@ -15,16 +27,7 @@ function safeClone(obj) {
   if (obj instanceof Object) {
     if (obj.constructor !== Object) {
       // Handle non-plain objects (like Request)
-      if (obj instanceof Request) {
-        return {
-          url: obj.url,
-          method: obj.method,
-          headers: Object.fromEntries(obj.headers.entries()),
-          // Add other properties as needed, but avoid methods or complex objects
-        };
-      }
-      // For other custom objects, return a plain object with their properties
-      return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, safeClone(value)]));
+      return extractRequestData(obj);
     }
     return Object.fromEntries(
       Object.entries(obj).map(([key, value]) => [key, safeClone(value)])

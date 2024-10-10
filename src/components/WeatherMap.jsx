@@ -52,10 +52,16 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (!map.current) return;
-    activeLayers.forEach(layer => {
+    
+    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
+    
+    layers.forEach(layer => {
       if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', 'visible');
-        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+        const visibility = activeLayers.includes(layer) ? 'visible' : 'none';
+        map.current.setLayoutProperty(layer, 'visibility', visibility);
+        if (visibility === 'visible') {
+          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+        }
       }
     });
   }, [activeLayers, layerOpacity]);

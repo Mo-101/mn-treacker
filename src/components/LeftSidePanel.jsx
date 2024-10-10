@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Search, Wind } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
@@ -53,8 +53,8 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onOpacityC
           <div key={layer.id} className="flex items-center justify-between">
             <span>{layer.label}</span>
             <Switch
-              checked={activeLayer === layer.id}
-              onCheckedChange={() => onLayerChange(layer.id)}
+              checked={activeLayers[layer.id] || false}
+              onCheckedChange={() => onLayerToggle(layer.id)}
             />
           </div>
         ))}
@@ -69,13 +69,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayer, onLayerChange, onOpacityC
           onValueChange={(value) => onOpacityChange(value[0])}
         />
       </div>
-      <Button
-        className="mt-4 w-full flex items-center justify-center"
-        variant="outline"
-      >
-        <Wind className="mr-2 h-4 w-4" />
-        Weather
-      </Button>
     </motion.div>
   );
 };

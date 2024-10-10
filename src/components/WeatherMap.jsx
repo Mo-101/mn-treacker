@@ -16,8 +16,8 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwN
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 }); // Centered on Nigeria
-  const [activeLayer, setActiveLayer] = useState(null);
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [activeLayers, setActiveLayers] = useState({});
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -29,7 +29,7 @@ const WeatherMap = () => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default style
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
     });
@@ -51,18 +51,19 @@ const WeatherMap = () => {
   useEffect(() => {
     if (!map.current) return;
     
-    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
-    
-    layers.forEach(layer => {
-      toggleLayer(map.current, layer, layer === activeLayer);
-      if (layer === activeLayer) {
-        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+    Object.entries(activeLayers).forEach(([layerId, isActive]) => {
+      toggleLayer(map.current, layerId, isActive);
+      if (isActive) {
+        map.current.setPaintProperty(layerId, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayer, layerOpacity]);
+  }, [activeLayers, layerOpacity]);
 
-  const handleLayerChange = (layer) => {
-    setActiveLayer(prevLayer => prevLayer === layer ? null : layer);
+  const handleLayerToggle = (layerId) => {
+    setActiveLayers(prev => ({
+      ...prev,
+      [layerId]: !prev[layerId]
+    }));
   };
 
   const handleOpacityChange = (opacity) => {
@@ -87,8 +88,8 @@ const WeatherMap = () => {
             <LeftSidePanel 
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
-              activeLayer={activeLayer}
-              onLayerChange={handleLayerChange}
+              activeLayers={activeLayers}
+              onLayerToggle={handleLayerToggle}
               onOpacityChange={handleOpacityChange}
             />
           )}

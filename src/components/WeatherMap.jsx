@@ -52,12 +52,14 @@ const WeatherMap = () => {
   useEffect(() => {
     if (!map.current) return;
     
-    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
+    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar', 'admin-boundaries'];
     layers.forEach(layer => {
       console.log(`Toggling layer ${layer}: ${activeLayers.includes(layer)}`);
       toggleLayer(map.current, layer, activeLayers.includes(layer));
       if (activeLayers.includes(layer)) {
-        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+        if (layer !== 'admin-boundaries') {
+          map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
+        }
       }
     });
   }, [activeLayers, layerOpacity]);

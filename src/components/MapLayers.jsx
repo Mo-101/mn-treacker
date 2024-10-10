@@ -1,6 +1,6 @@
 import mapboxgl from 'mapbox-gl';
 
-const addLayer = (map, id, source, type, paint) => {
+const addLayer = (map, id, source, type, paint, layout = {}) => {
   if (!map.getSource(id)) {
     map.addSource(id, source);
   }
@@ -10,7 +10,7 @@ const addLayer = (map, id, source, type, paint) => {
       type,
       source: id,
       paint,
-      layout: { visibility: 'none' } // Start with all layers hidden
+      layout: { visibility: 'none', ...layout }
     });
   }
 };
@@ -21,6 +21,7 @@ export const addCustomLayers = (map) => {
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
+  addAdminBoundariesLayer(map);
 };
 
 const addTemperatureLayer = (map) => {
@@ -56,6 +57,18 @@ const addRadarLayer = (map) => {
     type: 'raster',
     url: 'mapbox://mapbox.radar'
   }, 'raster', { 'raster-opacity': 0.7 });
+};
+
+const addAdminBoundariesLayer = (map) => {
+  addLayer(map, 'admin-boundaries', {
+    type: 'vector',
+    url: 'mapbox://mapbox.mapbox-streets-v8'
+  }, 'line', {
+    'line-color': '#FF0000',
+    'line-width': 2
+  }, {
+    'source-layer': 'admin'
+  });
 };
 
 export const toggleLayer = (map, layerId, visible) => {

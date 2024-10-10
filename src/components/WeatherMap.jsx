@@ -52,7 +52,6 @@ const WeatherMap = () => {
     if (!map.current) return;
     
     const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
-    
     layers.forEach(layer => {
       toggleLayer(map.current, layer, activeLayers.includes(layer));
       if (activeLayers.includes(layer)) {

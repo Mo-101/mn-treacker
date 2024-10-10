@@ -77,8 +77,8 @@ const addAdminBoundariesLayer = (map) => {
     source: 'admin-boundaries',
     'source-layer': 'admin',
     paint: {
-      'line-color': '#FF0000',
-      'line-width': 2
+      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
+      'line-width': 1  // Reduced stroke width
     },
     layout: { visibility: 'visible' }
   });

@@ -29,10 +29,15 @@ const addDefaultLayer = (map) => {
 };
 
 const addTemperatureLayer = (map) => {
-  addLayer(map, 'temperature', {
+  map.addLayer({
+    id: 'temperature',
     type: 'raster',
-    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
-  }, 'raster', { 'raster-opacity': 0.7 });
+    source: {
+      type: 'raster',
+      url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+    },
+    paint: { 'raster-opacity': 0.7 }
+  });
 };
 
 const addVegetationLayer = (map) => {

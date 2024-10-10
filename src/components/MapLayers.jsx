@@ -25,10 +25,17 @@ export const addCustomLayers = (map) => {
 };
 
 const addTemperatureLayer = (map) => {
-  addLayer(map, 'temperature', {
+  map.addSource('temperature', {
     type: 'raster',
-    url: 'mapbox://mapbox.temperature-v2'
-  }, 'raster', { 'raster-opacity': 0.7 });
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+  });
+  map.addLayer({
+    id: 'temperature',
+    type: 'raster',
+    source: 'temperature',
+    paint: { 'raster-opacity': 0.7 },
+    layout: { visibility: 'none' }
+  });
 };
 
 const addVegetationLayer = (map) => {
@@ -60,20 +67,26 @@ const addRadarLayer = (map) => {
 };
 
 const addAdminBoundariesLayer = (map) => {
-  addLayer(map, 'admin-boundaries', {
+  map.addSource('admin-boundaries', {
     type: 'vector',
     url: 'mapbox://mapbox.mapbox-streets-v8'
-  }, 'line', {
-    'line-color': '#FF0000',
-    'line-width': 2
-  }, {
-    'source-layer': 'admin'
+  });
+  map.addLayer({
+    id: 'admin-boundaries',
+    type: 'line',
+    source: 'admin-boundaries',
+    'source-layer': 'admin',
+    paint: {
+      'line-color': '#FF0000',
+      'line-width': 2
+    },
+    layout: { visibility: 'visible' }
   });
 };
 
 export const toggleLayer = (map, layerId, visible) => {
   console.log(`Attempting to toggle layer ${layerId} to ${visible ? 'visible' : 'hidden'}`);
-  if (map.getLayer(layerId)) {
+  if (map.getLayer(layerId) && layerId !== 'admin-boundaries') {
     const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
     console.log(`Current visibility of ${layerId}: ${currentVisibility}`);
     if (currentVisibility !== (visible ? 'visible' : 'none')) {
@@ -82,6 +95,8 @@ export const toggleLayer = (map, layerId, visible) => {
     } else {
       console.log(`Layer ${layerId} visibility unchanged`);
     }
+  } else if (layerId === 'admin-boundaries') {
+    console.log('Admin boundaries layer is always visible');
   } else {
     console.warn(`Layer ${layerId} not found on the map.`);
   }

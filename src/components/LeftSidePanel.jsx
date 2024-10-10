@@ -15,7 +15,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
     { id: 'precipitation', label: 'Precipitation' },
     { id: 'clouds', label: 'Clouds' },
     { id: 'radar', label: 'Radar' },
-    { id: 'admin-boundaries', label: 'Admin Boundaries' },
   ];
 
   const handleSearch = (e) => {

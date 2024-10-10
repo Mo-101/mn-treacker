@@ -4,51 +4,34 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      headers: Object.fromEntries(request.headers.entries()),
+      // Only include headers if absolutely necessary
+      // headers: Object.fromEntries(request.headers.entries()),
     };
   }
-  return request;
+  return String(request); // Convert to string if not a Request
 }
 
-// Function to safely clone an object
-function safeClone(obj) {
-  if (obj === null || typeof obj !== 'object') {
-    return obj;
-  }
-
-  if (obj instanceof Date) {
-    return new Date(obj.getTime());
-  }
-
-  if (obj instanceof Array) {
-    return obj.map(safeClone);
-  }
-
-  if (obj instanceof Object) {
-    if (obj.constructor !== Object) {
-      // Handle non-plain objects (like Request)
-      return extractRequestData(obj);
-    }
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [key, safeClone(value)])
-    );
-  }
-
-  // If we can't clone it, return a string representation
-  return String(obj);
+// Function to extract relevant error information
+function extractErrorInfo(error) {
+  return {
+    message: error.message,
+    stack: error.stack,
+    // Add any other relevant error properties here
+  };
 }
 
 // Modified postMessage function
 function postMessage(message) {
   try {
-    const cloneableMessage = safeClone(message);
-    window.parent.postMessage(cloneableMessage, '*');
+    // Extract only necessary information
+    const safeMessage = typeof message === 'object' ? extractErrorInfo(message) : message;
+    window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);
-    // Attempt to send a simplified error message
+    // Send a simplified error message
     window.parent.postMessage({
       type: 'error',
-      message: 'Failed to send message due to cloning issue',
+      message: 'Failed to send message',
       originalError: String(error)
     }, '*');
   }
@@ -56,11 +39,11 @@ function postMessage(message) {
 
 // Function to report HTTP errors
 function reportHTTPError(error) {
-  const errorDetails = {
-    message: error.message,
-    stack: error.stack,
-    // Add any other relevant error details that can be safely cloned
-  };
+  const errorDetails = extractErrorInfo(error);
+  
+  if (error.request) {
+    errorDetails.request = extractRequestData(error.request);
+  }
   
   postMessage({
     type: 'http_error',

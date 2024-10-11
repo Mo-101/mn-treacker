@@ -63,18 +63,23 @@ const WeatherMap = () => {
 
   const handleLayerToggle = (layerId) => {
     if (map.current) {
-      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
-      map.current.setLayoutProperty(
-        layerId,
-        'visibility',
-        visibility === 'visible' ? 'none' : 'visible'
-      );
-      setActiveLayers(prev => 
-        visibility === 'visible' 
-          ? prev.filter(id => id !== layerId)
-          : [...prev, layerId]
-      );
-      addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
+      const updatedLayers = activeLayers.includes(layerId)
+        ? activeLayers.filter(id => id !== layerId)
+        : [...activeLayers, layerId];
+      
+      setActiveLayers(updatedLayers);
+      
+      updatedLayers.forEach(id => {
+        map.current.setLayoutProperty(id, 'visibility', 'visible');
+      });
+      
+      layers.forEach(layer => {
+        if (!updatedLayers.includes(layer.id)) {
+          map.current.setLayoutProperty(layer.id, 'visibility', 'none');
+        }
+      });
+      
+      addToConsoleLog(`Layer ${layerId} ${updatedLayers.includes(layerId) ? 'enabled' : 'disabled'}`);
     }
   };
 

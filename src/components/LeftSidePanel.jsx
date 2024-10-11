@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
@@ -23,11 +23,15 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
     // Implement search functionality here
   };
 
+  const handleLayerToggle = (layerId) => {
+    onLayerToggle(layerId);
+  };
+
   return (
     <motion.div
       initial={{ x: '-100%' }}
       animate={{ x: isOpen ? 0 : '-100%' }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="fixed left-0 top-0 h-full w-64 sm:w-80 bg-[#1e293b] text-white p-4 z-30 overflow-y-auto pointer-events-auto"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
@@ -49,15 +53,24 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
         </div>
       </form>
       <div className="space-y-4">
-        {layers.map((layer) => (
-          <div key={layer.id} className="flex items-center justify-between">
-            <span>{layer.label}</span>
-            <Switch
-              checked={activeLayers.includes(layer.id)}
-              onCheckedChange={() => onLayerToggle(layer.id)}
-            />
-          </div>
-        ))}
+        <AnimatePresence>
+          {layers.map((layer) => (
+            <motion.div
+              key={layer.id}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-between"
+            >
+              <span>{layer.label}</span>
+              <Switch
+                checked={activeLayers.includes(layer.id)}
+                onCheckedChange={() => handleLayerToggle(layer.id)}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>

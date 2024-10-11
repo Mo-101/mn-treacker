@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
@@ -11,6 +11,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import Prediction from './Prediction';
+import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -31,112 +32,32 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v10',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
-    });
-
-    map.current.on('load', () => {
-      fetchWeatherData();
-      fetchMastomysData();
-    });
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-      }
-    };
+    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
   }, []);
 
-  const fetchWeatherData = async () => {
-    try {
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${mapState.lat}&lon=${mapState.lng}&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}&units=metric`);
-      const data = await response.json();
-      
-      if (map.current) {
-        // Add weather data as a new source
-        map.current.addSource('weather', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [data.coord.lon, data.coord.lat]
-            },
-            properties: {
-              temperature: data.main.temp,
-              description: data.weather[0].description
-            }
-          }
-        });
-
-        // Add a layer to display the weather data
-        map.current.addLayer({
-          id: 'weather',
-          type: 'symbol',
-          source: 'weather',
-          layout: {
-            'text-field': ['concat', ['to-string', ['get', 'temperature']], '°C\n', ['get', 'description']],
-            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-            'text-size': 12
-          },
-          paint: {
-            'text-color': '#ffffff'
-          }
-        });
-
-        addToConsoleLog('Weather data fetched and added to map');
-      }
-    } catch (error) {
-      console.error('Error fetching weather data:', error);
-      addToConsoleLog('Failed to fetch weather data');
+  useEffect(() => {
+    if (map.current) {
+      fetchWeatherData(map.current, mapState, addToConsoleLog);
+      fetchMastomysData(setMastomysData, addToConsoleLog);
     }
+  }, [mapState]);
+
+  const addCustomLayers = (map) => {
+    // Add custom layers here
   };
 
-  const handleLayerToggle = (layer) => {
-    setActiveLayers(prevLayers => {
-      const newLayers = prevLayers.includes(layer)
-        ? prevLayers.filter(l => l !== layer)
-        : [...prevLayers, layer];
-      if (map.current && map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', newLayers.includes(layer) ? 'visible' : 'none');
-      }
-      addToConsoleLog(`Layer ${layer} ${newLayers.includes(layer) ? 'activated' : 'deactivated'}`);
-      return newLayers;
+  const updateMapState = () => {
+    if (!map.current) return;
+    const center = map.current.getCenter();
+    setMapState({
+      lng: center.lng.toFixed(4),
+      lat: center.lat.toFixed(4),
+      zoom: map.current.getZoom().toFixed(2)
     });
-  };
-
-  const handleOpacityChange = (opacity) => {
-    setLayerOpacity(opacity);
-    activeLayers.forEach(layer => {
-      if (map.current && map.current.getLayer(layer)) {
-        map.current.setPaintProperty(layer, 'raster-opacity', opacity / 100);
-      }
-    });
-    addToConsoleLog(`Layer opacity changed to ${opacity}%`);
-  };
-
-  const handleSearch = async (query) => {
-    addToConsoleLog(`Searching for: ${query}`);
-    // Implement search functionality here
   };
 
   const addToConsoleLog = (message) => {
     setConsoleLog(prevLog => [...prevLog, `[${new Date().toLocaleTimeString()}] ${message}`]);
-  };
-
-  const fetchMastomysData = async () => {
-    // Simulated data fetch - replace with actual API call
-    const simulatedData = [
-      { id: 1, lat: 9.5, lng: 8.5, population: 150 },
-      { id: 2, lat: 10.2, lng: 7.8, population: 200 },
-      { id: 3, lat: 8.8, lng: 9.2, population: 100 },
-    ];
-    setMastomysData(simulatedData);
-    addToConsoleLog('Mastomys natalensis data fetched');
   };
 
   return (
@@ -158,8 +79,8 @@ const WeatherMap = () => {
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
               activeLayers={activeLayers}
-              onLayerToggle={handleLayerToggle}
-              onOpacityChange={handleOpacityChange}
+              onLayerToggle={(layer) => handleLayerToggle(layer, map.current, setActiveLayers, addToConsoleLog)}
+              onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
               className="pointer-events-auto"
             />
           )}
@@ -188,14 +109,7 @@ const WeatherMap = () => {
         </AnimatePresence>
         <AnimatePresence>
           {showPrediction && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              className="absolute inset-x-0 bottom-0 z-50 pointer-events-auto"
-            >
-              <Prediction />
-            </motion.div>
+            <Prediction />
           )}
         </AnimatePresence>
       </div>

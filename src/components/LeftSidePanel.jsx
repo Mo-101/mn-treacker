@@ -28,7 +28,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       initial={{ x: '-100%' }}
       animate={{ x: isOpen ? 0 : '-100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed left-0 top-0 h-full w-64 bg-[#1e293b] text-white p-4 z-30"
+      className="fixed left-0 top-0 h-full w-64 sm:w-80 bg-[#1e293b] text-white p-4 z-30 overflow-y-auto"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
         <X className="h-5 w-5" />

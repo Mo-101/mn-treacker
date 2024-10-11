@@ -12,7 +12,6 @@ import AITrainingInterface from './AITrainingInterface';
 import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 import MastomysTracker from './MastomysTracker';
 
-// Set the Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
@@ -20,7 +19,7 @@ const WeatherMap = () => {
   const map = useRef(null);
   const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [activeLayers, setActiveLayers] = useState(['radar', 'satellite', 'temperatures', 'wind-particles', 'precipitation']);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -31,7 +30,7 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
 
   useEffect(() => {
-    if (map.current) return; // Initialize map only once
+    if (map.current) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -103,7 +102,6 @@ const WeatherMap = () => {
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-        className="absolute top-0 left-0 right-0 z-50"
       />
       <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
@@ -117,7 +115,6 @@ const WeatherMap = () => {
             activeLayers={activeLayers}
             onLayerToggle={handleLayerToggle}
             onOpacityChange={handleOpacityChange}
-            className="absolute left-0 top-16 bottom-16 z-40"
           />
         )}
       </AnimatePresence>
@@ -127,19 +124,17 @@ const WeatherMap = () => {
             isOpen={rightPanelOpen} 
             onClose={() => setRightPanelOpen(false)}
             selectedPoint={selectedPoint}
-            className="absolute right-0 top-16 bottom-16 z-40"
           />
         )}
       </AnimatePresence>
-      <BottomPanel consoleLog={consoleLog} className="absolute bottom-0 left-0 right-0 z-50" />
-      <FloatingInsightsBar className="absolute bottom-4 right-4 z-50" />
+      <BottomPanel consoleLog={consoleLog} />
+      <FloatingInsightsBar />
       <AnimatePresence>
         {aiTrainingOpen && (
           <AITrainingInterface
             isOpen={aiTrainingOpen}
             onClose={() => setAiTrainingOpen(false)}
             addToConsoleLog={addToConsoleLog}
-            className="absolute inset-0 z-50"
           />
         )}
       </AnimatePresence>

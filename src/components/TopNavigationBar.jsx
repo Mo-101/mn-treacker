@@ -17,7 +17,7 @@ const TopNavigationBar = ({ onLayerToggle, onAITrainingToggle }) => {
     <div className="w-full bg-black p-2 shadow-lg z-20 flex justify-between items-center border-b-2 border-yellow-400">
       <div className="flex items-center space-x-2">
         <img src="/wizard-logo.png" alt="Wizard Logo" className="h-12 w-12" />
-        <h1 className="text-lg font-bold text-yellow-400">Mastomys Habitat & Risk Assessment</h1>
+        <h1 className="text-2xl font-bold text-yellow-400">Mastomys Habitat & Risk Assessment</h1>
       </div>
       <div className="flex space-x-2">
         <Button variant="ghost" size="sm" onClick={onLayerToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">

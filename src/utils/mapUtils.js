@@ -1,5 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
+
+
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
@@ -77,14 +79,32 @@ export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity,
   addToConsoleLog(`Layer opacity set to ${opacity}%`);
 };
 
-export const fetchWeatherData = (map, mapState, addToConsoleLog) => {
-  // Implement weather data fetching logic here
-  addToConsoleLog('Fetching weather data...');
+export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
+  try {
+    addToConsoleLog('Fetching weather data...');
+    // Implement weather data fetching logic here
+    // For example:
+    // const response = await fetch(`/api/weather?lat=${mapState.lat}&lng=${mapState.lng}`);
+    // const data = await response.json();
+    // Process and use the weather data
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    addToConsoleLog('Failed to fetch weather data');
+  }
 };
 
-export const fetchMastomysData = (setMastomysData, addToConsoleLog) => {
-  // Implement Mastomys data fetching logic here
-  addToConsoleLog('Fetching Mastomys data...');
+export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
+  try {
+    addToConsoleLog('Fetching Mastomys data...');
+    // Implement Mastomys data fetching logic here
+    // For example:
+    // const response = await fetch('/api/mastomys-data');
+    // const data = await response.json();
+    // setMastomysData(data);
+  } catch (error) {
+    console.error('Error fetching Mastomys data:', error);
+    addToConsoleLog('Failed to fetch Mastomys data');
+  }
 };
 
 export const updatePredictionLayer = (map, predictionData) => {

@@ -24,7 +24,7 @@ function extractErrorInfo(error) {
 function postMessage(message) {
   try {
     // Extract only necessary information
-    const safeMessage = typeof message === 'object' ? extractErrorInfo(message) : message;
+    const safeMessage = typeof message === 'object' ? JSON.parse(JSON.stringify(message)) : message;
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);

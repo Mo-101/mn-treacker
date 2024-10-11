@@ -40,7 +40,7 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      initializeAerisMap(map.current, aerisApp, mapState, toast, addToConsoleLog);
+      initializeAerisMap(map.current.getContainer(), aerisApp, mapState, toast, addToConsoleLog);
       fetchMastomysData();
     });
 

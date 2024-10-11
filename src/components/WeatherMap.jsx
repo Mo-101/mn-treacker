@@ -19,7 +19,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState(['weather', 'satellite', 'temperatures', 'wind', 'precipitation']);
+  const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -43,7 +43,14 @@ const WeatherMap = () => {
   }, [mapState]);
 
   const addCustomLayers = (map) => {
-    // Add custom layers here
+    // Add custom layers here, but set them to invisible by default
+    // Example:
+    // map.addLayer({
+    //   id: 'custom-layer',
+    //   type: 'raster',
+    //   source: 'custom-source',
+    //   layout: { visibility: 'none' }
+    // });
   };
 
   const updateMapState = () => {
@@ -58,6 +65,22 @@ const WeatherMap = () => {
 
   const addToConsoleLog = (message) => {
     setConsoleLog(prevLog => [...prevLog, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
+
+  const handleLayerToggle = (layerId) => {
+    if (map.current) {
+      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+      map.current.setLayoutProperty(
+        layerId,
+        'visibility',
+        visibility === 'visible' ? 'none' : 'visible'
+      );
+      setActiveLayers(prev => 
+        visibility === 'visible' 
+          ? prev.filter(id => id !== layerId)
+          : [...prev, layerId]
+      );
+    }
   };
 
   return (
@@ -79,7 +102,7 @@ const WeatherMap = () => {
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
               activeLayers={activeLayers}
-              onLayerToggle={(layer) => handleLayerToggle(layer, map.current, setActiveLayers, addToConsoleLog)}
+              onLayerToggle={handleLayerToggle}
               onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
               className="pointer-events-auto"
             />

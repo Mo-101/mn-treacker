@@ -127,12 +127,14 @@ const WeatherMap = () => {
           predictionData={predictionData}
         />
         <FloatingInsightsBar />
-        <AITrainingInterface
-          isOpen={aiTrainingOpen}
-          onClose={() => setAiTrainingOpen(false)}
-          addToConsoleLog={addToConsoleLog}
-          updateMapData={setPredictionData}
-        />
+        {aiTrainingOpen && (
+          <AITrainingInterface
+            isOpen={aiTrainingOpen}
+            onClose={() => setAiTrainingOpen(false)}
+            addToConsoleLog={addToConsoleLog}
+            updateMapData={setPredictionData}
+          />
+        )}
         <StreamingWeatherData data={streamingWeatherData} />
       </div>
     </div>

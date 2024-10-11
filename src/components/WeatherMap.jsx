@@ -9,9 +9,10 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
+import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
+import MastomysTracker from './MastomysTracker';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2w5ODU2cjR2MDR3dTNxcXRpdG5jb3Z6dyJ9.vi2wspa-B9a9gYYWMpEm0A';
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -25,9 +26,11 @@ const WeatherMap = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [consoleLog, setConsoleLog] = useState([]);
+  const [mastomysData, setMastomysData] = useState([]);
 
   useEffect(() => {
-    initializeAerisMap(mapContainer.current, aerisApp, mapState, toast);
+    initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
+    fetchMastomysData();
     return () => cleanupAerisMap(aerisApp);
   }, []);
 
@@ -35,6 +38,7 @@ const WeatherMap = () => {
     if (!aerisApp.current) return;
     
     activeLayers.forEach(layer => {
+      toggleAerisLayer(aerisApp.current, layer, true);
       aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
     });
   }, [activeLayers, layerOpacity]);
@@ -45,7 +49,7 @@ const WeatherMap = () => {
         ? prevLayers.filter(l => l !== layer)
         : [...prevLayers, layer];
       if (aerisApp.current) {
-        aerisApp.current.map.layers.toggleLayer(layer);
+        toggleAerisLayer(aerisApp.current, layer, !prevLayers.includes(layer));
       }
       addToConsoleLog(`Layer ${layer} ${newLayers.includes(layer) ? 'activated' : 'deactivated'}`);
       return newLayers;
@@ -66,6 +70,17 @@ const WeatherMap = () => {
     setConsoleLog(prevLog => [...prevLog, `[${new Date().toLocaleTimeString()}] ${message}`]);
   };
 
+  const fetchMastomysData = async () => {
+    // Simulated data fetch - replace with actual API call
+    const simulatedData = [
+      { id: 1, lat: 9.5, lng: 8.5, population: 150 },
+      { id: 2, lat: 10.2, lng: 7.8, population: 200 },
+      { id: 3, lat: 8.8, lng: 9.2, population: 100 },
+    ];
+    setMastomysData(simulatedData);
+    addToConsoleLog('Mastomys natalensis data fetched');
+  };
+
   return (
     <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
       <TopNavigationBar 
@@ -74,6 +89,7 @@ const WeatherMap = () => {
       />
       <div className="flex-grow relative">
         <div ref={mapContainer} className="absolute inset-0" />
+        <MastomysTracker data={mastomysData} />
         <AnimatePresence>
           {leftPanelOpen && (
             <LeftSidePanel 

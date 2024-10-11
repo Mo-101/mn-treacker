@@ -1,13 +1,13 @@
 import AerisWeather from '@aerisweather/javascript-sdk';
 
-export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast) => {
-  const aeris = new AerisWeather('r8ZBl3l7eRPGBVBs3B2GD', 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW');
+export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast, addToConsoleLog) => {
+  const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
 
   aeris.apps().then((apps) => {
     aerisApp.current = new apps.InteractiveMapApp(mapContainer, {
       map: {
         strategy: 'mapbox',
-        accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2w5ODU2cjR2MDR3dTNxcXRpdG5jb3Z6dyJ9.vi2wspa-B9a9gYYWMpEm0A',
+        accessToken: import.meta.env.VITE_MAPBOX_TOKEN,
         zoom: mapState.zoom,
         center: {
           lat: mapState.lat,
@@ -17,6 +17,21 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast) => {
           from: -7200,
           to: 0
         }
+      },
+      layers: {
+        radar: { zIndex: 1 },
+        satellite: { zIndex: 2 },
+        temperatures: { zIndex: 3 },
+        'wind-particles': { zIndex: 4 },
+        precipitation: { zIndex: 5 },
+        'radar-forecast': { zIndex: 6 },
+        'temperatures-forecast': { zIndex: 7 },
+        'precipitation-forecast': { zIndex: 8 },
+        'wind-forecast': { zIndex: 9 },
+        'pressure-forecast': { zIndex: 10 },
+        'humidity-forecast': { zIndex: 11 },
+        'dewpoint-forecast': { zIndex: 12 },
+        'cloudcover-forecast': { zIndex: 13 }
       },
       panels: {
         layers: { enabled: false },
@@ -43,7 +58,8 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast) => {
 
     aerisApp.current.on('ready', () => {
       console.log('Map is ready');
-      setupMapInteractions(aerisApp.current);
+      addToConsoleLog('AerisWeather map initialized');
+      setupMapInteractions(aerisApp.current, addToConsoleLog);
     });
   }).catch(error => {
     console.error('Error initializing Aeris Weather SDK:', error);
@@ -55,7 +71,7 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast) => {
   });
 };
 
-const setupMapInteractions = (app) => {
+const setupMapInteractions = (app, addToConsoleLog) => {
   app.panels.info.setContentView('localweather', {
     views: [
       { renderer: "place" },
@@ -71,11 +87,13 @@ const setupMapInteractions = (app) => {
 
   app.map.on('click', (e) => {
     app.showInfoAtCoord(e.data.coord, 'localweather', 'Local Weather');
+    addToConsoleLog(`Weather info requested for: ${e.data.coord.lat.toFixed(4)}, ${e.data.coord.lon.toFixed(4)}`);
   });
 
   // Start the timeline play after a short delay to ensure all layers are loaded
   setTimeout(() => {
     app.map.timeline.play();
+    addToConsoleLog('Weather timeline animation started');
   }, 1000);
 };
 
@@ -98,4 +116,13 @@ export const cleanupAerisMap = (aerisApp) => {
     console.warn('Aeris map or map object not found during cleanup');
   }
   aerisApp.current = null;
+};
+
+export const toggleAerisLayer = (app, layerId, visible) => {
+  if (app && app.map && app.map.layers) {
+    app.map.layers.setLayerVisibility(layerId, visible);
+    console.log(`Layer ${layerId} visibility set to ${visible}`);
+  } else {
+    console.warn(`Unable to toggle layer ${layerId}. Map or layers not initialized.`);
+  }
 };

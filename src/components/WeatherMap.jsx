@@ -80,6 +80,7 @@ const WeatherMap = () => {
           ? prev.filter(id => id !== layerId)
           : [...prev, layerId]
       );
+      addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
     }
   };
 

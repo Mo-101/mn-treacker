@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
 import DataUploadSection from './AITrainingComponents/DataUploadSection';
 import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
 import DataVisualizationPanel from './AITrainingComponents/DataVisualizationPanel';
 import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
-import BottomConsole from './AITrainingComponents/BottomConsole';
 import HelpSection from './AITrainingComponents/HelpSection';
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
@@ -17,6 +15,10 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [showHelp, setShowHelp] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [isTraining, setIsTraining] = useState(false);
+  const [dataUploaded, setDataUploaded] = useState(false);
+  const [trainingActivities, setTrainingActivities] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -31,13 +33,15 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       interval = setInterval(() => {
         setTrainingProgress(prev => {
           const newProgress = prev + 1;
-          addToConsoleLog(`Training progress: ${newProgress}%`);
           if (newProgress >= 100) {
             clearInterval(interval);
             setIsTraining(false);
             addToConsoleLog('Training completed');
             return 100;
           }
+          setElapsedTime(prev => prev + 1);
+          setTimeLeft(prev => Math.max(0, prev - 1));
+          setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
           return newProgress;
         });
       }, 1000);
@@ -48,7 +52,15 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const handleStartTraining = () => {
     setIsTraining(true);
     setTrainingProgress(0);
+    setElapsedTime(0);
+    setTimeLeft(100); // Assuming 100 seconds for training
+    setTrainingActivities([]);
     addToConsoleLog('Training started');
+  };
+
+  const handleDataUpload = () => {
+    setDataUploaded(true);
+    addToConsoleLog('Data uploaded successfully');
   };
 
   return (
@@ -78,7 +90,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <DataUploadSection onUploadComplete={() => addToConsoleLog('Data upload completed')} />
+                <DataUploadSection onUploadComplete={handleDataUpload} />
               </motion.div>
             )}
 
@@ -111,12 +123,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <Card>
-                  <CardContent>
-                    <h2 className="text-xl font-bold mb-4">Settings</h2>
-                    {/* Add settings controls here */}
-                  </CardContent>
-                </Card>
+                <h2 className="text-xl font-bold mb-4">Settings</h2>
+                {/* Add settings controls here */}
               </motion.div>
             )}
           </AnimatePresence>
@@ -125,11 +133,13 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
             onStartTraining={handleStartTraining}
             isTraining={isTraining}
             trainingProgress={trainingProgress}
+            dataUploaded={dataUploaded}
+            trainingActivities={trainingActivities}
+            timeLeft={timeLeft}
+            elapsedTime={elapsedTime}
           />
         </div>
       </div>
-
-      <BottomConsole />
 
       <Button
         variant="ghost"

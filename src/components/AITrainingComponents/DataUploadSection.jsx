@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
 
-const DataUploadSection = () => {
+const DataUploadSection = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const simulateUpload = () => {
@@ -14,6 +14,7 @@ const DataUploadSection = () => {
       setUploadProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
+          onUploadComplete();
           return 100;
         }
         return prev + 10;

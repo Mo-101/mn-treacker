@@ -9,7 +9,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
       initial={{ x: '100%' }}
       animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed right-0 top-0 h-full w-64 sm:w-80 bg-black/70 backdrop-blur-lg text-white p-4 z-30 overflow-y-auto"
+      className="fixed right-0 top-0 h-full w-64 sm:w-80 bg-black/70 backdrop-blur-lg text-white p-4 z-30 overflow-y-auto pointer-events-auto"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
         <X className="h-5 w-5" />

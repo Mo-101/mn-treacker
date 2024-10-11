@@ -6,7 +6,6 @@ import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
-import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
@@ -26,7 +25,6 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
-  const [consoleLog, setConsoleLog] = useState([]);
   const [mastomysData, setMastomysData] = useState([]);
   const [showPrediction, setShowPrediction] = useState(false);
 
@@ -44,13 +42,6 @@ const WeatherMap = () => {
 
   const addCustomLayers = (map) => {
     // Add custom layers here, but set them to invisible by default
-    // Example:
-    // map.addLayer({
-    //   id: 'custom-layer',
-    //   type: 'raster',
-    //   source: 'custom-source',
-    //   layout: { visibility: 'none' }
-    // });
   };
 
   const updateMapState = () => {
@@ -64,7 +55,11 @@ const WeatherMap = () => {
   };
 
   const addToConsoleLog = (message) => {
-    setConsoleLog(prevLog => [...prevLog, `[${new Date().toLocaleTimeString()}] ${message}`]);
+    // Instead of updating a state, we can use toast for important messages
+    toast({
+      title: "Map Update",
+      description: message,
+    });
   };
 
   const handleLayerToggle = (layerId) => {
@@ -119,7 +114,6 @@ const WeatherMap = () => {
             />
           )}
         </AnimatePresence>
-        <BottomPanel consoleLog={consoleLog} className="pointer-events-auto" />
         <FloatingInsightsBar className="pointer-events-auto" />
         <AnimatePresence>
           {aiTrainingOpen && (

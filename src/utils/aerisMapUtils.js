@@ -18,13 +18,10 @@ export const initializeAerisMap = (containerId, mapState, addToConsoleLog) => {
             lon: mapState.lng
           }
         },
-        layers: {
-          radar: { zIndex: 1 },
-          satellite: { zIndex: 2 },
-          temperatures: { zIndex: 3 },
-          'wind-particles': { zIndex: 4 },
-          precipitation: { zIndex: 5 },
-          clouds: { zIndex: 6 },
+        layers: 'blue-marble,radar-global,fradar,satellite-geocolor,satellite-infrared-color,satellite-water-vapor,rivers,roads,admin,admin-dk',
+        timeline: {
+          from: -6 * 3600,
+          to: +24 * 3600
         }
       });
 
@@ -53,6 +50,6 @@ export const toggleAerisLayer = (map, layerId, visible) => {
 
 export const setAerisLayerOpacity = (map, layerId, opacity) => {
   if (map && map.layers) {
-    map.layers.setLayerOpacity(layerId, opacity);
+    map.layers.setLayerOpacity(layerId, opacity / 100);
   }
 };

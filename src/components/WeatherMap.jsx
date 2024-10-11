@@ -12,8 +12,8 @@ import StreamingWeatherData from './StreamingWeatherData';
 import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
 
 const WeatherMap = () => {
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [mapState, setMapState] = useState({ lng: 12.12890625, lat: 1.2303741774326145, zoom: 3 });
+  const [activeLayers, setActiveLayers] = useState(['blue-marble', 'radar-global', 'fradar', 'satellite-geocolor', 'satellite-infrared-color', 'satellite-water-vapor', 'rivers', 'roads', 'admin', 'admin-dk']);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -76,19 +76,9 @@ const WeatherMap = () => {
     if (aerisMap) {
       aerisMap.panTo(highRiskArea.center);
       aerisMap.setZoom(10);
-      // Implement highlighting logic for AerisWeather map
     }
     addToConsoleLog(`Highlighting high-risk area: ${highRiskArea.name}`);
   }, [aerisMap, addToConsoleLog]);
-
-  const layers = [
-    { id: 'radar', name: 'Radar' },
-    { id: 'satellite', name: 'Satellite' },
-    { id: 'temperatures', name: 'Temperature' },
-    { id: 'wind-particles', name: 'Wind' },
-    { id: 'precipitation', name: 'Precipitation' },
-    { id: 'clouds', name: 'Clouds' },
-  ];
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -112,7 +102,18 @@ const WeatherMap = () => {
           activeLayers={activeLayers}
           onLayerToggle={handleLayerToggle}
           onOpacityChange={handleOpacityChange}
-          layers={layers}
+          layers={[
+            { id: 'blue-marble', name: 'Blue Marble' },
+            { id: 'radar-global', name: 'Global Radar' },
+            { id: 'fradar', name: 'Future Radar' },
+            { id: 'satellite-geocolor', name: 'Satellite Geocolor' },
+            { id: 'satellite-infrared-color', name: 'Satellite Infrared' },
+            { id: 'satellite-water-vapor', name: 'Satellite Water Vapor' },
+            { id: 'rivers', name: 'Rivers' },
+            { id: 'roads', name: 'Roads' },
+            { id: 'admin', name: 'Admin Boundaries' },
+            { id: 'admin-dk', name: 'Admin Boundaries (Dark)' }
+          ]}
           aerisMap={aerisMap}
         />
         <RightSidePanel 

@@ -1,15 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const MastomysTracker = ({ data, aerisApp }) => {
-  useEffect(() => {
-    if (!aerisApp.current || data.length === 0) return;
+  const [isLayerAdded, setIsLayerAdded] = useState(false);
 
-    const map = aerisApp.current.map;
+  useEffect(() => {
+    if (!aerisApp || !aerisApp.map || data.length === 0 || isLayerAdded) return;
+
+    const map = aerisApp.map;
 
     // Remove existing layers and sources
-    if (map.hasLayer('mastomys-heat')) map.removeLayer('mastomys-heat');
-    if (map.hasLayer('mastomys-point')) map.removeLayer('mastomys-point');
-    if (map.hasSource('mastomys')) map.removeSource('mastomys');
+    if (map.getLayer('mastomys-heat')) map.removeLayer('mastomys-heat');
+    if (map.getLayer('mastomys-point')) map.removeLayer('mastomys-point');
+    if (map.getSource('mastomys')) map.removeSource('mastomys');
 
     // Add new source and layers
     map.addSource('mastomys', {
@@ -90,7 +92,8 @@ const MastomysTracker = ({ data, aerisApp }) => {
       }
     });
 
-  }, [data, aerisApp]);
+    setIsLayerAdded(true);
+  }, [data, aerisApp, isLayerAdded]);
 
   return null; // This component doesn't render anything directly
 };

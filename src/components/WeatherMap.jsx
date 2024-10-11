@@ -82,45 +82,47 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-[#0f172a] text-white">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#0f172a] text-white">
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+        className="absolute top-0 left-0 right-0 z-50"
       />
-      <div className="flex-grow relative">
-        <div ref={mapContainer} className="absolute inset-0" />
-        {aerisApp.current && aerisApp.current.map && (
-          <MastomysTracker data={mastomysData} map={aerisApp.current.map} />
+      <div ref={mapContainer} className="absolute inset-0" />
+      {aerisApp.current && aerisApp.current.map && (
+        <MastomysTracker data={mastomysData} map={aerisApp.current.map} />
+      )}
+      <AnimatePresence>
+        {leftPanelOpen && (
+          <LeftSidePanel 
+            isOpen={leftPanelOpen} 
+            onClose={() => setLeftPanelOpen(false)}
+            activeLayers={activeLayers}
+            onLayerToggle={handleLayerToggle}
+            onOpacityChange={handleOpacityChange}
+            className="absolute left-0 top-16 bottom-16 z-40"
+          />
         )}
-        <AnimatePresence>
-          {leftPanelOpen && (
-            <LeftSidePanel 
-              isOpen={leftPanelOpen} 
-              onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
-              onLayerToggle={handleLayerToggle}
-              onOpacityChange={handleOpacityChange}
-            />
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {rightPanelOpen && (
-            <RightSidePanel 
-              isOpen={rightPanelOpen} 
-              onClose={() => setRightPanelOpen(false)}
-              selectedPoint={selectedPoint}
-            />
-          )}
-        </AnimatePresence>
-        <BottomPanel consoleLog={consoleLog} />
-      </div>
-      <FloatingInsightsBar />
+      </AnimatePresence>
+      <AnimatePresence>
+        {rightPanelOpen && (
+          <RightSidePanel 
+            isOpen={rightPanelOpen} 
+            onClose={() => setRightPanelOpen(false)}
+            selectedPoint={selectedPoint}
+            className="absolute right-0 top-16 bottom-16 z-40"
+          />
+        )}
+      </AnimatePresence>
+      <BottomPanel consoleLog={consoleLog} className="absolute bottom-0 left-0 right-0 z-50" />
+      <FloatingInsightsBar className="absolute bottom-4 right-4 z-50" />
       <AnimatePresence>
         {aiTrainingOpen && (
           <AITrainingInterface
             isOpen={aiTrainingOpen}
             onClose={() => setAiTrainingOpen(false)}
             addToConsoleLog={addToConsoleLog}
+            className="absolute inset-0 z-50"
           />
         )}
       </AnimatePresence>

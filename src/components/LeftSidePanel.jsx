@@ -6,17 +6,17 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const layers = [
-    { id: 'weather', label: 'Weather', icon: Cloud },
-    { id: 'satellite', label: 'Satellite', icon: MapPin },
-    { id: 'temperatures', label: 'Temperature', icon: Thermometer },
-    { id: 'wind', label: 'Wind', icon: Wind },
-    { id: 'precipitation', label: 'Precipitation', icon: Droplet },
-    { id: 'prediction', label: 'Prediction Hotspots', icon: MapPin },
-  ];
+  const layerIcons = {
+    radar: Cloud,
+    temperature: Thermometer,
+    precip: Droplet,
+    wind: Wind,
+    satellite: MapPin,
+    prediction: MapPin,
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -55,25 +55,28 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       </form>
       <div className="space-y-4">
         <AnimatePresence>
-          {layers.map((layer) => (
-            <motion.div
-              key={layer.id}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center justify-between"
-            >
-              <div className="flex items-center">
-                <layer.icon className="mr-2 h-5 w-5" />
-                <span>{layer.label}</span>
-              </div>
-              <Switch
-                checked={activeLayers.includes(layer.id)}
-                onCheckedChange={() => handleLayerToggle(layer.id)}
-              />
-            </motion.div>
-          ))}
+          {layers.map((layer) => {
+            const Icon = layerIcons[layer.id] || MapPin;
+            return (
+              <motion.div
+                key={layer.id}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center">
+                  <Icon className="mr-2 h-5 w-5" />
+                  <span>{layer.name}</span>
+                </div>
+                <Switch
+                  checked={activeLayers.includes(layer.id)}
+                  onCheckedChange={() => handleLayerToggle(layer.id)}
+                />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
       <div className="mt-8">

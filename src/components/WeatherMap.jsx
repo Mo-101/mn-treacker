@@ -10,7 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
+import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData, updatePredictionLayer } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -28,37 +28,48 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
 
+  const weatherLayers = [
+    { id: 'radar', name: 'Radar', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/radar/{z}/{x}/{y}/current.png' },
+    { id: 'temperature', name: 'Temperature', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/temp/{z}/{x}/{y}/current.png' },
+    { id: 'precip', name: 'Precipitation', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/precip/{z}/{x}/{y}/current.png' },
+    { id: 'wind', name: 'Wind', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/wind/{z}/{x}/{y}/current.png' },
+  ];
+
+  const fetchLayer = (layer) => {
+    const clientId = import.meta.env.VITE_AERIS_CLIENT_ID;
+    const clientSecret = import.meta.env.VITE_AERIS_CLIENT_SECRET;
+    const layerUrl = layer.url.replace('{client_id}', clientId).replace('{client_secret}', clientSecret);
+
+    if (!map.current.getSource(layer.id)) {
+      map.current.addSource(layer.id, {
+        type: 'raster',
+        tiles: [layerUrl],
+        tileSize: 256,
+      });
+
+      map.current.addLayer({
+        id: layer.id,
+        type: 'raster',
+        source: layer.id,
+        paint: { 'raster-opacity': 0.7 },
+        layout: { visibility: 'none' },
+      });
+    }
+  };
+
+  const toggleLayer = (layerId) => {
+    const layer = weatherLayers.find(l => l.id === layerId);
+    if (layer) {
+      fetchLayer(layer);
+      handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog);
+    }
+  };
+
   useEffect(() => {
     if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-      pitch: 45,
-      bearing: 0,
-      antialias: true
-    });
+    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
 
-    map.current.on('load', () => {
-      map.current.addControl(new mapboxgl.NavigationControl());
-      addCustomLayers(map.current);
-      updateMapState();
-    });
-
-    map.current.on('move', updateMapState);
-
-    map.current.on('style.load', () => {
-      map.current.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-      });
-      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-    });
-
-    return () => map.current.remove();
+    return () => map.current && map.current.remove();
   }, []);
 
   useEffect(() => {
@@ -69,7 +80,7 @@ const WeatherMap = () => {
   }, [mapState]);
 
   const addCustomLayers = (map) => {
-    // Add custom layers here, but set them to invisible by default
+    weatherLayers.forEach(layer => fetchLayer(layer));
   };
 
   const updateMapState = () => {
@@ -89,32 +100,9 @@ const WeatherMap = () => {
     });
   };
 
-  const handleLayerToggle = (layerId) => {
-    if (map.current) {
-      const updatedLayers = activeLayers.includes(layerId)
-        ? activeLayers.filter(id => id !== layerId)
-        : [...activeLayers, layerId];
-      
-      setActiveLayers(updatedLayers);
-      
-      updatedLayers.forEach(id => {
-        map.current.setLayoutProperty(id, 'visibility', 'visible');
-      });
-      
-      layers.forEach(layer => {
-        if (!updatedLayers.includes(layer.id)) {
-          map.current.setLayoutProperty(layer.id, 'visibility', 'none');
-        }
-      });
-      
-      addToConsoleLog(`Layer ${layerId} ${updatedLayers.includes(layerId) ? 'enabled' : 'disabled'}`);
-    }
-  };
-
   const handleDetailView = () => {
-    // Implement logic to focus main map on prediction details
     setPredictionPanelOpen(false);
-    // Add code to update main map view
+    // Add code to update main map view based on prediction details
   };
 
   return (
@@ -138,8 +126,9 @@ const WeatherMap = () => {
                 isOpen={leftPanelOpen} 
                 onClose={() => setLeftPanelOpen(false)}
                 activeLayers={activeLayers}
-                onLayerToggle={handleLayerToggle}
+                onLayerToggle={toggleLayer}
                 onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
+                layers={weatherLayers}
               />
             </div>
           )}

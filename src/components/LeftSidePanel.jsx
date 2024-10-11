@@ -10,11 +10,11 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
-    { id: 'temperature', label: 'Temperature' },
-    { id: 'vegetation', label: 'Vegetation' },
+    { id: 'weather', label: 'Weather' },
+    { id: 'satellite', label: 'Satellite' },
+    { id: 'temperatures', label: 'Temperature' },
+    { id: 'wind', label: 'Wind' },
     { id: 'precipitation', label: 'Precipitation' },
-    { id: 'clouds', label: 'Clouds' },
-    { id: 'radar', label: 'Radar' },
   ];
 
   const handleSearch = (e) => {

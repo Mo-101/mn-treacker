@@ -9,7 +9,6 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 import MastomysTracker from './MastomysTracker';
 import Prediction from './Prediction';
 
@@ -18,9 +17,8 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState(['radar', 'satellite', 'temperatures', 'wind-particles', 'precipitation']);
+  const [activeLayers, setActiveLayers] = useState(['weather', 'satellite', 'temperatures', 'wind', 'precipitation']);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -42,36 +40,69 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
+      fetchWeatherData();
       fetchMastomysData();
     });
 
     return () => {
-      cleanupAerisMap(aerisApp);
       if (map.current) {
         map.current.remove();
       }
     };
   }, []);
 
-  useEffect(() => {
-    if (!aerisApp.current) return;
-    
-    activeLayers.forEach(layer => {
-      toggleAerisLayer(aerisApp.current, layer, true);
-      if (aerisApp.current.map && aerisApp.current.map.layers) {
-        aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
+  const fetchWeatherData = async () => {
+    try {
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${mapState.lat}&lon=${mapState.lng}&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}&units=metric`);
+      const data = await response.json();
+      
+      if (map.current) {
+        // Add weather data as a new source
+        map.current.addSource('weather', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [data.coord.lon, data.coord.lat]
+            },
+            properties: {
+              temperature: data.main.temp,
+              description: data.weather[0].description
+            }
+          }
+        });
+
+        // Add a layer to display the weather data
+        map.current.addLayer({
+          id: 'weather',
+          type: 'symbol',
+          source: 'weather',
+          layout: {
+            'text-field': ['concat', ['to-string', ['get', 'temperature']], '°C\n', ['get', 'description']],
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 12
+          },
+          paint: {
+            'text-color': '#ffffff'
+          }
+        });
+
+        addToConsoleLog('Weather data fetched and added to map');
       }
-    });
-  }, [activeLayers, layerOpacity]);
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      addToConsoleLog('Failed to fetch weather data');
+    }
+  };
 
   const handleLayerToggle = (layer) => {
     setActiveLayers(prevLayers => {
       const newLayers = prevLayers.includes(layer)
         ? prevLayers.filter(l => l !== layer)
         : [...prevLayers, layer];
-      if (aerisApp.current) {
-        toggleAerisLayer(aerisApp.current, layer, !prevLayers.includes(layer));
+      if (map.current && map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', newLayers.includes(layer) ? 'visible' : 'none');
       }
       addToConsoleLog(`Layer ${layer} ${newLayers.includes(layer) ? 'activated' : 'deactivated'}`);
       return newLayers;
@@ -80,6 +111,11 @@ const WeatherMap = () => {
 
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
+    activeLayers.forEach(layer => {
+      if (map.current && map.current.getLayer(layer)) {
+        map.current.setPaintProperty(layer, 'raster-opacity', opacity / 100);
+      }
+    });
     addToConsoleLog(`Layer opacity changed to ${opacity}%`);
   };
 

@@ -9,6 +9,7 @@ import DataVisualizationPanel from './AITrainingComponents/DataVisualizationPane
 import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
+import BrainModel from './AITrainingComponents/BrainModel';
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -19,6 +20,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [trainingActivities, setTrainingActivities] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [knowledgeLevel, setKnowledgeLevel] = useState(0);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -42,6 +44,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
           setElapsedTime(prev => prev + 1);
           setTimeLeft(prev => Math.max(0, prev - 1));
           setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
+          setKnowledgeLevel(newProgress); // Update knowledge level as training progresses
           return newProgress;
         });
       }, 1000);
@@ -55,6 +58,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     setElapsedTime(0);
     setTimeLeft(100); // Assuming 100 seconds for training
     setTrainingActivities([]);
+    setKnowledgeLevel(0);
     addToConsoleLog('Training started');
   };
 
@@ -128,6 +132,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          <BrainModel knowledgeLevel={knowledgeLevel} />
 
           <TrainingControlsPanel 
             onStartTraining={handleStartTraining}

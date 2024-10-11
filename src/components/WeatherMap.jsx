@@ -88,7 +88,7 @@ const WeatherMap = () => {
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
         className="absolute top-0 left-0 right-0 z-50"
       />
-      <div ref={mapContainer} className="absolute inset-0 top-16" /> {/* Adjusted to start below TopNavigationBar */}
+      <div ref={mapContainer} className="absolute inset-0" />
       {aerisApp.current && aerisApp.current.map && (
         <MastomysTracker data={mastomysData} map={aerisApp.current.map} />
       )}

@@ -3,7 +3,7 @@ import WeatherMap from '../components/WeatherMap';
 
 const Index = () => {
   return (
-    <div className="w-full h-screen">
+    <div className="w-screen h-screen overflow-hidden">
       <WeatherMap />
     </div>
   );

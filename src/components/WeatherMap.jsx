@@ -11,6 +11,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 import MastomysTracker from './MastomysTracker';
+import Prediction from './Prediction';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -28,6 +29,7 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [consoleLog, setConsoleLog] = useState([]);
   const [mastomysData, setMastomysData] = useState([]);
+  const [showPrediction, setShowPrediction] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
@@ -106,6 +108,7 @@ const WeatherMap = () => {
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+        onPredictionToggle={() => setShowPrediction(!showPrediction)}
       />
       <div ref={mapContainer} className="absolute inset-0 top-16" />
       {map.current && (
@@ -140,6 +143,18 @@ const WeatherMap = () => {
             onClose={() => setAiTrainingOpen(false)}
             addToConsoleLog={addToConsoleLog}
           />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showPrediction && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="absolute inset-x-0 bottom-0 z-50"
+          >
+            <Prediction />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

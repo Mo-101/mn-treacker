@@ -7,8 +7,6 @@ const MastomysTracker = ({ data, map }) => {
   useEffect(() => {
     if (!map || data.length === 0 || markersAdded) return;
 
-    const markers = [];
-
     data.forEach((point) => {
       const el = document.createElement('div');
       el.className = 'marker';
@@ -17,25 +15,19 @@ const MastomysTracker = ({ data, map }) => {
       el.style.height = '10px';
       el.style.borderRadius = '50%';
 
-      const marker = new mapboxgl.Marker(el)
+      new mapboxgl.Marker(el)
         .setLngLat([point.lng, point.lat])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 })
             .setHTML(`<h3>Mastomys Population: ${point.population}</h3>`)
         )
         .addTo(map);
-
-      markers.push(marker);
     });
 
     setMarkersAdded(true);
-
-    return () => {
-      markers.forEach(marker => marker.remove());
-    };
   }, [map, data, markersAdded]);
 
-  return null;
+  return null; // This component doesn't render anything directly
 };
 
 export default MastomysTracker;

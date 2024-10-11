@@ -12,6 +12,7 @@ import AITrainingInterface from './AITrainingInterface';
 import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 import MastomysTracker from './MastomysTracker';
 
+// Set the Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
@@ -40,13 +41,13 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
+      initializeAerisMap(map.current, aerisApp, mapState, toast, addToConsoleLog);
       fetchMastomysData();
     });
 
     return () => {
       cleanupAerisMap(aerisApp);
-      if (map.current) map.current.remove();
+      map.current.remove();
     };
   }, []);
 
@@ -55,9 +56,7 @@ const WeatherMap = () => {
     
     activeLayers.forEach(layer => {
       toggleAerisLayer(aerisApp.current, layer, true);
-      if (aerisApp.current.map && aerisApp.current.map.layers) {
-        aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
-      }
+      aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
     });
   }, [activeLayers, layerOpacity]);
 

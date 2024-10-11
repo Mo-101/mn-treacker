@@ -27,6 +27,7 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [streamingWeatherData, setStreamingWeatherData] = useState(null);
 
   const weatherLayers = [
     { id: 'radar', name: 'Radar', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/radar/{z}/{x}/{y}/current.png' },
@@ -78,6 +79,19 @@ const WeatherMap = () => {
       fetchMastomysData(setMastomysData, addToConsoleLog);
     }
   }, [mapState]);
+
+  useEffect(() => {
+    const fetchStreamingWeatherData = () => {
+      const eventSource = new EventSource('/api/weather-data');
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        setStreamingWeatherData(data);
+      };
+      return () => eventSource.close();
+    };
+
+    fetchStreamingWeatherData();
+  }, []);
 
   const addCustomLayers = (map) => {
     weatherLayers.forEach(layer => fetchLayer(layer));
@@ -169,6 +183,13 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+        {streamingWeatherData && (
+          <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">Live Weather Data</h3>
+            <p>Temperature: {streamingWeatherData.temperature}°C</p>
+            <p>Humidity: {streamingWeatherData.humidity}%</p>
+          </div>
+        )}
       </div>
     </div>
   );

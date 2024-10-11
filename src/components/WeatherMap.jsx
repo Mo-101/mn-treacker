@@ -103,7 +103,7 @@ const WeatherMap = () => {
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
       />
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="absolute inset-0 top-16" /> {/* Adjusted to accommodate the TopNavigationBar */}
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}

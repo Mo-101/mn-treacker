@@ -9,13 +9,13 @@ import RightSidePanel from './RightSidePanel';
 import BottomPanel from './BottomPanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import { addCustomLayers, toggleLayer } from './MapLayers';
+import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2w5ODU2cjR2MDR3dTNxcXRpdG5jb3Z6dyJ9.vi2wspa-B9a9gYYWMpEm0A';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
-  const map = useRef(null);
+  const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
@@ -24,62 +24,46 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [consoleLog, setConsoleLog] = useState([]);
 
   useEffect(() => {
-    if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-    });
-
-    map.current.on('style.load', () => {
-      addCustomLayers(map.current);
-      console.log('Custom layers added');
-    });
-
-    map.current.on('move', () => {
-      const center = map.current.getCenter();
-      setMapState({
-        lng: center.lng.toFixed(4),
-        lat: center.lat.toFixed(4),
-        zoom: map.current.getZoom().toFixed(2)
-      });
-    });
+    initializeAerisMap(mapContainer.current, aerisApp, mapState, toast);
+    return () => cleanupAerisMap(aerisApp);
   }, []);
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!aerisApp.current) return;
     
-    const layers = ['temperature', 'vegetation', 'precipitation', 'clouds', 'radar'];
-    layers.forEach(layer => {
-      console.log(`Toggling layer ${layer}: ${activeLayers.includes(layer)}`);
-      toggleLayer(map.current, layer, activeLayers.includes(layer));
-      if (activeLayers.includes(layer)) {
-        map.current.setPaintProperty(layer, 'raster-opacity', layerOpacity / 100);
-      }
+    activeLayers.forEach(layer => {
+      aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
     });
   }, [activeLayers, layerOpacity]);
 
   const handleLayerToggle = (layer) => {
-    console.log(`Toggling layer: ${layer}`);
     setActiveLayers(prevLayers => {
       const newLayers = prevLayers.includes(layer)
         ? prevLayers.filter(l => l !== layer)
         : [...prevLayers, layer];
-      console.log('New active layers:', newLayers);
+      if (aerisApp.current) {
+        aerisApp.current.map.layers.toggleLayer(layer);
+      }
+      addToConsoleLog(`Layer ${layer} ${newLayers.includes(layer) ? 'activated' : 'deactivated'}`);
       return newLayers;
     });
   };
 
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
+    addToConsoleLog(`Layer opacity changed to ${opacity}%`);
   };
 
   const handleSearch = async (query) => {
-    console.log('Searching for:', query);
+    addToConsoleLog(`Searching for: ${query}`);
     // Implement search functionality here
+  };
+
+  const addToConsoleLog = (message) => {
+    setConsoleLog(prevLog => [...prevLog, `[${new Date().toLocaleTimeString()}] ${message}`]);
   };
 
   return (
@@ -110,7 +94,7 @@ const WeatherMap = () => {
             />
           )}
         </AnimatePresence>
-        <BottomPanel />
+        <BottomPanel consoleLog={consoleLog} />
       </div>
       <FloatingInsightsBar />
       <AnimatePresence>
@@ -118,6 +102,7 @@ const WeatherMap = () => {
           <AITrainingInterface
             isOpen={aiTrainingOpen}
             onClose={() => setAiTrainingOpen(false)}
+            addToConsoleLog={addToConsoleLog}
           />
         )}
       </AnimatePresence>

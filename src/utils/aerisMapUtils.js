@@ -4,10 +4,10 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast) => {
   const aeris = new AerisWeather('r8ZBl3l7eRPGBVBs3B2GD', 'e3LxlhWReUM20kV7pkCTssDcl0c99dKtJ7A93ygW');
 
   aeris.apps().then((apps) => {
-    aerisApp.current = new apps.InteractiveMapApp(mapContainer.current, {
+    aerisApp.current = new apps.InteractiveMapApp(mapContainer, {
       map: {
         strategy: 'mapbox',
-        accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g',
+        accessToken: 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2w5ODU2cjR2MDR3dTNxcXRpdG5jb3Z6dyJ9.vi2wspa-B9a9gYYWMpEm0A',
         zoom: mapState.zoom,
         center: {
           lat: mapState.lat,
@@ -85,13 +85,6 @@ export const cleanupAerisMap = (aerisApp) => {
       aerisApp.current.map.timeline.stop();
     }
     
-    // Check if removeLayers method exists before calling it
-    if (typeof aerisApp.current.map.removeLayers === 'function') {
-      aerisApp.current.map.removeLayers();
-    } else {
-      console.warn('removeLayers method not found on map object');
-    }
-
     // Remove event listeners
     if (typeof aerisApp.current.map.off === 'function') {
       aerisApp.current.map.off();

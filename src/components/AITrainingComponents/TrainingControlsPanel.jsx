@@ -2,8 +2,9 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Slider } from '../ui/slider';
 import { Card, CardContent } from '../ui/card';
+import { Progress } from '../ui/progress';
 
-const TrainingControlsPanel = () => {
+const TrainingControlsPanel = ({ onStartTraining, isTraining, trainingProgress }) => {
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
       <CardContent className="p-6">
@@ -17,7 +18,19 @@ const TrainingControlsPanel = () => {
             <label className="block mb-2">Batch Size</label>
             <Slider defaultValue={[32]} max={128} step={1} />
           </div>
-          <Button className="w-full">Start Training</Button>
+          <Button 
+            className="w-full" 
+            onClick={onStartTraining}
+            disabled={isTraining}
+          >
+            {isTraining ? 'Training...' : 'Start Training'}
+          </Button>
+          {isTraining && (
+            <div>
+              <Progress value={trainingProgress} className="mb-2" />
+              <p className="text-sm text-gray-300">Training Progress: {trainingProgress}%</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

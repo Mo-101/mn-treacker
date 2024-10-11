@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
@@ -12,9 +12,11 @@ import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import BottomConsole from './AITrainingComponents/BottomConsole';
 import HelpSection from './AITrainingComponents/HelpSection';
 
-const AITrainingInterface = ({ isOpen, onClose }) => {
+const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
   const [showHelp, setShowHelp] = useState(false);
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [isTraining, setIsTraining] = useState(false);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -22,6 +24,32 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
     { icon: Map, label: 'Visualization', section: 'visualization' },
     { icon: Settings, label: 'Settings', section: 'settings' },
   ];
+
+  useEffect(() => {
+    let interval;
+    if (isTraining) {
+      interval = setInterval(() => {
+        setTrainingProgress(prev => {
+          const newProgress = prev + 1;
+          addToConsoleLog(`Training progress: ${newProgress}%`);
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            setIsTraining(false);
+            addToConsoleLog('Training completed');
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTraining, addToConsoleLog]);
+
+  const handleStartTraining = () => {
+    setIsTraining(true);
+    setTrainingProgress(0);
+    addToConsoleLog('Training started');
+  };
 
   return (
     <motion.div
@@ -50,7 +78,7 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <DataUploadSection />
+                <DataUploadSection onUploadComplete={() => addToConsoleLog('Data upload completed')} />
               </motion.div>
             )}
 
@@ -93,7 +121,11 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
             )}
           </AnimatePresence>
 
-          <TrainingControlsPanel />
+          <TrainingControlsPanel 
+            onStartTraining={handleStartTraining}
+            isTraining={isTraining}
+            trainingProgress={trainingProgress}
+          />
         </div>
       </div>
 

@@ -80,53 +80,61 @@ const WeatherMap = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0 z-0" />
+      <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        <TopNavigationBar 
-          onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-          onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-          onPredictionToggle={() => setShowPrediction(!showPrediction)}
-          className="pointer-events-auto"
-        />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="pointer-events-auto">
+          <TopNavigationBar 
+            onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+            onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+            onPredictionToggle={() => setShowPrediction(!showPrediction)}
+          />
+        </div>
         <AnimatePresence>
           {leftPanelOpen && (
-            <LeftSidePanel 
-              isOpen={leftPanelOpen} 
-              onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
-              onLayerToggle={handleLayerToggle}
-              onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
-              className="pointer-events-auto"
-            />
+            <div className="pointer-events-auto">
+              <LeftSidePanel 
+                isOpen={leftPanelOpen} 
+                onClose={() => setLeftPanelOpen(false)}
+                activeLayers={activeLayers}
+                onLayerToggle={handleLayerToggle}
+                onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
+              />
+            </div>
           )}
         </AnimatePresence>
         <AnimatePresence>
           {rightPanelOpen && (
-            <RightSidePanel 
-              isOpen={rightPanelOpen} 
-              onClose={() => setRightPanelOpen(false)}
-              selectedPoint={selectedPoint}
-              className="pointer-events-auto"
-            />
+            <div className="pointer-events-auto">
+              <RightSidePanel 
+                isOpen={rightPanelOpen} 
+                onClose={() => setRightPanelOpen(false)}
+                selectedPoint={selectedPoint}
+              />
+            </div>
           )}
         </AnimatePresence>
-        <FloatingInsightsBar className="pointer-events-auto" />
+        <div className="pointer-events-auto">
+          <FloatingInsightsBar />
+        </div>
         <AnimatePresence>
           {aiTrainingOpen && (
-            <AITrainingInterface
-              isOpen={aiTrainingOpen}
-              onClose={() => setAiTrainingOpen(false)}
-              addToConsoleLog={addToConsoleLog}
-              className="pointer-events-auto"
-            />
+            <div className="pointer-events-auto">
+              <AITrainingInterface
+                isOpen={aiTrainingOpen}
+                onClose={() => setAiTrainingOpen(false)}
+                addToConsoleLog={addToConsoleLog}
+              />
+            </div>
           )}
         </AnimatePresence>
         <AnimatePresence>
           {showPrediction && (
-            <Prediction />
+            <div className="pointer-events-auto">
+              <Prediction />
+            </div>
           )}
         </AnimatePresence>
       </div>

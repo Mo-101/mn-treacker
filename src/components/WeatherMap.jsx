@@ -9,7 +9,7 @@ import RightSidePanel from './RightSidePanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
-import Prediction from './Prediction';
+import PredictionPanel from './PredictionPanel';
 import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -26,7 +26,7 @@ const WeatherMap = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
-  const [showPrediction, setShowPrediction] = useState(false);
+  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
@@ -35,9 +35,9 @@ const WeatherMap = () => {
       style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
-      pitch: 45, // Enable 3D view
+      pitch: 45,
       bearing: 0,
-      antialias: true // Smooth out edges of vector tiles
+      antialias: true
     });
 
     map.current.on('load', () => {
@@ -48,7 +48,6 @@ const WeatherMap = () => {
 
     map.current.on('move', updateMapState);
 
-    // Enable 3D terrain
     map.current.on('style.load', () => {
       map.current.addSource('mapbox-dem', {
         'type': 'raster-dem',
@@ -112,6 +111,12 @@ const WeatherMap = () => {
     }
   };
 
+  const handleDetailView = () => {
+    // Implement logic to focus main map on prediction details
+    setPredictionPanelOpen(false);
+    // Add code to update main map view
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
@@ -123,7 +128,7 @@ const WeatherMap = () => {
           <TopNavigationBar 
             onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
             onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-            onPredictionToggle={() => setShowPrediction(!showPrediction)}
+            onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
           />
         </div>
         <AnimatePresence>
@@ -150,6 +155,17 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+        <AnimatePresence>
+          {predictionPanelOpen && (
+            <div className="pointer-events-auto">
+              <PredictionPanel
+                isOpen={predictionPanelOpen}
+                onClose={() => setPredictionPanelOpen(false)}
+                onDetailView={handleDetailView}
+              />
+            </div>
+          )}
+        </AnimatePresence>
         <div className="pointer-events-auto">
           <FloatingInsightsBar />
         </div>
@@ -161,13 +177,6 @@ const WeatherMap = () => {
                 onClose={() => setAiTrainingOpen(false)}
                 addToConsoleLog={addToConsoleLog}
               />
-            </div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showPrediction && (
-            <div className="pointer-events-auto">
-              <Prediction />
             </div>
           )}
         </AnimatePresence>

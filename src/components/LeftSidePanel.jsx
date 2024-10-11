@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search } from 'lucide-react';
+import { X, Search, MapPin, Cloud, Thermometer, Wind, Droplet } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
@@ -10,11 +10,12 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
   const [searchQuery, setSearchQuery] = useState('');
 
   const layers = [
-    { id: 'weather', label: 'Weather' },
-    { id: 'satellite', label: 'Satellite' },
-    { id: 'temperatures', label: 'Temperature' },
-    { id: 'wind', label: 'Wind' },
-    { id: 'precipitation', label: 'Precipitation' },
+    { id: 'weather', label: 'Weather', icon: Cloud },
+    { id: 'satellite', label: 'Satellite', icon: MapPin },
+    { id: 'temperatures', label: 'Temperature', icon: Thermometer },
+    { id: 'wind', label: 'Wind', icon: Wind },
+    { id: 'precipitation', label: 'Precipitation', icon: Droplet },
+    { id: 'prediction', label: 'Prediction Hotspots', icon: MapPin },
   ];
 
   const handleSearch = (e) => {
@@ -63,7 +64,10 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               transition={{ duration: 0.2 }}
               className="flex items-center justify-between"
             >
-              <span>{layer.label}</span>
+              <div className="flex items-center">
+                <layer.icon className="mr-2 h-5 w-5" />
+                <span>{layer.label}</span>
+              </div>
               <Switch
                 checked={activeLayers.includes(layer.id)}
                 onCheckedChange={() => handleLayerToggle(layer.id)}

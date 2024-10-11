@@ -4,10 +4,12 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
   try {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Your custom Mapbox style
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
-      maxBounds: [[-30, -40], [60, 40]] // Adjusted to allow viewing the entire African continent
+      pitch: 45,
+      bearing: 0,
+      antialias: true
     });
 
     map.current.on('load', () => {
@@ -15,6 +17,17 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
       updateMapState();
     });
     map.current.on('move', updateMapState);
+
+    // Enable 3D terrain
+    map.current.on('style.load', () => {
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    });
   } catch (error) {
     console.error('Error initializing map:', error);
     toast({
@@ -49,10 +62,61 @@ export const addMapLayers = (map) => {
       'raster-opacity': 0.5
     },
     layout: {
-      visibility: 'none' // Set to 'none' by default
+      visibility: 'none'
     }
   });
-  // Add more layers as needed, all with visibility set to 'none' by default
+
+  // Add prediction layer
+  map.addSource('prediction-hotspots', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: []
+    }
+  });
+  map.addLayer({
+    id: 'prediction',
+    type: 'heatmap',
+    source: 'prediction-hotspots',
+    paint: {
+      'heatmap-weight': [
+        'interpolate',
+        ['linear'],
+        ['get', 'risk'],
+        0, 0,
+        1, 1
+      ],
+      'heatmap-intensity': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0, 1,
+        9, 3
+      ],
+      'heatmap-color': [
+        'interpolate',
+        ['linear'],
+        ['heatmap-density'],
+        0, 'rgba(0, 0, 255, 0)',
+        0.2, 'royalblue',
+        0.4, 'cyan',
+        0.6, 'lime',
+        0.8, 'yellow',
+        1, 'red'
+      ],
+      'heatmap-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0, 2,
+        9, 20
+      ],
+      'heatmap-opacity': 0.8
+    },
+    layout: {
+      visibility: 'none'
+    }
+  });
 };
 
 export const toggleLayer = (map, layerId, visible) => {
@@ -92,4 +156,22 @@ export const fetchWeatherData = (map, mapState, addToConsoleLog) => {
 export const fetchMastomysData = (setMastomysData, addToConsoleLog) => {
   // Implement Mastomys data fetching logic here
   addToConsoleLog('Fetching Mastomys data...');
+};
+
+export const updatePredictionLayer = (map, predictionData) => {
+  if (map.getSource('prediction-hotspots')) {
+    map.getSource('prediction-hotspots').setData({
+      type: 'FeatureCollection',
+      features: predictionData.map(point => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [point.lng, point.lat]
+        },
+        properties: {
+          risk: point.risk
+        }
+      }))
+    });
+  }
 };

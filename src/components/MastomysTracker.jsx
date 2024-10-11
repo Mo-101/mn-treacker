@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-const MastomysTracker = ({ data, aerisApp }) => {
+const MastomysTracker = ({ data, map }) => {
   const [isLayerAdded, setIsLayerAdded] = useState(false);
 
   useEffect(() => {
-    if (!aerisApp || !aerisApp.map || data.length === 0 || isLayerAdded) return;
-
-    const map = aerisApp.map;
+    if (!map || data.length === 0 || isLayerAdded) return;
 
     // Remove existing layers and sources
     if (map.getLayer('mastomys-heat')) map.removeLayer('mastomys-heat');
@@ -93,7 +91,7 @@ const MastomysTracker = ({ data, aerisApp }) => {
     });
 
     setIsLayerAdded(true);
-  }, [data, aerisApp, isLayerAdded]);
+  }, [data, map, isLayerAdded]);
 
   return null; // This component doesn't render anything directly
 };

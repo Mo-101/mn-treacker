@@ -40,15 +40,13 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      initializeAerisMap(map.current.getContainer(), aerisApp, mapState, toast, addToConsoleLog);
+      initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
       fetchMastomysData();
     });
 
     return () => {
       cleanupAerisMap(aerisApp);
-      if (map.current) {
-        map.current.remove();
-      }
+      if (map.current) map.current.remove();
     };
   }, []);
 

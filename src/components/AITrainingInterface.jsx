@@ -29,30 +29,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     { icon: Settings, label: 'Settings', section: 'settings' },
   ];
 
-  useEffect(() => {
-    let interval;
-    if (isTraining) {
-      interval = setInterval(() => {
-        setTrainingProgress(prev => {
-          const newProgress = prev + 1;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            setIsTraining(false);
-            addToConsoleLog('Training completed');
-            return 100;
-          }
-          setElapsedTime(prev => prev + 1);
-          setTimeLeft(prev => Math.max(0, prev - 1));
-          setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
-          setKnowledgeLevel(newProgress); // Update knowledge level as training progresses
-          return newProgress;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTraining, addToConsoleLog]);
-
-  const handleStartTraining = () => {
+  const trainModel = async () => {
     setIsTraining(true);
     setTrainingProgress(0);
     setElapsedTime(0);
@@ -60,6 +37,30 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     setTrainingActivities([]);
     setKnowledgeLevel(0);
     addToConsoleLog('Training started');
+
+    // Simulate loading dataset files
+    const datasetFiles = ['file1.json', 'file2.json', 'file3.json']; // Simulated list of files
+    for (let file of datasetFiles) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate file loading delay
+      setTrainingActivities(prev => [...prev, `Loaded dataset: ${file}`]);
+    }
+
+    // Simulate training progress
+    for (let i = 1; i <= 100; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 second delay
+      setTrainingProgress(i);
+      setElapsedTime(prev => prev + 0.5);
+      setTimeLeft(prev => Math.max(0, prev - 0.5));
+      setTrainingActivities(prev => [...prev, `Training step ${i} completed`]);
+      setKnowledgeLevel(i);
+    }
+
+    setIsTraining(false);
+    addToConsoleLog('Training completed');
+  };
+
+  const handleStartTraining = () => {
+    trainModel();
   };
 
   const handleDataUpload = () => {

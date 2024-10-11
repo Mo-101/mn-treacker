@@ -104,59 +104,65 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#0f172a] text-white">
-      <TopNavigationBar 
-        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-        onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-        onPredictionToggle={() => setShowPrediction(!showPrediction)}
-      />
+    <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}
-      <AnimatePresence>
-        {leftPanelOpen && (
-          <LeftSidePanel 
-            isOpen={leftPanelOpen} 
-            onClose={() => setLeftPanelOpen(false)}
-            activeLayers={activeLayers}
-            onLayerToggle={handleLayerToggle}
-            onOpacityChange={handleOpacityChange}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {rightPanelOpen && (
-          <RightSidePanel 
-            isOpen={rightPanelOpen} 
-            onClose={() => setRightPanelOpen(false)}
-            selectedPoint={selectedPoint}
-          />
-        )}
-      </AnimatePresence>
-      <BottomPanel consoleLog={consoleLog} />
-      <FloatingInsightsBar />
-      <AnimatePresence>
-        {aiTrainingOpen && (
-          <AITrainingInterface
-            isOpen={aiTrainingOpen}
-            onClose={() => setAiTrainingOpen(false)}
-            addToConsoleLog={addToConsoleLog}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showPrediction && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="absolute inset-x-0 bottom-0 z-50"
-          >
-            <Prediction />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="absolute inset-0 pointer-events-none">
+        <TopNavigationBar 
+          onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+          onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+          onPredictionToggle={() => setShowPrediction(!showPrediction)}
+          className="pointer-events-auto"
+        />
+        <AnimatePresence>
+          {leftPanelOpen && (
+            <LeftSidePanel 
+              isOpen={leftPanelOpen} 
+              onClose={() => setLeftPanelOpen(false)}
+              activeLayers={activeLayers}
+              onLayerToggle={handleLayerToggle}
+              onOpacityChange={handleOpacityChange}
+              className="pointer-events-auto"
+            />
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {rightPanelOpen && (
+            <RightSidePanel 
+              isOpen={rightPanelOpen} 
+              onClose={() => setRightPanelOpen(false)}
+              selectedPoint={selectedPoint}
+              className="pointer-events-auto"
+            />
+          )}
+        </AnimatePresence>
+        <BottomPanel consoleLog={consoleLog} className="pointer-events-auto" />
+        <FloatingInsightsBar className="pointer-events-auto" />
+        <AnimatePresence>
+          {aiTrainingOpen && (
+            <AITrainingInterface
+              isOpen={aiTrainingOpen}
+              onClose={() => setAiTrainingOpen(false)}
+              addToConsoleLog={addToConsoleLog}
+              className="pointer-events-auto"
+            />
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showPrediction && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="absolute inset-x-0 bottom-0 z-50 pointer-events-auto"
+            >
+              <Prediction />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

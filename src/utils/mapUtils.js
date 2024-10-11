@@ -14,7 +14,6 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
 
     map.current.on('load', () => {
       map.current.addControl(new mapboxgl.NavigationControl());
-      addCustomLayers(map.current);
       updateMapState();
     });
 
@@ -48,32 +47,13 @@ export const updateMapState = (map, setMapState) => {
   });
 };
 
-export const toggleLayer = (map, layerId, visible) => {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-  }
-};
-
-export const handleLayerToggle = (layerId, map, setActiveLayers, addToConsoleLog) => {
-  if (map) {
-    const visibility = map.getLayoutProperty(layerId, 'visibility');
-    toggleLayer(map, layerId, visibility !== 'visible');
-    setActiveLayers(prev => 
-      visibility === 'visible' 
-        ? prev.filter(id => id !== layerId)
-        : [...prev, layerId]
-    );
-    addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
-  }
-};
-
-export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity, addToConsoleLog) => {
+export const handleOpacityChange = (opacity, aerisApp, activeLayers, setLayerOpacity, addToConsoleLog) => {
   setLayerOpacity(opacity);
-  activeLayers.forEach(layerId => {
-    if (map.getLayer(layerId)) {
-      map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
-  });
+  if (aerisApp && aerisApp.map && aerisApp.map.layers) {
+    activeLayers.forEach(layerId => {
+      aerisApp.map.layers.setLayerOpacity(layerId, opacity / 100);
+    });
+  }
   addToConsoleLog(`Layer opacity set to ${opacity}%`);
 };
 

@@ -6,7 +6,7 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers, aerisMap }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layerIcons = {
@@ -26,6 +26,9 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
 
   const handleLayerToggle = (layerId) => {
     onLayerToggle(layerId);
+    if (aerisMap && aerisMap.map && aerisMap.map.layers) {
+      aerisMap.map.layers.setLayerVisibility(layerId, !activeLayers.includes(layerId));
+    }
   };
 
   return (

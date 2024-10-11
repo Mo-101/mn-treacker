@@ -34,16 +34,28 @@ const WeatherMap = () => {
   }, [toast]);
 
   useEffect(() => {
-    const map = initializeAerisMap('map-container', mapState, addToConsoleLog);
-    setAerisMap(map);
-    return () => cleanupAerisMap(map);
+    const initMap = async () => {
+      try {
+        const map = await initializeAerisMap('map-container', mapState, addToConsoleLog);
+        setAerisMap(map);
+      } catch (error) {
+        console.error('Failed to initialize AerisWeather map:', error);
+        addToConsoleLog('Failed to initialize weather map');
+      }
+    };
+    initMap();
+    return () => {
+      if (aerisMap) {
+        cleanupAerisMap(aerisMap);
+      }
+    };
   }, [mapState, addToConsoleLog]);
 
   const handleLayerToggle = useCallback((layerId) => {
     setActiveLayers(prev => 
       prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
     );
-    if (aerisMap) {
+    if (aerisMap && aerisMap.layers) {
       aerisMap.layers.setLayerVisibility(layerId, !activeLayers.includes(layerId));
     }
     addToConsoleLog(`Layer ${layerId} ${activeLayers.includes(layerId) ? 'disabled' : 'enabled'}`);
@@ -51,7 +63,7 @@ const WeatherMap = () => {
 
   const handleOpacityChange = useCallback((opacity) => {
     setLayerOpacity(opacity);
-    if (aerisMap) {
+    if (aerisMap && aerisMap.layers) {
       activeLayers.forEach(layerId => {
         aerisMap.layers.setLayerOpacity(layerId, opacity / 100);
       });
@@ -68,6 +80,15 @@ const WeatherMap = () => {
     }
     addToConsoleLog(`Highlighting high-risk area: ${highRiskArea.name}`);
   }, [aerisMap, addToConsoleLog]);
+
+  const layers = [
+    { id: 'radar', name: 'Radar' },
+    { id: 'satellite', name: 'Satellite' },
+    { id: 'temperatures', name: 'Temperature' },
+    { id: 'wind-particles', name: 'Wind' },
+    { id: 'precipitation', name: 'Precipitation' },
+    { id: 'clouds', name: 'Clouds' },
+  ];
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -91,6 +112,8 @@ const WeatherMap = () => {
           activeLayers={activeLayers}
           onLayerToggle={handleLayerToggle}
           onOpacityChange={handleOpacityChange}
+          layers={layers}
+          aerisMap={aerisMap}
         />
         <RightSidePanel 
           isOpen={rightPanelOpen} 

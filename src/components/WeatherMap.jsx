@@ -55,7 +55,6 @@ const WeatherMap = () => {
   };
 
   const addToConsoleLog = (message) => {
-    // Instead of updating a state, we can use toast for important messages
     toast({
       title: "Map Update",
       description: message,
@@ -81,11 +80,11 @@ const WeatherMap = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="absolute inset-0 z-0" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 z-10 pointer-events-none">
         <TopNavigationBar 
           onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
           onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}

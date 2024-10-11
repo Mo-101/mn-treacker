@@ -28,6 +28,7 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [streamingWeatherData, setStreamingWeatherData] = useState(null);
+  const [predictionData, setPredictionData] = useState([]);
 
   useEffect(() => {
     if (map.current) return;
@@ -77,14 +78,45 @@ const WeatherMap = () => {
     });
   };
 
-  const handleDetailView = () => {
+  const handleDetailView = (highRiskArea) => {
     setPredictionPanelOpen(false);
-    // Add code to update main map view based on prediction details
+    // Add code to highlight high-risk regions on the main map
+    if (map.current) {
+      // Example: Fly to a specific area (you'd need to determine the coordinates based on the highRiskArea)
+      map.current.flyTo({
+        center: [0, 0], // Replace with actual coordinates of the high-risk area
+        zoom: 10,
+        essential: true
+      });
+
+      // Add a highlight layer or marker for the high-risk area
+      // This is a placeholder - you'd need to implement the actual highlighting logic
+      map.current.addLayer({
+        id: 'highlight-layer',
+        type: 'fill',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[]] // Replace with actual polygon coordinates of the high-risk area
+            }
+          }
+        },
+        paint: {
+          'fill-color': '#FF0000',
+          'fill-opacity': 0.5
+        }
+      });
+    }
+    addToConsoleLog(`Highlighting high-risk area: ${highRiskArea}`);
   };
 
   const updateMapData = (newData) => {
     if (map.current) {
       updatePredictionLayer(map.current, newData);
+      setPredictionData(newData);
       addToConsoleLog('Map updated with new prediction data');
     }
   };
@@ -127,6 +159,7 @@ const WeatherMap = () => {
               isOpen={predictionPanelOpen}
               onClose={() => setPredictionPanelOpen(false)}
               onDetailView={handleDetailView}
+              predictionData={predictionData}
             />
           )}
         </AnimatePresence>

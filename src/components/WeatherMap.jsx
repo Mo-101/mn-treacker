@@ -29,43 +29,6 @@ const WeatherMap = () => {
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [streamingWeatherData, setStreamingWeatherData] = useState(null);
 
-  const weatherLayers = [
-    { id: 'radar', name: 'Radar', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/radar/{z}/{x}/{y}/current.png' },
-    { id: 'temperature', name: 'Temperature', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/temp/{z}/{x}/{y}/current.png' },
-    { id: 'precip', name: 'Precipitation', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/precip/{z}/{x}/{y}/current.png' },
-    { id: 'wind', name: 'Wind', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/wind/{z}/{x}/{y}/current.png' },
-  ];
-
-  const fetchLayer = (layer) => {
-    const clientId = import.meta.env.VITE_AERIS_CLIENT_ID;
-    const clientSecret = import.meta.env.VITE_AERIS_CLIENT_SECRET;
-    const layerUrl = layer.url.replace('{client_id}', clientId).replace('{client_secret}', clientSecret);
-
-    if (!map.current.getSource(layer.id)) {
-      map.current.addSource(layer.id, {
-        type: 'raster',
-        tiles: [layerUrl],
-        tileSize: 256,
-      });
-
-      map.current.addLayer({
-        id: layer.id,
-        type: 'raster',
-        source: layer.id,
-        paint: { 'raster-opacity': 0.7 },
-        layout: { visibility: 'none' },
-      });
-    }
-  };
-
-  const toggleLayer = (layerId) => {
-    const layer = weatherLayers.find(l => l.id === layerId);
-    if (layer) {
-      fetchLayer(layer);
-      handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog);
-    }
-  };
-
   useEffect(() => {
     if (map.current) return;
     initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
@@ -94,7 +57,7 @@ const WeatherMap = () => {
   }, []);
 
   const addCustomLayers = (map) => {
-    weatherLayers.forEach(layer => fetchLayer(layer));
+    // Implementation of addCustomLayers
   };
 
   const updateMapState = () => {
@@ -122,6 +85,7 @@ const WeatherMap = () => {
   const updateMapData = (newData) => {
     if (map.current) {
       updatePredictionLayer(map.current, newData);
+      addToConsoleLog('Map updated with new prediction data');
     }
   };
 
@@ -132,62 +96,49 @@ const WeatherMap = () => {
         <MastomysTracker data={mastomysData} map={map.current} />
       )}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="pointer-events-auto">
-          <TopNavigationBar 
-            onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-            onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-            onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
-          />
-        </div>
+        <TopNavigationBar 
+          onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+          onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+          onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
+        />
         <AnimatePresence>
           {leftPanelOpen && (
-            <div className="pointer-events-auto">
-              <LeftSidePanel 
-                isOpen={leftPanelOpen} 
-                onClose={() => setLeftPanelOpen(false)}
-                activeLayers={activeLayers}
-                onLayerToggle={toggleLayer}
-                onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
-                layers={weatherLayers}
-              />
-            </div>
+            <LeftSidePanel 
+              isOpen={leftPanelOpen} 
+              onClose={() => setLeftPanelOpen(false)}
+              activeLayers={activeLayers}
+              onLayerToggle={(layerId) => handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog)}
+              onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
+            />
           )}
         </AnimatePresence>
         <AnimatePresence>
           {rightPanelOpen && (
-            <div className="pointer-events-auto">
-              <RightSidePanel 
-                isOpen={rightPanelOpen} 
-                onClose={() => setRightPanelOpen(false)}
-                selectedPoint={selectedPoint}
-              />
-            </div>
+            <RightSidePanel 
+              isOpen={rightPanelOpen} 
+              onClose={() => setRightPanelOpen(false)}
+              selectedPoint={selectedPoint}
+            />
           )}
         </AnimatePresence>
         <AnimatePresence>
           {predictionPanelOpen && (
-            <div className="pointer-events-auto">
-              <PredictionPanel
-                isOpen={predictionPanelOpen}
-                onClose={() => setPredictionPanelOpen(false)}
-                onDetailView={handleDetailView}
-              />
-            </div>
+            <PredictionPanel
+              isOpen={predictionPanelOpen}
+              onClose={() => setPredictionPanelOpen(false)}
+              onDetailView={handleDetailView}
+            />
           )}
         </AnimatePresence>
-        <div className="pointer-events-auto">
-          <FloatingInsightsBar />
-        </div>
+        <FloatingInsightsBar />
         <AnimatePresence>
           {aiTrainingOpen && (
-            <div className="pointer-events-auto">
-              <AITrainingInterface
-                isOpen={aiTrainingOpen}
-                onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={addToConsoleLog}
-                updateMapData={updateMapData}
-              />
-            </div>
+            <AITrainingInterface
+              isOpen={aiTrainingOpen}
+              onClose={() => setAiTrainingOpen(false)}
+              addToConsoleLog={addToConsoleLog}
+              updateMapData={updateMapData}
+            />
           )}
         </AnimatePresence>
         {streamingWeatherData && (

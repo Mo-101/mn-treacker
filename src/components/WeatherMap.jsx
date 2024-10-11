@@ -30,7 +30,36 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      pitch: 45, // Enable 3D view
+      bearing: 0,
+      antialias: true // Smooth out edges of vector tiles
+    });
+
+    map.current.on('load', () => {
+      map.current.addControl(new mapboxgl.NavigationControl());
+      addCustomLayers(map.current);
+      updateMapState();
+    });
+
+    map.current.on('move', updateMapState);
+
+    // Enable 3D terrain
+    map.current.on('style.load', () => {
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    });
+
+    return () => map.current.remove();
   }, []);
 
   useEffect(() => {

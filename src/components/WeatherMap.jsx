@@ -40,13 +40,15 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      initializeAerisMap(map.current, aerisApp, mapState, toast, addToConsoleLog);
+      initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
       fetchMastomysData();
     });
 
     return () => {
       cleanupAerisMap(aerisApp);
-      map.current.remove();
+      if (map.current) {
+        map.current.remove();
+      }
     };
   }, []);
 
@@ -55,7 +57,9 @@ const WeatherMap = () => {
     
     activeLayers.forEach(layer => {
       toggleAerisLayer(aerisApp.current, layer, true);
-      aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
+      if (aerisApp.current.map && aerisApp.current.map.layers) {
+        aerisApp.current.map.layers.setLayerOpacity(layer, layerOpacity / 100);
+      }
     });
   }, [activeLayers, layerOpacity]);
 
@@ -103,7 +107,7 @@ const WeatherMap = () => {
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
       />
-      <div ref={mapContainer} className="absolute inset-0 top-16" /> {/* Adjusted to accommodate the TopNavigationBar */}
+      <div ref={mapContainer} className="absolute inset-0 top-16" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}

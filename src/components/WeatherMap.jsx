@@ -12,10 +12,12 @@ import AITrainingInterface from './AITrainingInterface';
 import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 import MastomysTracker from './MastomysTracker';
 
+// Set the Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
+  const map = useRef(null);
   const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayers, setActiveLayers] = useState([]);
@@ -29,9 +31,24 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
 
   useEffect(() => {
-    initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
-    fetchMastomysData();
-    return () => cleanupAerisMap(aerisApp);
+    if (map.current) return; // Initialize map only once
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom
+    });
+
+    map.current.on('load', () => {
+      initializeAerisMap(map.current, aerisApp, mapState, toast, addToConsoleLog);
+      fetchMastomysData();
+    });
+
+    return () => {
+      cleanupAerisMap(aerisApp);
+      map.current.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -89,8 +106,8 @@ const WeatherMap = () => {
         className="absolute top-0 left-0 right-0 z-50"
       />
       <div ref={mapContainer} className="absolute inset-0" />
-      {aerisApp.current && aerisApp.current.map && (
-        <MastomysTracker data={mastomysData} map={aerisApp.current.map} />
+      {map.current && (
+        <MastomysTracker data={mastomysData} map={map.current} />
       )}
       <AnimatePresence>
         {leftPanelOpen && (

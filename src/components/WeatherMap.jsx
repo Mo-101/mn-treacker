@@ -9,7 +9,7 @@ import PredictionPanel from './PredictionPanel';
 import AerisWeatherMap from './AerisWeatherMap';
 import WeatherControls from './WeatherControls';
 import StreamingWeatherData from './StreamingWeatherData';
-import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
+import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer, setAerisLayerOpacity } from '../utils/aerisMapUtils';
 
 const WeatherMap = () => {
   const [mapState, setMapState] = useState({ lng: 12.12890625, lat: 1.2303741774326145, zoom: 3 });
@@ -55,17 +55,17 @@ const WeatherMap = () => {
     setActiveLayers(prev => 
       prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
     );
-    if (aerisMap && aerisMap.layers) {
-      aerisMap.layers.setLayerVisibility(layerId, !activeLayers.includes(layerId));
+    if (aerisMap) {
+      toggleAerisLayer(aerisMap, layerId, !activeLayers.includes(layerId));
     }
     addToConsoleLog(`Layer ${layerId} ${activeLayers.includes(layerId) ? 'disabled' : 'enabled'}`);
   }, [activeLayers, aerisMap, addToConsoleLog]);
 
   const handleOpacityChange = useCallback((opacity) => {
     setLayerOpacity(opacity);
-    if (aerisMap && aerisMap.layers) {
+    if (aerisMap) {
       activeLayers.forEach(layerId => {
-        aerisMap.layers.setLayerOpacity(layerId, opacity / 100);
+        setAerisLayerOpacity(aerisMap, layerId, opacity);
       });
     }
     addToConsoleLog(`Layer opacity set to ${opacity}%`);

@@ -29,8 +29,14 @@ export const initializeAerisMap = (containerId, mapState, addToConsoleLog) => {
         addToConsoleLog('AerisWeather map initialized');
         resolve(map);
       });
+
+      map.on('error', (error) => {
+        addToConsoleLog(`Map initialization error: ${error.message}`);
+        reject(error);
+      });
     }).catch(error => {
       console.error('Error initializing Aeris Weather SDK:', error);
+      addToConsoleLog(`Failed to initialize Aeris Weather SDK: ${error.message}`);
       reject(error);
     });
   });

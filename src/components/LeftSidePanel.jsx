@@ -6,7 +6,7 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers, aerisMap }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const layerIcons = {
@@ -26,78 +26,70 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
 
   const handleLayerToggle = (layerId) => {
     onLayerToggle(layerId);
-    if (aerisMap && aerisMap.map && aerisMap.map.layers) {
-      aerisMap.map.layers.setLayerVisibility(layerId, !activeLayers.includes(layerId));
-    }
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '-100%' }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="fixed left-0 top-0 h-full w-64 sm:w-80 bg-[#1e293b] text-white p-4 z-30 overflow-y-auto pointer-events-auto"
-        >
-          <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
-            <X className="h-5 w-5" />
+    <motion.div
+      initial={{ x: '-100%' }}
+      animate={{ x: isOpen ? 0 : '-100%' }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      className="fixed left-0 top-0 h-full w-64 sm:w-80 bg-[#1e293b] text-white p-4 z-30 overflow-y-auto pointer-events-auto"
+    >
+      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
+        <X className="h-5 w-5" />
+      </Button>
+      <h2 className="text-xl font-bold mb-4">Map Layers</h2>
+      <form onSubmit={handleSearch} className="mb-4">
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Search for sightings..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pr-10 bg-[#0f172a] border-gray-600"
+          />
+          <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
+            <Search className="h-5 w-5" />
           </Button>
-          <h2 className="text-xl font-bold mb-4">Map Layers</h2>
-          <form onSubmit={handleSearch} className="mb-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search for sightings..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 bg-[#0f172a] border-gray-600"
-              />
-              <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
-                <Search className="h-5 w-5" />
-              </Button>
-            </div>
-          </form>
-          <div className="space-y-4">
-            <AnimatePresence>
-              {layers.map((layer) => {
-                const Icon = layerIcons[layer.id] || MapPin;
-                return (
-                  <motion.div
-                    key={layer.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center">
-                      <Icon className="mr-2 h-5 w-5" />
-                      <span>{layer.name}</span>
-                    </div>
-                    <Switch
-                      checked={activeLayers.includes(layer.id)}
-                      onCheckedChange={() => handleLayerToggle(layer.id)}
-                    />
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>
-            <Slider
-              defaultValue={[100]}
-              max={100}
-              step={1}
-              className="w-full"
-              onValueChange={(value) => onOpacityChange(value[0])}
-            />
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </form>
+      <div className="space-y-4">
+        <AnimatePresence>
+          {layers.map((layer) => {
+            const Icon = layerIcons[layer.id] || MapPin;
+            return (
+              <motion.div
+                key={layer.id}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center">
+                  <Icon className="mr-2 h-5 w-5" />
+                  <span>{layer.name}</span>
+                </div>
+                <Switch
+                  checked={activeLayers.includes(layer.id)}
+                  onCheckedChange={() => handleLayerToggle(layer.id)}
+                />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>
+        <Slider
+          defaultValue={[100]}
+          max={100}
+          step={1}
+          className="w-full"
+          onValueChange={(value) => onOpacityChange(value[0])}
+        />
+      </div>
+    </motion.div>
   );
 };
 

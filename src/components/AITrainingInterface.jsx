@@ -11,7 +11,7 @@ import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
 
-const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog, updateMapData }) => {
+const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
   const [showHelp, setShowHelp] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
@@ -39,13 +39,12 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog, updateMapData }
             clearInterval(interval);
             setIsTraining(false);
             addToConsoleLog('Training completed');
-            fetchUpdatedMapData();
             return 100;
           }
           setElapsedTime(prev => prev + 1);
           setTimeLeft(prev => Math.max(0, prev - 1));
           setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
-          setKnowledgeLevel(newProgress);
+          setKnowledgeLevel(newProgress); // Update knowledge level as training progresses
           return newProgress;
         });
       }, 1000);
@@ -57,7 +56,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog, updateMapData }
     setIsTraining(true);
     setTrainingProgress(0);
     setElapsedTime(0);
-    setTimeLeft(100);
+    setTimeLeft(100); // Assuming 100 seconds for training
     setTrainingActivities([]);
     setKnowledgeLevel(0);
     addToConsoleLog('Training started');
@@ -66,22 +65,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog, updateMapData }
   const handleDataUpload = () => {
     setDataUploaded(true);
     addToConsoleLog('Data uploaded successfully');
-  };
-
-  const fetchUpdatedMapData = async () => {
-    try {
-      const response = await fetch('/api/updated-map-data');
-      if (response.ok) {
-        const data = await response.json();
-        updateMapData(data);
-        addToConsoleLog('Map data updated with new predictions');
-      } else {
-        addToConsoleLog('Failed to fetch updated map data');
-      }
-    } catch (error) {
-      console.error('Error fetching updated map data:', error);
-      addToConsoleLog('Error updating map data');
-    }
   };
 
   return (

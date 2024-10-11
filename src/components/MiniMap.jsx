@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
-const MiniMap = ({ predictionData }) => {
+const MiniMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
@@ -16,12 +16,26 @@ const MiniMap = ({ predictionData }) => {
       zoom: 2
     });
 
+    // Add prediction hotspots (example)
     map.current.on('load', () => {
       map.current.addSource('hotspots', {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: []
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+              },
+              properties: {
+                title: 'Hotspot 1',
+                risk: 'high'
+              }
+            }
+            // Add more hotspots as needed
+          ]
         }
       });
 
@@ -45,24 +59,6 @@ const MiniMap = ({ predictionData }) => {
 
     return () => map.current.remove();
   }, []);
-
-  useEffect(() => {
-    if (map.current && map.current.isStyleLoaded() && predictionData) {
-      map.current.getSource('hotspots').setData({
-        type: 'FeatureCollection',
-        features: predictionData.map(point => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [point.lng, point.lat]
-          },
-          properties: {
-            risk: point.risk
-          }
-        }))
-      });
-    }
-  }, [predictionData]);
 
   return <div ref={mapContainer} className="w-full h-48 mb-4" />;
 };

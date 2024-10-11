@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
@@ -11,12 +11,14 @@ import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData, updatePredictionLayer } from '../utils/mapUtils';
+import { initializeAerisMap, cleanupAerisMap, toggleAerisLayer } from '../utils/aerisMapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const aerisApp = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
@@ -30,38 +32,71 @@ const WeatherMap = () => {
   const [streamingWeatherData, setStreamingWeatherData] = useState(null);
   const [predictionData, setPredictionData] = useState([]);
 
+  const addToConsoleLog = useCallback((message) => {
+    console.log(message);
+    toast({
+      title: "Map Update",
+      description: message,
+    });
+  }, [toast]);
+
+  const addCustomLayers = useCallback((map) => {
+    const layers = [
+      { id: 'radar', name: 'Radar' },
+      { id: 'satellite', name: 'Satellite' },
+      { id: 'temperatures', name: 'Temperature' },
+      { id: 'wind-particles', name: 'Wind' },
+      { id: 'precipitation', name: 'Precipitation' },
+      { id: 'clouds', name: 'Clouds' },
+    ];
+
+    layers.forEach(layer => {
+      if (!map.getLayer(layer.id)) {
+        map.addLayer({
+          id: layer.id,
+          type: 'raster',
+          source: {
+            type: 'raster',
+            tiles: [`https://maps.aerisapi.com/${import.meta.env.VITE_XWEATHER_ID}_${import.meta.env.VITE_XWEATHER_SECRET}/${layer.id}/{z}/{x}/{y}/current.png`],
+            tileSize: 256,
+          },
+          layout: { visibility: 'none' },
+        });
+      }
+    });
+
+    addToConsoleLog('Custom layers added successfully');
+  }, [addToConsoleLog]);
+
   useEffect(() => {
     if (map.current) return;
     initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
+    initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
 
-    return () => map.current && map.current.remove();
-  }, []);
+    return () => {
+      if (map.current) map.current.remove();
+      cleanupAerisMap(aerisApp);
+    };
+  }, [mapState, addCustomLayers, addToConsoleLog, toast]);
 
   useEffect(() => {
     if (map.current) {
       fetchWeatherData(map.current, mapState, addToConsoleLog);
       fetchMastomysData(setMastomysData, addToConsoleLog);
     }
-  }, [mapState]);
+  }, [mapState, addToConsoleLog]);
 
   useEffect(() => {
-    const fetchStreamingWeatherData = () => {
-      const eventSource = new EventSource('/api/weather-data');
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        setStreamingWeatherData(data);
-      };
-      return () => eventSource.close();
+    const eventSource = new EventSource('/api/weather-data');
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setStreamingWeatherData(data);
+      addToConsoleLog('Received new weather data');
     };
+    return () => eventSource.close();
+  }, [addToConsoleLog]);
 
-    fetchStreamingWeatherData();
-  }, []);
-
-  const addCustomLayers = (map) => {
-    // Implementation of addCustomLayers
-  };
-
-  const updateMapState = () => {
+  const updateMapState = useCallback(() => {
     if (!map.current) return;
     const center = map.current.getCenter();
     setMapState({
@@ -69,53 +104,67 @@ const WeatherMap = () => {
       lat: center.lat.toFixed(4),
       zoom: map.current.getZoom().toFixed(2)
     });
-  };
+    addToConsoleLog('Map state updated');
+  }, [addToConsoleLog]);
 
-  const addToConsoleLog = (message) => {
-    toast({
-      title: "Map Update",
-      description: message,
-    });
-  };
-
-  const handleDetailView = (highRiskArea) => {
+  const handleDetailView = useCallback((highRiskArea) => {
     setPredictionPanelOpen(false);
     if (map.current) {
       map.current.flyTo({
-        center: [0, 0], // Replace with actual coordinates of the high-risk area
+        center: highRiskArea.center,
         zoom: 10,
         essential: true
+      });
+
+      if (map.current.getLayer('highlight-layer')) {
+        map.current.removeLayer('highlight-layer');
+      }
+      if (map.current.getSource('highlight-source')) {
+        map.current.removeSource('highlight-source');
+      }
+
+      map.current.addSource('highlight-source', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: highRiskArea.geometry
+        }
       });
 
       map.current.addLayer({
         id: 'highlight-layer',
         type: 'fill',
-        source: {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'Polygon',
-              coordinates: [[]] // Replace with actual polygon coordinates of the high-risk area
-            }
-          }
-        },
+        source: 'highlight-source',
         paint: {
           'fill-color': '#FF0000',
           'fill-opacity': 0.5
         }
       });
     }
-    addToConsoleLog(`Highlighting high-risk area: ${highRiskArea}`);
-  };
+    addToConsoleLog(`Highlighting high-risk area: ${highRiskArea.name}`);
+  }, [addToConsoleLog]);
 
-  const updateMapData = (newData) => {
+  const updateMapData = useCallback((newData) => {
     if (map.current) {
       updatePredictionLayer(map.current, newData);
       setPredictionData(newData);
       addToConsoleLog('Map updated with new prediction data');
     }
-  };
+  }, [addToConsoleLog]);
+
+  const handleLayerToggleWrapper = useCallback((layerId) => {
+    handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog);
+    toggleAerisLayer(aerisApp.current, layerId, !activeLayers.includes(layerId));
+  }, [activeLayers, addToConsoleLog]);
+
+  const handleOpacityChangeWrapper = useCallback((opacity) => {
+    handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog);
+    if (aerisApp.current && aerisApp.current.map && aerisApp.current.map.layers) {
+      activeLayers.forEach(layerId => {
+        aerisApp.current.map.layers.setLayerOpacity(layerId, opacity / 100);
+      });
+    }
+  }, [activeLayers, addToConsoleLog]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -135,8 +184,8 @@ const WeatherMap = () => {
               isOpen={leftPanelOpen} 
               onClose={() => setLeftPanelOpen(false)}
               activeLayers={activeLayers}
-              onLayerToggle={(layerId) => handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog)}
-              onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
+              onLayerToggle={handleLayerToggleWrapper}
+              onOpacityChange={handleOpacityChangeWrapper}
             />
           )}
         </AnimatePresence>
@@ -175,6 +224,7 @@ const WeatherMap = () => {
             <h3 className="text-lg font-semibold mb-2">Live Weather Data</h3>
             <p>Temperature: {streamingWeatherData.temperature}°C</p>
             <p>Humidity: {streamingWeatherData.humidity}%</p>
+            <p>Wind Speed: {streamingWeatherData.windSpeed} km/h</p>
           </div>
         )}
       </div>

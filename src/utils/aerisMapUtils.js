@@ -24,14 +24,7 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast, addT
         temperatures: { zIndex: 3 },
         'wind-particles': { zIndex: 4 },
         precipitation: { zIndex: 5 },
-        'radar-forecast': { zIndex: 6 },
-        'temperatures-forecast': { zIndex: 7 },
-        'precipitation-forecast': { zIndex: 8 },
-        'wind-forecast': { zIndex: 9 },
-        'pressure-forecast': { zIndex: 10 },
-        'humidity-forecast': { zIndex: 11 },
-        'dewpoint-forecast': { zIndex: 12 },
-        'cloudcover-forecast': { zIndex: 13 }
+        clouds: { zIndex: 6 },
       },
       panels: {
         layers: { enabled: false },
@@ -57,7 +50,7 @@ export const initializeAerisMap = (mapContainer, aerisApp, mapState, toast, addT
     });
 
     aerisApp.current.on('ready', () => {
-      console.log('Map is ready');
+      console.log('AerisWeather map is ready');
       addToConsoleLog('AerisWeather map initialized');
       setupMapInteractions(aerisApp.current, addToConsoleLog);
     });
@@ -121,8 +114,8 @@ export const cleanupAerisMap = (aerisApp) => {
 export const toggleAerisLayer = (app, layerId, visible) => {
   if (app && app.map && app.map.layers) {
     app.map.layers.setLayerVisibility(layerId, visible);
-    console.log(`Layer ${layerId} visibility set to ${visible}`);
+    console.log(`AerisWeather layer ${layerId} visibility set to ${visible}`);
   } else {
-    console.warn(`Unable to toggle layer ${layerId}. Map or layers not initialized.`);
+    console.warn(`Unable to toggle AerisWeather layer ${layerId}. Map or layers not initialized.`);
   }
 };

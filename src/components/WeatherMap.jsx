@@ -36,7 +36,7 @@ const WeatherMap = () => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/dark-v10',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });
@@ -110,7 +110,7 @@ const WeatherMap = () => {
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
         onPredictionToggle={() => setShowPrediction(!showPrediction)}
       />
-      <div ref={mapContainer} className="absolute inset-0 top-16" />
+      <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />
       )}

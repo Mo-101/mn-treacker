@@ -80,17 +80,13 @@ const WeatherMap = () => {
 
   const handleDetailView = (highRiskArea) => {
     setPredictionPanelOpen(false);
-    // Add code to highlight high-risk regions on the main map
     if (map.current) {
-      // Example: Fly to a specific area (you'd need to determine the coordinates based on the highRiskArea)
       map.current.flyTo({
         center: [0, 0], // Replace with actual coordinates of the high-risk area
         zoom: 10,
         essential: true
       });
 
-      // Add a highlight layer or marker for the high-risk area
-      // This is a placeholder - you'd need to implement the actual highlighting logic
       map.current.addLayer({
         id: 'highlight-layer',
         type: 'fill',
@@ -122,7 +118,7 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
         <MastomysTracker data={mastomysData} map={map.current} />

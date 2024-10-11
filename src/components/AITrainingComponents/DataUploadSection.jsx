@@ -7,19 +7,37 @@ import { Card, CardContent } from '../ui/card';
 
 const DataUploadSection = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  const simulateUpload = () => {
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          onUploadComplete();
-          return 100;
-        }
-        return prev + 10;
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const uploadFile = async () => {
+    if (!selectedFile) {
+      alert('Please select a file first!');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
       });
-    }, 500);
+
+      if (response.ok) {
+        onUploadComplete();
+        alert('File uploaded successfully!');
+      } else {
+        alert('File upload failed.');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('An error occurred while uploading the file.');
+    }
   };
 
   return (
@@ -28,23 +46,12 @@ const DataUploadSection = ({ onUploadComplete }) => {
         <h2 className="text-2xl font-bold mb-4">Data Upload</h2>
         <div className="space-y-4">
           <div>
-            <Input placeholder="Enter data source URL" className="mb-2" />
-            <Button onClick={simulateUpload} className="w-full">
-              <Link className="h-4 w-4 mr-2" />
-              Upload from URL
-            </Button>
-          </div>
-          <div>
-            <Input type="file" className="mb-2" />
-            <Button onClick={simulateUpload} className="w-full">
+            <Input type="file" onChange={handleFileChange} className="mb-2" />
+            <Button onClick={uploadFile} className="w-full">
               <Upload className="h-4 w-4 mr-2" />
-              Upload Local Files
+              Upload Data
             </Button>
           </div>
-          <Button onClick={simulateUpload} className="w-full">
-            <Database className="h-4 w-4 mr-2" />
-            Connect to API
-          </Button>
           {uploadProgress > 0 && (
             <div>
               <Progress value={uploadProgress} className="mb-2" />

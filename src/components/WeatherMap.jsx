@@ -119,6 +119,12 @@ const WeatherMap = () => {
     // Add code to update main map view based on prediction details
   };
 
+  const updateMapData = (newData) => {
+    if (map.current) {
+      updatePredictionLayer(map.current, newData);
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
@@ -179,6 +185,7 @@ const WeatherMap = () => {
                 isOpen={aiTrainingOpen}
                 onClose={() => setAiTrainingOpen(false)}
                 addToConsoleLog={addToConsoleLog}
+                updateMapData={updateMapData}
               />
             </div>
           )}

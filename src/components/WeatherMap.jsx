@@ -89,7 +89,7 @@ const WeatherMap = () => {
       />
       <div className="flex-grow relative">
         <div ref={mapContainer} className="absolute inset-0" />
-        <MastomysTracker data={mastomysData} />
+        <MastomysTracker data={mastomysData} aerisApp={aerisApp} />
         <AnimatePresence>
           {leftPanelOpen && (
             <LeftSidePanel 

@@ -1,19 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect } from 'react';
 
-const MastomysTracker = ({ data }) => {
-  const mapRef = useRef(null);
-
+const MastomysTracker = ({ data, aerisApp }) => {
   useEffect(() => {
-    if (!mapRef.current || data.length === 0) return;
+    if (!aerisApp.current || data.length === 0) return;
 
-    const map = mapRef.current.getMap();
+    const map = aerisApp.current.map;
 
     // Remove existing layers and sources
-    if (map.getLayer('mastomys-heat')) map.removeLayer('mastomys-heat');
-    if (map.getLayer('mastomys-point')) map.removeLayer('mastomys-point');
-    if (map.getSource('mastomys')) map.removeSource('mastomys');
+    if (map.hasLayer('mastomys-heat')) map.removeLayer('mastomys-heat');
+    if (map.hasLayer('mastomys-point')) map.removeLayer('mastomys-point');
+    if (map.hasSource('mastomys')) map.removeSource('mastomys');
 
     // Add new source and layers
     map.addSource('mastomys', {
@@ -94,7 +90,7 @@ const MastomysTracker = ({ data }) => {
       }
     });
 
-  }, [data]);
+  }, [data, aerisApp]);
 
   return null; // This component doesn't render anything directly
 };

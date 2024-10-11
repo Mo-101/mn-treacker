@@ -2,6 +2,12 @@ import React from 'react';
 import { Button } from './ui/button';
 import { Layers, Settings, Clock, Brain, ChartBar } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 const AnimatedIcon = ({ children }) => (
   <motion.div
@@ -19,33 +25,74 @@ const TopNavigationBar = ({ onLayerToggle, onAITrainingToggle, onPredictionToggl
         <img src="/wizard-logo.png" alt="Wizard Logo" className="h-8 w-8" />
         <h1 className="text-lg font-bold text-yellow-400">Mastomys Habitat & Risk Assessment</h1>
       </div>
-      <div className="flex space-x-2">
-        <Button variant="ghost" size="sm" onClick={onLayerToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
-          <AnimatedIcon>
-            <Layers className="h-4 w-4 text-yellow-400" />
-          </AnimatedIcon>
-        </Button>
-        <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
-          <AnimatedIcon>
-            <Clock className="h-4 w-4 text-yellow-400" />
-          </AnimatedIcon>
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onAITrainingToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
-          <AnimatedIcon>
-            <Brain className="h-4 w-4 text-yellow-400" />
-          </AnimatedIcon>
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onPredictionToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
-          <AnimatedIcon>
-            <ChartBar className="h-4 w-4 text-yellow-400" />
-          </AnimatedIcon>
-        </Button>
-        <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
-          <AnimatedIcon>
-            <Settings className="h-4 w-4 text-yellow-400" />
-          </AnimatedIcon>
-        </Button>
-      </div>
+      <TooltipProvider>
+        <div className="flex space-x-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onLayerToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
+                <AnimatedIcon>
+                  <Layers className="h-4 w-4 text-yellow-400" />
+                </AnimatedIcon>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Toggle Layers</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
+                <AnimatedIcon>
+                  <Clock className="h-4 w-4 text-yellow-400" />
+                </AnimatedIcon>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Time Controls</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onAITrainingToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
+                <AnimatedIcon>
+                  <Brain className="h-4 w-4 text-yellow-400" />
+                </AnimatedIcon>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>AI Training</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onPredictionToggle} className="hover:bg-yellow-400 hover:text-black transition-colors">
+                <AnimatedIcon>
+                  <ChartBar className="h-4 w-4 text-yellow-400" />
+                </AnimatedIcon>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Predictions</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="hover:bg-yellow-400 hover:text-black transition-colors">
+                <AnimatedIcon>
+                  <Settings className="h-4 w-4 text-yellow-400" />
+                </AnimatedIcon>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Settings</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
     </div>
   );
 };

@@ -110,78 +110,78 @@ const WeatherMap = () => {
     // Add code to update main map view based on prediction details
   };
 
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" id="aeris-map" />
-      {aerisMap.current && (
-        <MastomysTracker data={mastomysData} map={aerisMap.current} />
-      )}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="pointer-events-auto">
-          <TopNavigationBar 
-            onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-            onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-            onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
-          />
-        </div>
-        <AnimatePresence>
-          {leftPanelOpen && (
-            <div className="pointer-events-auto">
-              <LeftSidePanel 
-                isOpen={leftPanelOpen} 
-                onClose={() => setLeftPanelOpen(false)}
-              >
-                <LayerControls
-                  layers={weatherLayers}
-                  activeLayers={activeLayers}
-                  setActiveLayers={setActiveLayers}
-                  layerOpacity={layerOpacity}
-                  setLayerOpacity={setLayerOpacity}
-                  onLayerToggle={toggleAerisLayer}
-                  onOpacityChange={setAerisLayerOpacity}
+    <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex-shrink-0">
+        <TopNavigationBar 
+          onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+          onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+          onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
+        />
+      </div>
+      
+      <div className="flex-grow relative overflow-hidden">
+        <div ref={mapContainer} className="absolute inset-0" id="aeris-map" />
+        {aerisMap.current && (
+          <MastomysTracker data={mastomysData} map={aerisMap.current} />
+        )}
+        
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="pointer-events-auto">
+            <AnimatePresence>
+              {leftPanelOpen && (
+                <LeftSidePanel 
+                  isOpen={leftPanelOpen} 
+                  onClose={() => setLeftPanelOpen(false)}
+                >
+                  <LayerControls
+                    layers={weatherLayers}
+                    activeLayers={activeLayers}
+                    setActiveLayers={setActiveLayers}
+                    layerOpacity={layerOpacity}
+                    setLayerOpacity={setLayerOpacity}
+                    onLayerToggle={toggleAerisLayer}
+                    onOpacityChange={setAerisLayerOpacity}
+                  />
+                </LeftSidePanel>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {rightPanelOpen && (
+                <RightSidePanel 
+                  isOpen={rightPanelOpen} 
+                  onClose={() => setRightPanelOpen(false)}
+                  selectedPoint={selectedPoint}
                 />
-              </LeftSidePanel>
-            </div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {rightPanelOpen && (
-            <div className="pointer-events-auto">
-              <RightSidePanel 
-                isOpen={rightPanelOpen} 
-                onClose={() => setRightPanelOpen(false)}
-                selectedPoint={selectedPoint}
-              />
-            </div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {predictionPanelOpen && (
-            <div className="pointer-events-auto">
-              <PredictionPanel
-                isOpen={predictionPanelOpen}
-                onClose={() => setPredictionPanelOpen(false)}
-                onDetailView={handleDetailView}
-              />
-            </div>
-          )}
-        </AnimatePresence>
-        <div className="pointer-events-auto">
-          <FloatingInsightsBar />
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {predictionPanelOpen && (
+                <PredictionPanel
+                  isOpen={predictionPanelOpen}
+                  onClose={() => setPredictionPanelOpen(false)}
+                  onDetailView={handleDetailView}
+                />
+              )}
+            </AnimatePresence>
+            <FloatingInsightsBar />
+            <AnimatePresence>
+              {aiTrainingOpen && (
+                <AITrainingInterface
+                  isOpen={aiTrainingOpen}
+                  onClose={() => setAiTrainingOpen(false)}
+                  addToConsoleLog={addToConsoleLog}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-        <AnimatePresence>
-          {aiTrainingOpen && (
-            <div className="pointer-events-auto">
-              <AITrainingInterface
-                isOpen={aiTrainingOpen}
-                onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={addToConsoleLog}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+      </div>
+      
+      <div className="flex-shrink-0">
         {streamingWeatherData && (
-          <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg">
+          <div className="bg-white p-4 shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Live Weather Data</h3>
             <p>Temperature: {streamingWeatherData.temperature}°C</p>
             <p>Humidity: {streamingWeatherData.humidity}%</p>

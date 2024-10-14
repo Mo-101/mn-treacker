@@ -1,12 +1,11 @@
 import React from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
-import { toggleAerisLayer, setAerisLayerOpacity } from '../utils/aerisWeatherApi';
 
-const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity }) => {
+const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
   const handleLayerToggle = async (layerId) => {
     const isEnabled = !activeLayers.includes(layerId);
-    const result = await toggleAerisLayer(layerId, isEnabled);
+    const result = await onLayerToggle(layerId, isEnabled);
     if (result.success) {
       setActiveLayers(prev => 
         isEnabled ? [...prev, layerId] : prev.filter(id => id !== layerId)
@@ -19,7 +18,7 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
   const handleOpacityChange = async (opacity) => {
     setLayerOpacity(opacity);
     for (const layerId of activeLayers) {
-      const result = await setAerisLayerOpacity(layerId, opacity / 100);
+      const result = await onOpacityChange(layerId, opacity / 100);
       if (!result.success) {
         console.error(`Failed to set opacity for ${layerId} layer:`, result.error);
       }

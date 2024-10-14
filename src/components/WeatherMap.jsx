@@ -9,7 +9,7 @@ import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import LayerControls from './LayerControls';
-import { initializeAerisMap } from '../utils/aerisWeatherApi';
+import { initializeAerisMap, toggleAerisLayer, setAerisLayerOpacity } from '../utils/aerisWeatherApi';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -30,9 +30,8 @@ const WeatherMap = () => {
     { id: 'radar', name: 'Radar' },
     { id: 'satellite', name: 'Satellite' },
     { id: 'temperatures', name: 'Temperature' },
-    { id: 'wind-particles', name: 'Wind' },
+    { id: 'wind', name: 'Wind' },
     { id: 'precipitation', name: 'Precipitation' },
-    { id: 'clouds', name: 'Clouds' },
   ];
 
   useEffect(() => {
@@ -138,6 +137,8 @@ const WeatherMap = () => {
                   setActiveLayers={setActiveLayers}
                   layerOpacity={layerOpacity}
                   setLayerOpacity={setLayerOpacity}
+                  onLayerToggle={toggleAerisLayer}
+                  onOpacityChange={setAerisLayerOpacity}
                 />
               </LeftSidePanel>
             </div>

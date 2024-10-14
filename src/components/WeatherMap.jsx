@@ -30,41 +30,13 @@ const WeatherMap = () => {
   const [streamingWeatherData, setStreamingWeatherData] = useState(null);
 
   const weatherLayers = [
-    { id: 'radar', name: 'Radar', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/radar/{z}/{x}/{y}/current.png' },
-    { id: 'temperature', name: 'Temperature', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/temp/{z}/{x}/{y}/current.png' },
-    { id: 'precip', name: 'Precipitation', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/precip/{z}/{x}/{y}/current.png' },
-    { id: 'wind', name: 'Wind', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/wind/{z}/{x}/{y}/current.png' },
+    { id: 'radar', name: 'Radar' },
+    { id: 'satellite', name: 'Satellite' },
+    { id: 'temperatures', name: 'Temperature' },
+    { id: 'wind-particles', name: 'Wind' },
+    { id: 'precipitation', name: 'Precipitation' },
+    { id: 'clouds', name: 'Clouds' },
   ];
-
-  const fetchLayer = (layer) => {
-    const clientId = import.meta.env.VITE_AERIS_CLIENT_ID;
-    const clientSecret = import.meta.env.VITE_AERIS_CLIENT_SECRET;
-    const layerUrl = layer.url.replace('{client_id}', clientId).replace('{client_secret}', clientSecret);
-
-    if (!map.current.getSource(layer.id)) {
-      map.current.addSource(layer.id, {
-        type: 'raster',
-        tiles: [layerUrl],
-        tileSize: 256,
-      });
-
-      map.current.addLayer({
-        id: layer.id,
-        type: 'raster',
-        source: layer.id,
-        paint: { 'raster-opacity': 0.7 },
-        layout: { visibility: 'none' },
-      });
-    }
-  };
-
-  const toggleLayer = (layerId) => {
-    const layer = weatherLayers.find(l => l.id === layerId);
-    if (layer) {
-      fetchLayer(layer);
-      handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog);
-    }
-  };
 
   useEffect(() => {
     if (map.current) return;
@@ -94,7 +66,39 @@ const WeatherMap = () => {
   }, []);
 
   const addCustomLayers = (map) => {
-    weatherLayers.forEach(layer => fetchLayer(layer));
+    weatherLayers.forEach(layer => {
+      if (!map.getSource(layer.id)) {
+        map.addSource(layer.id, {
+          type: 'raster',
+          tiles: [`https://maps.aerisapi.com/${import.meta.env.VITE_XWEATHER_ID}_${import.meta.env.VITE_XWEATHER_SECRET}/${layer.id}/{z}/{x}/{y}/current.png`],
+          tileSize: 256,
+        });
+        map.addLayer({
+          id: layer.id,
+          type: 'raster',
+          source: layer.id,
+          layout: { visibility: 'none' },
+          paint: { 'raster-opacity': 0.7 },
+        });
+      }
+    });
+  };
+
+  const toggleLayer = (layerId) => {
+    if (map.current) {
+      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+      map.current.setLayoutProperty(
+        layerId,
+        'visibility',
+        visibility === 'visible' ? 'none' : 'visible'
+      );
+      setActiveLayers(prev => 
+        visibility === 'visible' 
+          ? prev.filter(id => id !== layerId)
+          : [...prev, layerId]
+      );
+      addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
+    }
   };
 
   const updateMapState = () => {

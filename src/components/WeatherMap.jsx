@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
@@ -8,13 +10,14 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { initializeAerisWeather, toggleAerisLayer, setAerisLayerOpacity, toggleAerisAnimation } from '../utils/aerisWeatherUtils';
-import { fetchMastomysData } from '../utils/mapUtils';
+import { initializeMap, handleLayerToggle, handleOpacityChange, fetchWeatherData, fetchMastomysData, updatePredictionLayer } from '../utils/mapUtils';
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
-  const aerisMap = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 5.625, lat: 8.2332, zoom: 4 });
+  const map = useRef(null);
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
   const [activeLayers, setActiveLayers] = useState([]);
   const [layerOpacity, setLayerOpacity] = useState(100);
   const { toast } = useToast();
@@ -24,67 +27,84 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [streamingWeatherData, setStreamingWeatherData] = useState(null);
 
   const weatherLayers = [
-    { id: 'fradar-hrrr', name: 'Radar' },
-    { id: 'temperatures', name: 'Temperature' },
-    { id: 'humidity-rtma', name: 'Humidity' },
-    { id: 'satellite-infrared-color', name: 'Satellite' },
+    { id: 'radar', name: 'Radar', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/radar/{z}/{x}/{y}/current.png' },
+    { id: 'temperature', name: 'Temperature', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/temp/{z}/{x}/{y}/current.png' },
+    { id: 'precip', name: 'Precipitation', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/precip/{z}/{x}/{y}/current.png' },
+    { id: 'wind', name: 'Wind', url: 'https://maps.aerisapi.com/{client_id}_{client_secret}/wind/{z}/{x}/{y}/current.png' },
   ];
 
-  useEffect(() => {
-    initializeAerisWeather(
-      mapContainer.current,
-      mapState,
-      () => {
-        addToConsoleLog('AerisWeather map initialized');
-        fetchMastomysData(setMastomysData, addToConsoleLog);
-      },
-      (error) => {
-        console.error('Error initializing Aeris Weather SDK:', error);
-        toast({
-          title: "Error",
-          description: "Failed to initialize weather map. Please try again later.",
-          variant: "destructive",
-        });
-      }
-    ).then(map => {
-      aerisMap.current = map;
-    });
+  const fetchLayer = (layer) => {
+    const clientId = import.meta.env.VITE_AERIS_CLIENT_ID;
+    const clientSecret = import.meta.env.VITE_AERIS_CLIENT_SECRET;
+    const layerUrl = layer.url.replace('{client_id}', clientId).replace('{client_secret}', clientSecret);
 
-    return () => {
-      if (aerisMap.current) {
-        aerisMap.current.destroy();
-      }
-    };
-  }, []);
+    if (!map.current.getSource(layer.id)) {
+      map.current.addSource(layer.id, {
+        type: 'raster',
+        tiles: [layerUrl],
+        tileSize: 256,
+      });
+
+      map.current.addLayer({
+        id: layer.id,
+        type: 'raster',
+        source: layer.id,
+        paint: { 'raster-opacity': 0.7 },
+        layout: { visibility: 'none' },
+      });
+    }
+  };
 
   const toggleLayer = (layerId) => {
-    if (aerisMap.current) {
-      const isVisible = !activeLayers.includes(layerId);
-      toggleAerisLayer(aerisMap.current, layerId, isVisible);
-      setActiveLayers(prev => 
-        isVisible ? [...prev, layerId] : prev.filter(id => id !== layerId)
-      );
-      addToConsoleLog(`Layer ${layerId} ${isVisible ? 'enabled' : 'disabled'}`);
+    const layer = weatherLayers.find(l => l.id === layerId);
+    if (layer) {
+      fetchLayer(layer);
+      handleLayerToggle(layerId, map.current, setActiveLayers, addToConsoleLog);
     }
   };
 
-  const handleOpacityChange = (opacity) => {
-    setLayerOpacity(opacity);
-    activeLayers.forEach(layerId => {
-      setAerisLayerOpacity(aerisMap.current, layerId, opacity);
+  useEffect(() => {
+    if (map.current) return;
+    initializeMap(mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast);
+
+    return () => map.current && map.current.remove();
+  }, []);
+
+  useEffect(() => {
+    if (map.current) {
+      fetchWeatherData(map.current, mapState, addToConsoleLog);
+      fetchMastomysData(setMastomysData, addToConsoleLog);
+    }
+  }, [mapState]);
+
+  useEffect(() => {
+    const fetchStreamingWeatherData = () => {
+      const eventSource = new EventSource('/api/weather-data');
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        setStreamingWeatherData(data);
+      };
+      return () => eventSource.close();
+    };
+
+    fetchStreamingWeatherData();
+  }, []);
+
+  const addCustomLayers = (map) => {
+    weatherLayers.forEach(layer => fetchLayer(layer));
+  };
+
+  const updateMapState = () => {
+    if (!map.current) return;
+    const center = map.current.getCenter();
+    setMapState({
+      lng: center.lng.toFixed(4),
+      lat: center.lat.toFixed(4),
+      zoom: map.current.getZoom().toFixed(2)
     });
-    addToConsoleLog(`Layer opacity set to ${opacity}%`);
-  };
-
-  const toggleAnimation = () => {
-    if (aerisMap.current) {
-      toggleAerisAnimation(aerisMap.current);
-      setIsAnimating(prev => !prev);
-      addToConsoleLog(`Animation ${isAnimating ? 'stopped' : 'started'}`);
-    }
   };
 
   const addToConsoleLog = (message) => {
@@ -102,6 +122,9 @@ const WeatherMap = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
+      {map.current && (
+        <MastomysTracker data={mastomysData} map={map.current} />
+      )}
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">
           <TopNavigationBar 
@@ -118,7 +141,7 @@ const WeatherMap = () => {
                 onClose={() => setLeftPanelOpen(false)}
                 activeLayers={activeLayers}
                 onLayerToggle={toggleLayer}
-                onOpacityChange={handleOpacityChange}
+                onOpacityChange={(opacity) => handleOpacityChange(opacity, map.current, activeLayers, setLayerOpacity, addToConsoleLog)}
                 layers={weatherLayers}
               />
             </div>
@@ -160,11 +183,13 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
-        <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg pointer-events-auto">
-          <button onClick={toggleAnimation} className="px-4 py-2 bg-blue-500 text-white rounded">
-            {isAnimating ? 'Stop' : 'Play'} Animation
-          </button>
-        </div>
+        {streamingWeatherData && (
+          <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">Live Weather Data</h3>
+            <p>Temperature: {streamingWeatherData.temperature}°C</p>
+            <p>Humidity: {streamingWeatherData.humidity}%</p>
+          </div>
+        )}
       </div>
     </div>
   );

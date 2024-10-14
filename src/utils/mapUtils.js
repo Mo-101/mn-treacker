@@ -1,3 +1,96 @@
+import mapboxgl from 'mapbox-gl';
+
+export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
+  try {
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      pitch: 45,
+      bearing: 0,
+      antialias: true
+    });
+
+    map.current.on('load', () => {
+      map.current.addControl(new mapboxgl.NavigationControl());
+      addCustomLayers(map.current);
+      updateMapState();
+    });
+
+    map.current.on('move', updateMapState);
+
+    map.current.on('style.load', () => {
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    });
+  } catch (error) {
+    console.error('Error initializing map:', error);
+    toast({
+      title: "Error",
+      description: "Failed to initialize map. Please try again later.",
+      variant: "destructive",
+    });
+  }
+};
+
+export const updateMapState = (map, setMapState) => {
+  const center = map.getCenter();
+  setMapState({
+    lng: center.lng.toFixed(4),
+    lat: center.lat.toFixed(4),
+    zoom: map.getZoom().toFixed(2)
+  });
+};
+
+export const toggleLayer = (map, layerId, visible) => {
+  if (map.getLayer(layerId)) {
+    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+  }
+};
+
+export const handleLayerToggle = (layerId, map, setActiveLayers, addToConsoleLog) => {
+  if (map) {
+    const visibility = map.getLayoutProperty(layerId, 'visibility');
+    toggleLayer(map, layerId, visibility !== 'visible');
+    setActiveLayers(prev => 
+      visibility === 'visible' 
+        ? prev.filter(id => id !== layerId)
+        : [...prev, layerId]
+    );
+    addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
+  }
+};
+
+export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity, addToConsoleLog) => {
+  setLayerOpacity(opacity);
+  activeLayers.forEach(layerId => {
+    if (map.getLayer(layerId)) {
+      map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+    }
+  });
+  addToConsoleLog(`Layer opacity set to ${opacity}%`);
+};
+
+export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
+  try {
+    addToConsoleLog('Fetching weather data...');
+    // Implement weather data fetching logic here
+    // For example:
+    // const response = await fetch(`/api/weather?lat=${mapState.lat}&lng=${mapState.lng}`);
+    // const data = await response.json();
+    // Process and use the weather data
+  } catch (error) {
+    console.error('Error fetching weather data:', error.message);
+    addToConsoleLog('Failed to fetch weather data');
+  }
+};
+
 export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
   try {
     addToConsoleLog('Fetching Mastomys data...');
@@ -11,8 +104,6 @@ export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
     addToConsoleLog('Failed to fetch Mastomys data');
   }
 };
-
-// Add any other non-AerisWeather specific utility functions here
 
 export const updatePredictionLayer = (map, predictionData) => {
   if (map.getSource('prediction-hotspots')) {
@@ -30,56 +121,4 @@ export const updatePredictionLayer = (map, predictionData) => {
       }))
     });
   }
-};
-
-export const formatWeatherData = (data) => {
-  // Implement weather data formatting logic here
-  // This function can be used to format raw weather data for display
-  return {
-    temperature: `${data.temperature}°C`,
-    humidity: `${data.humidity}%`,
-    windSpeed: `${data.windSpeed} km/h`,
-    // Add more formatted weather properties as needed
-  };
-};
-
-export const calculateRiskLevel = (weatherData, mastomysData) => {
-  // Implement risk level calculation logic here
-  // This function can be used to calculate risk levels based on weather and Mastomys data
-  // Return a risk level (e.g., 'low', 'medium', 'high')
-};
-
-export const generateHeatmapData = (mastomysData) => {
-  // Implement heatmap data generation logic here
-  // This function can be used to convert Mastomys data into a format suitable for heatmap visualization
-  return mastomysData.map(point => ({
-    location: [point.lng, point.lat],
-    weight: point.population
-  }));
-};
-
-export const filterDataByDate = (data, startDate, endDate) => {
-  // Implement date filtering logic here
-  // This function can be used to filter any dataset based on a date range
-  return data.filter(item => {
-    const itemDate = new Date(item.date);
-    return itemDate >= startDate && itemDate <= endDate;
-  });
-};
-
-export const interpolateData = (data, resolution) => {
-  // Implement data interpolation logic here
-  // This function can be used to interpolate sparse data points for smoother visualizations
-  // The implementation would depend on the specific interpolation method you want to use
-};
-
-export const calculateStatistics = (data) => {
-  // Implement statistics calculation logic here
-  // This function can be used to calculate various statistics from your datasets
-  return {
-    mean: data.reduce((sum, value) => sum + value, 0) / data.length,
-    max: Math.max(...data),
-    min: Math.min(...data),
-    // Add more statistical calculations as needed
-  };
 };

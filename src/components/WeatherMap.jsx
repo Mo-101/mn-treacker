@@ -143,6 +143,7 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+        <AnimatePresence>
           {rightPanelOpen && (
             <div className="pointer-events-auto">
               <RightSidePanel 

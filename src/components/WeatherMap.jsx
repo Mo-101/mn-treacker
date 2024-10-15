@@ -26,6 +26,10 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [activeLayer, setActiveLayer] = useState(null);
+  const [selectAll, setSelectAll] = useState(false);
+
+  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
 
   useEffect(() => {
     if (map.current) return;
@@ -45,7 +49,6 @@ const WeatherMap = () => {
   }, []);
 
   const addWeatherLayers = async () => {
-    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
     for (const layer of layers) {
       try {
         const source = await getWeatherLayer(layer);
@@ -55,7 +58,7 @@ const WeatherMap = () => {
           type: 'raster',
           source: layer,
           layout: {
-            visibility: 'visible'
+            visibility: 'none'
           },
           paint: {
             'raster-opacity': 0.8
@@ -69,28 +72,33 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    if (!map.current) {
-      console.log('Map not initialized');
-      return;
-    }
+    if (selectAll) return;
 
     console.log(`Toggling layer: ${layerId}`);
-    const visibility = map.current.getLayoutProperty(layerId, 'visibility');
-    console.log(`Current visibility: ${visibility}`);
-    const newVisibility = visibility === 'visible' ? 'none' : 'visible';
+    const newVisibility = activeLayer === layerId ? 'none' : 'visible';
 
-    map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
-    console.log(`New visibility set to: ${newVisibility}`);
-
-    setActiveLayers(prev => {
-      if (newVisibility === 'visible') {
-        console.log(`Adding ${layerId} to active layers`);
-        return [...prev, layerId];
-      } else {
-        console.log(`Removing ${layerId} from active layers`);
-        return prev.filter(id => id !== layerId);
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', layer === layerId ? newVisibility : 'none');
       }
     });
+
+    setActiveLayer(activeLayer === layerId ? null : layerId);
+    setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
+  };
+
+  const handleSelectAllLayers = () => {
+    const newSelectAllState = !selectAll;
+
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
+      }
+    });
+
+    setSelectAll(newSelectAllState);
+    setActiveLayer(null);
+    setActiveLayers(newSelectAllState ? layers : []);
   };
 
   const handleOpacityChange = (layerId, opacity) => {
@@ -127,6 +135,9 @@ const WeatherMap = () => {
                 activeLayers={activeLayers}
                 onLayerToggle={handleLayerToggle}
                 onOpacityChange={handleOpacityChange}
+                layers={layers}
+                selectAll={selectAll}
+                onSelectAllLayers={handleSelectAllLayers}
               />
             </div>
           )}
@@ -162,7 +173,7 @@ const WeatherMap = () => {
               <AITrainingInterface
                 isOpen={aiTrainingOpen}
                 onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={(log) => console.log(log)} // Implement proper logging if needed
+                addToConsoleLog={(log) => console.log(log)}
               />
             </div>
           )}

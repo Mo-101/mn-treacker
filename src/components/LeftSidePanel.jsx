@@ -6,15 +6,14 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers, selectAll, onSelectAllLayers }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const weatherLayers = [
     { id: 'precipitation', name: 'Precipitation', icon: Cloud },
-    { id: 'temperature', name: 'Temperature', icon: Thermometer },
-    { id: 'humidity', name: 'Humidity', icon: Droplet },
-    { id: 'wind-speed', name: 'Wind Speed', icon: Wind },
-    { id: 'cloud-cover', name: 'Cloud Cover', icon: Sun },
+    { id: 'temp', name: 'Temperature', icon: Thermometer },
+    { id: 'clouds', name: 'Cloud Cover', icon: Sun },
+    { id: 'wind', name: 'Wind Speed', icon: Wind },
   ];
 
   const handleSearch = (e) => {
@@ -59,6 +58,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               <Switch
                 checked={activeLayers.includes(layer.id)}
                 onCheckedChange={() => onLayerToggle(layer.id)}
+                disabled={selectAll}
               />
             </div>
             <Slider
@@ -67,10 +67,17 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               step={1}
               className="w-full"
               onValueChange={(value) => onOpacityChange(layer.id, value[0])}
+              disabled={!activeLayers.includes(layer.id) && !selectAll}
             />
           </div>
         ))}
       </div>
+      <Button
+        onClick={onSelectAllLayers}
+        className="mt-4 w-full"
+      >
+        {selectAll ? 'Deselect All Layers' : 'Select All Layers'}
+      </Button>
     </motion.div>
   );
 };

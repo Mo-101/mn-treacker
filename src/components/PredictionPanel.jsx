@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Thermometer, Droplet, Wind, X } from 'lucide-react';
+import { Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import MiniMap from './MiniMap';
 
@@ -31,12 +31,7 @@ const PredictionPanel = ({ isOpen, onClose, predictionData, onDetailView }) => {
       transition={{ duration: 0.3 }}
       className="fixed right-0 top-0 h-full w-112 bg-gray-900 text-white p-6 overflow-y-auto z-50 shadow-lg"
     >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Mastomys Habitat & Risk Assessment</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-white">
-          <X className="h-6 w-6" />
-        </Button>
-      </div>
+      <h2 className="text-3xl font-bold mb-6">Mastomys Habitat & Risk Assessment</h2>
       <MiniMap />
       <div className="mb-6">
         <h3 className="text-2xl font-semibold mb-4">Population Trend</h3>

@@ -1,5 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
+
+
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
@@ -86,7 +88,7 @@ export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
     // const data = await response.json();
     // Process and use the weather data
   } catch (error) {
-    console.error('Error fetching weather data:', error.message);
+    console.error('Error fetching weather data:', error);
     addToConsoleLog('Failed to fetch weather data');
   }
 };
@@ -100,7 +102,7 @@ export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
     // const data = await response.json();
     // setMastomysData(data);
   } catch (error) {
-    console.error('Error fetching Mastomys data:', error.message);
+    console.error('Error fetching Mastomys data:', error);
     addToConsoleLog('Failed to fetch Mastomys data');
   }
 };

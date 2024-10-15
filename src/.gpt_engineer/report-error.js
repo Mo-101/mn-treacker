@@ -4,9 +4,11 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
+      // Only include headers if absolutely necessary
+      // headers: Object.fromEntries(request.headers.entries()),
     };
   }
-  return String(request);
+  return String(request); // Convert to string if not a Request
 }
 
 // Function to extract relevant error information
@@ -14,16 +16,19 @@ function extractErrorInfo(error) {
   return {
     message: error.message,
     stack: error.stack,
+    // Add any other relevant error properties here
   };
 }
 
 // Modified postMessage function
 function postMessage(message) {
   try {
-    const safeMessage = JSON.parse(JSON.stringify(message));
+    // Extract only necessary information
+    const safeMessage = typeof message === 'object' ? JSON.parse(JSON.stringify(message)) : message;
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);
+    // Send a simplified error message
     window.parent.postMessage({
       type: 'error',
       message: 'Failed to send message',

@@ -14,6 +14,7 @@ import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weathe
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 import { addCustomLayers, toggleLayer } from './MapLayers';
+import { initializeMap, handleLayerToggle, handleOpacityChange } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -33,17 +34,14 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
-    });
+    
+    initializeMap(mapContainer.current, map, mapState, setMapState, addCustomLayers, () => {}, toast);
 
     map.current.on('load', () => {
       addCustomLayers(map.current);
       fetchLassaFeverCases();
       addOpenWeatherLayer();
+      addTemperatureLayer();
       console.log('Map loaded and layers added');
     });
 
@@ -60,7 +58,22 @@ const WeatherMap = () => {
       source: 'openWeatherTemperature',
       layout: { visibility: 'none' },
       paint: { 'raster-opacity': 0.8 },
-    }, 'admin-boundaries'); // Add OpenWeather layer below admin-boundaries
+    }, 'admin-boundaries');
+  };
+
+  const addTemperatureLayer = () => {
+    map.current.addSource('temperatureLayer', {
+      type: 'raster',
+      url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+    });
+
+    map.current.addLayer({
+      id: 'temperatureLayer',
+      type: 'raster',
+      source: 'temperatureLayer',
+      layout: { visibility: 'none' },
+      paint: { 'raster-opacity': 0.7 },
+    }, 'admin-boundaries');
   };
 
   const toggleOpenWeatherLayer = () => {

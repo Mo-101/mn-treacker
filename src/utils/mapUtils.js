@@ -1,12 +1,10 @@
 import mapboxgl from 'mapbox-gl';
 
-
-
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      container: mapContainer,
+      style: 'mapbox://styles/mapbox/streets-v11', // Changed to default Mapbox style
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
       pitch: 45,

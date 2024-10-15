@@ -1,41 +1,42 @@
 import mapboxgl from 'mapbox-gl';
 
-const addLayer = (map, id, source, type, paint, layout = {}) => {
+const addLayer = (map, id, source, type, paint, layout = {}, beforeId = null) => {
   if (!map.getSource(id)) {
     map.addSource(id, source);
   }
   if (!map.getLayer(id)) {
-    map.addLayer({
+    const layerOptions = {
       id,
       type,
       source: id,
       paint,
       layout: { visibility: 'none', ...layout }
-    });
+    };
+    if (beforeId) {
+      map.addLayer(layerOptions, beforeId);
+    } else {
+      map.addLayer(layerOptions);
+    }
   }
 };
 
 export const addCustomLayers = (map) => {
+  // Add admin boundaries layer first
+  addAdminBoundariesLayer(map);
+  
+  // Then add weather layers
   addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
-  addAdminBoundariesLayer(map);
 };
 
 const addTemperatureLayer = (map) => {
-  map.addSource('temperature', {
+  addLayer(map, 'temperature', {
     type: 'raster',
     url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
-  });
-  map.addLayer({
-    id: 'temperature',
-    type: 'raster',
-    source: 'temperature',
-    paint: { 'raster-opacity': 0.7 },
-    layout: { visibility: 'none' }
-  }, 'admin-boundaries'); // Add temperature layer below admin-boundaries
+  }, 'raster', { 'raster-opacity': 0.7 }, {}, 'admin-boundaries');
 };
 
 const addVegetationLayer = (map) => {
@@ -77,8 +78,8 @@ const addAdminBoundariesLayer = (map) => {
     source: 'admin-boundaries',
     'source-layer': 'admin',
     paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
-      'line-width': 1  // Reduced stroke width
+      'line-color': 'rgba(0, 0, 0, 0.5)',
+      'line-width': 1
     },
     layout: { visibility: 'visible' }
   });

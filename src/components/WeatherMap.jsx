@@ -40,6 +40,7 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addWeatherLayers();
+      console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
@@ -67,21 +68,30 @@ const WeatherMap = () => {
           'raster-opacity': 0.7
         }
       });
+      console.log(`Added layer: ${layer}`);
     });
   };
 
   const handleLayerToggle = (layerId) => {
-    if (!map.current) return;
+    if (!map.current) {
+      console.log('Map not initialized');
+      return;
+    }
 
+    console.log(`Toggling layer: ${layerId}`);
     const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+    console.log(`Current visibility: ${visibility}`);
     const newVisibility = visibility === 'visible' ? 'none' : 'visible';
 
     map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
+    console.log(`New visibility set to: ${newVisibility}`);
 
     setActiveLayers(prev => {
       if (newVisibility === 'visible') {
+        console.log(`Adding ${layerId} to active layers`);
         return [...prev, layerId];
       } else {
+        console.log(`Removing ${layerId} from active layers`);
         return prev.filter(id => id !== layerId);
       }
     });

@@ -116,6 +116,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   };
 
   const validateData = async () => {
+    // In a real scenario, you would implement actual data validation logic here
     setIsValidated(true);
     addToConsoleLog('Data validation completed');
   };

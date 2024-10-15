@@ -86,9 +86,11 @@ const WeatherMap = () => {
   };
 
   const handleDetailView = () => {
-    // Implement the logic for handling detail view here
     console.log('Detail view requested');
+    // Implement the logic for handling detail view here
     // For example, you might want to zoom in on a specific area or show more detailed information
+    setPredictionPanelOpen(false);
+    // Add any additional logic for showing detailed view on the main map
   };
 
   return (

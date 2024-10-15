@@ -5,7 +5,7 @@ import { Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import MiniMap from './MiniMap';
 
-const PredictionPanel = ({ isOpen, onClose, predictionData, onDetailView }) => {
+const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
   const [timeframe, setTimeframe] = useState('weekly');
 
   const populationData = [
@@ -31,6 +31,9 @@ const PredictionPanel = ({ isOpen, onClose, predictionData, onDetailView }) => {
       transition={{ duration: 0.3 }}
       className="fixed right-0 top-0 h-full w-112 bg-gray-900 text-white p-6 overflow-y-auto z-50 shadow-lg"
     >
+      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
+        X
+      </Button>
       <h2 className="text-3xl font-bold mb-6">Mastomys Habitat & Risk Assessment</h2>
       <MiniMap />
       <div className="mb-6">

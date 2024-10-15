@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-import { getWeatherLayer } from './weatherApiUtils';
+import { getWeatherLayer, getPrecipitationLayer } from './weatherApiUtils';
 
 export const initializeMap = (mapContainer, mapState) => {
   const map = new mapboxgl.Map({
@@ -7,63 +7,55 @@ export const initializeMap = (mapContainer, mapState) => {
     style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
     center: [mapState.lng, mapState.lat],
     zoom: mapState.zoom,
-    maxZoom: 22  // Increase max zoom for higher resolution
-  });
-
-  map.on('load', () => {
-    addWeatherLayers(map);
-    addAdminLayer(map);
+    maxZoom: 19
   });
 
   return map;
 };
 
-const addWeatherLayers = async (map) => {
-  const layers = ['precipitation_new', 'temp_new', 'clouds_new', 'wind_new'];
+export const addWeatherLayers = async (map) => {
+  const layers = ['temp_new', 'clouds_new', 'wind_new'];
   for (const layer of layers) {
     try {
-      const source = await getWeatherLayer(layer);
+      const source = getWeatherLayer(layer);
       map.addSource(layer, source);
       map.addLayer({
         id: layer,
         type: 'raster',
         source: layer,
-        paint: {
-          'raster-opacity': 0.8,
-          'raster-contrast': 1,  // Increase contrast for more intensity
-          'raster-brightness-max': 1.5,  // Increase brightness for more intensity
-          'raster-saturation': 1.5  // Increase saturation for more vivid colors
-        },
-        layout: { visibility: 'none' }  // Set initial visibility to none
+        layout: { visibility: 'none' },
+        paint: { 'raster-opacity': 0.8 }
       });
+      console.log(`Added layer: ${layer}`);
     } catch (error) {
       console.error(`Error adding layer ${layer}:`, error);
     }
   }
-};
 
-const addAdminLayer = (map) => {
-  map.addSource('admin-boundaries', {
-    type: 'vector',
-    url: 'mapbox://mapbox.mapbox-streets-v8'
-  });
+  // Add animated precipitation layer
+  const precipitationSource = getPrecipitationLayer();
+  map.addSource('precipitation', precipitationSource);
   map.addLayer({
-    id: 'admin-boundaries',
-    type: 'line',
-    source: 'admin-boundaries',
-    'source-layer': 'admin',
-    paint: {
-      'line-color': '#000000',  // Changed to black
-      'line-width': 1.5,
-      'line-opacity': 0.8
-    }
+    id: 'precipitation',
+    type: 'raster',
+    source: 'precipitation',
+    layout: { visibility: 'none' },
+    paint: { 'raster-opacity': 0.8 }
   });
+
+  // Animate precipitation layer
+  let frame = 0;
+  const animatePrecipitation = () => {
+    frame = (frame + 1) % 4;
+    map.setPaintProperty('precipitation', 'raster-opacity', 0.8 - frame * 0.1);
+    requestAnimationFrame(animatePrecipitation);
+  };
+  animatePrecipitation();
 };
 
-export const toggleLayer = (map, layerId, visible) => {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-  }
+export const toggleLayer = (map, layerId, isVisible) => {
+  const visibility = isVisible ? 'visible' : 'none';
+  map.setLayoutProperty(layerId, 'visibility', visibility);
 };
 
 export const setLayerOpacity = (map, layerId, opacity) => {

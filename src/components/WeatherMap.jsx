@@ -67,10 +67,10 @@ const WeatherMap = () => {
           cacheWeatherData(fetchedData);
         }
       }
-      const mastomysData = await fetchMastomysData(setMastomysData, addToConsoleLog);
+      await fetchMastomysData(setMastomysData, addToConsoleLog);
 
       // Monitor predictions and add notifications
-      if (weatherData && mastomysData) {
+      if (weatherData && mastomysData.length > 0) {
         const predictions = monitorPredictions(weatherData, mastomysData, addNotification);
         setHabitatPredictions(predictions);
       }
@@ -80,7 +80,7 @@ const WeatherMap = () => {
     const interval = setInterval(fetchData, 900000); // 15 minutes
 
     return () => clearInterval(interval);
-  }, [mapState]);
+  }, [mapState, weatherData, mastomysData]);
 
   const addNotification = (notification) => {
     setNotifications(prev => [...prev, notification]);

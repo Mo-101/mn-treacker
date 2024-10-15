@@ -13,6 +13,7 @@ import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
+import { addCustomLayers, toggleLayer } from './MapLayers';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -40,38 +41,14 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      addWeatherLayers();
-      fetchLassaFeverCases();
       addOpenWeatherLayer();
+      addCustomLayers(map.current);
+      fetchLassaFeverCases();
       console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
-
-  const addWeatherLayers = async () => {
-    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
-    for (const layer of layers) {
-      try {
-        const source = await getWeatherLayer(layer);
-        map.current.addSource(layer, source);
-        map.current.addLayer({
-          id: layer,
-          type: 'raster',
-          source: layer,
-          layout: {
-            visibility: 'none'
-          },
-          paint: {
-            'raster-opacity': 0.8
-          }
-        });
-        console.log(`Added layer: ${layer}`);
-      } catch (error) {
-        console.error(`Error adding layer ${layer}:`, error);
-      }
-    }
-  };
 
   const addOpenWeatherLayer = () => {
     const temperatureSource = getOpenWeatherTemperatureLayer();
@@ -83,13 +60,7 @@ const WeatherMap = () => {
       source: 'openWeatherTemperature',
       layout: { visibility: 'none' },
       paint: { 'raster-opacity': 0.8 },
-    }, 'admin-boundaries'); // Add OpenWeather layer below admin-boundaries
-  };
-
-  const toggleOpenWeatherLayer = () => {
-    const visibility = showOpenWeather ? 'none' : 'visible';
-    map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
-    setShowOpenWeather(!showOpenWeather);
+    });
   };
 
   const fetchLassaFeverCases = async () => {

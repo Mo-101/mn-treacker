@@ -16,11 +16,14 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
 };
 
 export const addCustomLayers = (map) => {
+  // Add weather layers first
   addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
+  
+  // Add admin boundaries layer last
   addAdminBoundariesLayer(map);
 };
 
@@ -35,35 +38,35 @@ const addTemperatureLayer = (map) => {
     source: 'temperature',
     paint: { 'raster-opacity': 0.7 },
     layout: { visibility: 'none' }
-  }, 'admin-boundaries'); // Add temperature layer below admin-boundaries
+  });
 };
 
 const addVegetationLayer = (map) => {
   addLayer(map, 'vegetation', {
     type: 'raster',
     url: 'mapbox://mapbox.terrain-rgb'
-  }, 'raster', { 'raster-opacity': 0.7 }, {}, 'admin-boundaries');
+  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addPrecipitationLayer = (map) => {
   addLayer(map, 'precipitation', {
     type: 'raster',
     url: 'mapbox://mapbox.precipitation'
-  }, 'raster', { 'raster-opacity': 0.7 }, {}, 'admin-boundaries');
+  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addCloudsLayer = (map) => {
   addLayer(map, 'clouds', {
     type: 'raster',
     url: 'mapbox://mapbox.satellite'
-  }, 'raster', { 'raster-opacity': 0.5 }, {}, 'admin-boundaries');
+  }, 'raster', { 'raster-opacity': 0.5 });
 };
 
 const addRadarLayer = (map) => {
   addLayer(map, 'radar', {
     type: 'raster',
     url: 'mapbox://mapbox.radar'
-  }, 'raster', { 'raster-opacity': 0.7 }, {}, 'admin-boundaries');
+  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addAdminBoundariesLayer = (map) => {

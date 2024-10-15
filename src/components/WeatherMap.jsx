@@ -61,16 +61,17 @@ const WeatherMap = () => {
       if (cachedData) {
         setWeatherData(cachedData);
       } else {
-        const data = await fetchWeatherData(map.current, mapState, addToConsoleLog);
-        setWeatherData(data);
-        cacheWeatherData(data);
+        const fetchedData = await fetchWeatherData(map.current, mapState, addToConsoleLog);
+        if (fetchedData) {
+          setWeatherData(fetchedData);
+          cacheWeatherData(fetchedData);
+        }
       }
       const mastomysData = await fetchMastomysData(setMastomysData, addToConsoleLog);
-      setMastomysData(mastomysData);
 
       // Monitor predictions and add notifications
-      if (data && mastomysData) {
-        const predictions = monitorPredictions(data, mastomysData, addNotification);
+      if (weatherData && mastomysData) {
+        const predictions = monitorPredictions(weatherData, mastomysData, addNotification);
         setHabitatPredictions(predictions);
       }
     };

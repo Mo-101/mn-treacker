@@ -5,7 +5,7 @@ const MastomysTracker = ({ data, map }) => {
   const [markersAdded, setMarkersAdded] = useState(false);
 
   useEffect(() => {
-    if (!map || data.length === 0 || markersAdded) return;
+    if (!map || !data || data.length === 0 || markersAdded) return;
 
     data.forEach((point) => {
       const el = document.createElement('div');

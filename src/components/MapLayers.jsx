@@ -102,3 +102,56 @@ export const toggleLayer = (map, layerId, visible) => {
     console.warn(`Layer ${layerId} not found on the map.`);
   }
 };
+
+export const updatePredictionLayer = (map, predictionData) => {
+  if (map.getSource('prediction-hotspots')) {
+    map.getSource('prediction-hotspots').setData({
+      type: 'FeatureCollection',
+      features: predictionData.map(point => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [point.lng, point.lat]
+        },
+        properties: {
+          risk: point.risk
+        }
+      }))
+    });
+  } else {
+    map.addSource('prediction-hotspots', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: predictionData.map(point => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [point.lng, point.lat]
+          },
+          properties: {
+            risk: point.risk
+          }
+        }))
+      }
+    });
+
+    map.addLayer({
+      id: 'prediction-hotspots',
+      type: 'circle',
+      source: 'prediction-hotspots',
+      paint: {
+        'circle-radius': 10,
+        'circle-color': [
+          'interpolate',
+          ['linear'],
+          ['get', 'risk'],
+          0, '#00ff00',
+          0.5, '#ffff00',
+          1, '#ff0000'
+        ],
+        'circle-opacity': 0.7
+      }
+    });
+  }
+};

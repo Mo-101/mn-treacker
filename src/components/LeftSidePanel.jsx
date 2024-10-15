@@ -22,6 +22,11 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
     // Implement search functionality here
   };
 
+  const handleLayerToggle = (layerId) => {
+    console.log('Toggling layer:', layerId);
+    onLayerToggle(layerId);
+  };
+
   return (
     <motion.div
       initial={{ x: '-100%' }}
@@ -57,7 +62,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               </span>
               <Switch
                 checked={activeLayers.includes(layer.id)}
-                onCheckedChange={() => onLayerToggle(layer.id)}
+                onCheckedChange={() => handleLayerToggle(layer.id)}
               />
             </div>
             <Slider

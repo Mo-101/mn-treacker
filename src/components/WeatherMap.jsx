@@ -12,6 +12,7 @@ import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
+import SidePanels from './SidePanels';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -178,33 +179,17 @@ const WeatherMap = () => {
             onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
           />
         </div>
-        <AnimatePresence>
-          {leftPanelOpen && (
-            <div className="pointer-events-auto">
-              <LeftSidePanel 
-                isOpen={leftPanelOpen} 
-                onClose={() => setLeftPanelOpen(false)}
-                activeLayers={activeLayers}
-                onLayerToggle={handleLayerToggle}
-                onOpacityChange={handleOpacityChange}
-                layers={['precipitation', 'temp', 'clouds', 'wind']}
-                selectAll={false}
-                onSelectAllLayers={handleSelectAllLayers}
-              />
-            </div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {rightPanelOpen && (
-            <div className="pointer-events-auto">
-              <RightSidePanel 
-                isOpen={rightPanelOpen} 
-                onClose={() => setRightPanelOpen(false)}
-                selectedPoint={selectedPoint}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+        <SidePanels
+          leftPanelOpen={leftPanelOpen}
+          rightPanelOpen={rightPanelOpen}
+          setLeftPanelOpen={setLeftPanelOpen}
+          setRightPanelOpen={setRightPanelOpen}
+          activeLayers={activeLayers}
+          handleLayerToggle={handleLayerToggle}
+          handleOpacityChange={handleOpacityChange}
+          handleSelectAllLayers={handleSelectAllLayers}
+          selectedPoint={selectedPoint}
+        />
         <AnimatePresence>
           {predictionPanelOpen && (
             <div className="pointer-events-auto">

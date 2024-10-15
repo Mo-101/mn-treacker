@@ -2,11 +2,13 @@ import { toast } from '../components/ui/use-toast';
 
 export const fetchRatData = async () => {
   try {
-    const response = await fetch('/api/rat-data');
+    const response = await fetch('/api/rat-locations');
     if (!response.ok) {
       throw new Error('Failed to fetch rat data');
     }
-    return await response.json();
+    const data = await response.json();
+    console.log('Fetched rat data:', data);
+    return data;
   } catch (error) {
     console.error('Error fetching rat data:', error);
     toast({
@@ -14,7 +16,7 @@ export const fetchRatData = async () => {
       description: "Failed to fetch rat data. Please try again later.",
       variant: "destructive",
     });
-    return { detections: [], predictions: [] };
+    return { type: 'FeatureCollection', features: [] };
   }
 };
 

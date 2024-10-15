@@ -3,72 +3,35 @@ import mapboxgl from 'mapbox-gl';
 
 const RatDataLayer = ({ map, ratData }) => {
   useEffect(() => {
-    if (!map || !ratData) return;
+    if (!map || !ratData || !ratData.features) return;
 
-    // Add rat detection layer
-    map.addSource('rat-detections', {
+    // Remove existing layers and sources if they exist
+    if (map.getLayer('rat-points')) map.removeLayer('rat-points');
+    if (map.getSource('rat-data')) map.removeSource('rat-data');
+
+    // Add the GeoJSON source
+    map.addSource('rat-data', {
       type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: ratData.detections.map(detection => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [detection.lng, detection.lat]
-          },
-          properties: {
-            id: detection.id
-          }
-        }))
-      }
+      data: ratData
     });
 
+    // Add the layer
     map.addLayer({
-      id: 'rat-detection-points',
+      id: 'rat-points',
       type: 'circle',
-      source: 'rat-detections',
+      source: 'rat-data',
       paint: {
-        'circle-radius': 8,
-        'circle-color': '#FF0000',
+        'circle-radius': 6,
+        'circle-color': '#B42222',
         'circle-opacity': 0.7
       }
     });
 
-    // Add rat prediction layer
-    map.addSource('rat-predictions', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: ratData.predictions.map(prediction => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [prediction.lng, prediction.lat]
-          },
-          properties: {
-            id: prediction.id,
-            probability: prediction.probability
-          }
-        }))
-      }
-    });
-
-    map.addLayer({
-      id: 'rat-prediction-points',
-      type: 'circle',
-      source: 'rat-predictions',
-      paint: {
-        'circle-radius': 8,
-        'circle-color': '#00FF00',
-        'circle-opacity': ['interpolate', ['linear'], ['get', 'probability'], 0, 0.1, 1, 0.7]
-      }
-    });
+    console.log('Rat data added to map:', ratData.features.length, 'points');
 
     return () => {
-      if (map.getLayer('rat-detection-points')) map.removeLayer('rat-detection-points');
-      if (map.getLayer('rat-prediction-points')) map.removeLayer('rat-prediction-points');
-      if (map.getSource('rat-detections')) map.removeSource('rat-detections');
-      if (map.getSource('rat-predictions')) map.removeSource('rat-predictions');
+      if (map.getLayer('rat-points')) map.removeLayer('rat-points');
+      if (map.getSource('rat-data')) map.removeSource('rat-data');
     };
   }, [map, ratData]);
 

@@ -4,6 +4,7 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
+      headers: Object.fromEntries(request.headers),
       // Add other properties you need, but avoid those that can't be cloned
     };
   }

@@ -58,7 +58,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               <Switch
                 checked={activeLayers.includes(layer.id)}
                 onCheckedChange={() => onLayerToggle(layer.id)}
-                disabled={selectAll}
               />
             </div>
             <Slider
@@ -67,7 +66,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               step={1}
               className="w-full"
               onValueChange={(value) => onOpacityChange(layer.id, value[0])}
-              disabled={!activeLayers.includes(layer.id) && !selectAll}
+              disabled={!activeLayers.includes(layer.id)}
             />
           </div>
         ))}

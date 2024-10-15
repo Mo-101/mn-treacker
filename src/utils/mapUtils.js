@@ -6,7 +6,8 @@ export const initializeMap = (mapContainer, mapState) => {
     container: mapContainer,
     style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
     center: [mapState.lng, mapState.lat],
-    zoom: mapState.zoom
+    zoom: mapState.zoom,
+    maxZoom: 22  // Increase max zoom for higher resolution
   });
 
   map.on('load', () => {
@@ -29,9 +30,11 @@ const addWeatherLayers = async (map) => {
         source: layer,
         paint: {
           'raster-opacity': 0.8,
-          'raster-contrast': 0.5,  // Increase contrast for more intensity
-          'raster-brightness-max': 1.2  // Increase brightness for more intensity
-        }
+          'raster-contrast': 1,  // Increase contrast for more intensity
+          'raster-brightness-max': 1.5,  // Increase brightness for more intensity
+          'raster-saturation': 1.5  // Increase saturation for more vivid colors
+        },
+        layout: { visibility: 'none' }  // Set initial visibility to none
       });
     } catch (error) {
       console.error(`Error adding layer ${layer}:`, error);

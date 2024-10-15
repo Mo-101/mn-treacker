@@ -18,7 +18,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState(['temp']);
+  const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
@@ -74,9 +74,10 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    toggleLayer(map.current, layerId, !activeLayers.includes(layerId));
+    const isActive = activeLayers.includes(layerId);
+    toggleLayer(map.current, layerId, !isActive);
     setActiveLayers(prev =>
-      prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
+      isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
     );
   };
 

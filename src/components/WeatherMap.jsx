@@ -1,18 +1,19 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
+import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 import { addCustomLayers, toggleLayer } from './MapLayers';
-import { createToggleOpenWeatherLayer } from '../utils/openWeatherLayerUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -29,12 +30,6 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
-
-  const toggleOpenWeatherLayer = useCallback(() => {
-    if (map.current) {
-      createToggleOpenWeatherLayer(map.current, setShowOpenWeather)();
-    }
-  }, []);
 
   useEffect(() => {
     if (map.current) return;

@@ -12,7 +12,7 @@ import NewsScroll from './NewsScroll';
 import RatDataLayer from './RatDataLayer';
 import LassaFeverLayer from './LassaFeverLayer';
 import { initializeMap, toggleLayer, setLayerOpacity } from '../utils/mapUtils';
-import { fetchRatData, fetchLassaFeverCases, fetchTrainingProgress } from '../utils/dataFetching';
+import { fetchRatData, fetchLassaFeverCases } from '../utils/dataFetching';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -87,6 +87,12 @@ const WeatherMap = () => {
       allLayerIds.forEach(id => toggleLayer(map.current, id, true));
     }
     setSelectAll(!selectAll);
+  };
+
+  const handleDetailView = () => {
+    console.log('Detail view requested');
+    setPredictionPanelOpen(false);
+    // Implement logic to show details on the main map
   };
 
   return (

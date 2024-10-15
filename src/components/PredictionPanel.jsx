@@ -4,6 +4,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import MiniMap from './MiniMap';
+import PropTypes from 'prop-types';
 
 const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
   const [timeframe, setTimeframe] = useState('weekly');
@@ -24,6 +25,11 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
     { area: 'Wetland', suitability: 75 },
   ];
 
+  const handleTimeframeChange = (tf) => {
+    console.log('Changing timeframe to:', tf);
+    setTimeframe(tf);
+  };
+
   return (
     <motion.div
       initial={{ x: '100%' }}
@@ -43,7 +49,7 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
             <Button
               key={tf}
               variant={timeframe === tf ? 'default' : 'outline'}
-              onClick={() => setTimeframe(tf)}
+              onClick={() => handleTimeframeChange(tf)}
               className="text-sm"
             >
               {tf.charAt(0).toUpperCase() + tf.slice(1)}
@@ -100,6 +106,12 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
       <Button onClick={onDetailView} className="w-full text-lg py-3">View Details on Main Map</Button>
     </motion.div>
   );
+};
+
+PredictionPanel.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onDetailView: PropTypes.func.isRequired,
 };
 
 export default PredictionPanel;

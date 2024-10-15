@@ -2,8 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Download } from 'lucide-react';
 import { Button } from './ui/button';
+import PropTypes from 'prop-types';
 
 const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
+  const handleExportSnapshot = () => {
+    console.log('Exporting map snapshot');
+    // Implement export functionality here
+  };
+
   return (
     <motion.div
       initial={{ x: '100%' }}
@@ -30,11 +36,20 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
         <h3 className="text-base sm:text-lg font-semibold mb-2">Predictive Insights</h3>
         <p className="text-xs sm:text-sm">Based on current data, there's a 65% chance of increased Mastomys activity in this area over the next month.</p>
       </div>
-      <Button className="mt-4 w-full text-sm sm:text-base" onClick={() => console.log('Export map snapshot')}>
+      <Button className="mt-4 w-full text-sm sm:text-base" onClick={handleExportSnapshot}>
         <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Export Snapshot
       </Button>
     </motion.div>
   );
+};
+
+RightSidePanel.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  selectedPoint: PropTypes.shape({
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+  }),
 };
 
 export default RightSidePanel;

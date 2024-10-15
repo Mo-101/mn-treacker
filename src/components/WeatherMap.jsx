@@ -83,7 +83,7 @@ const WeatherMap = () => {
       source: 'openWeatherTemperature',
       layout: { visibility: 'none' },
       paint: { 'raster-opacity': 0.8 },
-    });
+    }, 'admin-boundaries'); // Add OpenWeather layer below admin-boundaries
   };
 
   const toggleOpenWeatherLayer = () => {

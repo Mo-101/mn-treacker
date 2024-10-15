@@ -4,11 +4,9 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      // Only include headers if absolutely necessary
-      // headers: Object.fromEntries(request.headers.entries()),
     };
   }
-  return String(request); // Convert to string if not a Request
+  return String(request);
 }
 
 // Function to extract relevant error information
@@ -16,15 +14,14 @@ function extractErrorInfo(error) {
   return {
     message: error.message,
     stack: error.stack,
-    // Add any other relevant error properties here
   };
 }
 
 // Modified postMessage function
 function postMessage(message) {
   try {
-    // Extract only necessary information
-    const safeMessage = typeof message === 'object' ? JSON.parse(JSON.stringify(message)) : message;
+    // Extract only necessary information and ensure it's cloneable
+    const safeMessage = JSON.parse(JSON.stringify(message));
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);

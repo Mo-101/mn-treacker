@@ -35,28 +35,28 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
       initial={{ x: '100%' }}
       animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed right-0 top-0 h-full w-112 bg-gray-900 text-white p-6 overflow-y-auto z-50 shadow-lg"
+      className="fixed right-0 top-0 h-full w-80 sm:w-96 md:w-112 bg-gray-900 text-white p-6 overflow-y-auto z-50 shadow-lg"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
-        X
+        <X className="h-4 w-4 sm:h-5 sm:w-5" />
       </Button>
-      <h2 className="text-3xl font-bold mb-6">Mastomys Habitat & Risk Assessment</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-6">Mastomys Habitat & Risk Assessment</h2>
       <MiniMap />
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Population Trend</h3>
-        <div className="flex space-x-4 mb-4">
+        <h3 className="text-xl sm:text-2xl font-semibold mb-4">Population Trend</h3>
+        <div className="flex space-x-2 sm:space-x-4 mb-4">
           {['weekly', 'monthly', 'yearly'].map((tf) => (
             <Button
               key={tf}
               variant={timeframe === tf ? 'default' : 'outline'}
               onClick={() => handleTimeframeChange(tf)}
-              className="text-sm"
+              className="text-xs sm:text-sm"
             >
               {tf.charAt(0).toUpperCase() + tf.slice(1)}
             </Button>
           ))}
         </div>
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={200}>
           <LineChart data={populationData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -67,8 +67,8 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
         </ResponsiveContainer>
       </div>
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Habitat Suitability</h3>
-        <ResponsiveContainer width="100%" height={250}>
+        <h3 className="text-xl sm:text-2xl font-semibold mb-4">Habitat Suitability</h3>
+        <ResponsiveContainer width="100%" height={200}>
           <BarChart data={habitatData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="area" />
@@ -79,31 +79,31 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
         </ResponsiveContainer>
       </div>
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Environmental Trends</h3>
-        <div className="flex justify-between text-lg">
+        <h3 className="text-xl sm:text-2xl font-semibold mb-4">Environmental Trends</h3>
+        <div className="flex justify-between text-sm sm:text-base">
           <div className="flex items-center">
-            <Thermometer className="mr-2 text-red-500 h-6 w-6" />
+            <Thermometer className="mr-2 text-red-500 h-4 w-4 sm:h-6 sm:w-6" />
             <span>+2.5°C</span>
           </div>
           <div className="flex items-center">
-            <Droplet className="mr-2 text-blue-500 h-6 w-6" />
+            <Droplet className="mr-2 text-blue-500 h-4 w-4 sm:h-6 sm:w-6" />
             <span>-5% Humidity</span>
           </div>
           <div className="flex items-center">
-            <Wind className="mr-2 text-green-500 h-6 w-6" />
+            <Wind className="mr-2 text-green-500 h-4 w-4 sm:h-6 sm:w-6" />
             <span>+10% Vegetation</span>
           </div>
         </div>
       </div>
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Risk Summary</h3>
+        <h3 className="text-xl sm:text-2xl font-semibold mb-4">Risk Summary</h3>
         <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="mb-2"><strong>Highest Predicted Risk:</strong> Urban areas near water sources</p>
-          <p className="mb-2"><strong>Newly Identified Hotspots:</strong> 3 locations in grasslands</p>
-          <p><strong>Habitat Suitability Change:</strong> +15% in forest regions</p>
+          <p className="mb-2 text-sm sm:text-base"><strong>Highest Predicted Risk:</strong> Urban areas near water sources</p>
+          <p className="mb-2 text-sm sm:text-base"><strong>Newly Identified Hotspots:</strong> 3 locations in grasslands</p>
+          <p className="text-sm sm:text-base"><strong>Habitat Suitability Change:</strong> +15% in forest regions</p>
         </div>
       </div>
-      <Button onClick={onDetailView} className="w-full text-lg py-3">View Details on Main Map</Button>
+      <Button onClick={onDetailView} className="w-full text-sm sm:text-base py-2 sm:py-3">View Details on Main Map</Button>
     </motion.div>
   );
 };

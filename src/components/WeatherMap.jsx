@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import TopNavigationBar from './TopNavigationBar';
+import FloatingInsightsBar from './FloatingInsightsButton';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -47,6 +48,8 @@ const WeatherMap = () => {
       <div className="flex-shrink-0 bg-white p-4 shadow-lg">
         <p>Longitude: {mapState.lng} | Latitude: {mapState.lat} | Zoom: {mapState.zoom}</p>
       </div>
+
+      <FloatingInsightsBar />
     </div>
   );
 };

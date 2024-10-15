@@ -21,6 +21,8 @@ export const addCustomLayers = (map) => {
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
+  addSatelliteLayer(map);
+  addWindLayer(map);
   addAdminBoundariesLayer(map);
 };
 
@@ -66,6 +68,20 @@ const addRadarLayer = (map) => {
   }, 'raster', { 'raster-opacity': 0.7 });
 };
 
+const addSatelliteLayer = (map) => {
+  addLayer(map, 'satellite', {
+    type: 'raster',
+    url: 'mapbox://mapbox.satellite'
+  }, 'raster', { 'raster-opacity': 0.7 });
+};
+
+const addWindLayer = (map) => {
+  addLayer(map, 'wind', {
+    type: 'raster',
+    url: 'mapbox://mapbox.wind'
+  }, 'raster', { 'raster-opacity': 0.7 });
+};
+
 const addAdminBoundariesLayer = (map) => {
   map.addSource('admin-boundaries', {
     type: 'vector',
@@ -77,8 +93,8 @@ const addAdminBoundariesLayer = (map) => {
     source: 'admin-boundaries',
     'source-layer': 'admin',
     paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
-      'line-width': 1  // Reduced stroke width
+      'line-color': 'rgba(0, 0, 0, 0.5)',
+      'line-width': 1
     },
     layout: { visibility: 'visible' }
   });

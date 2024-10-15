@@ -1,27 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Thermometer, Droplet, Wind } from 'lucide-react';
+import { Thermometer, Droplet, Wind, Cloud, Sun } from 'lucide-react';
 import { Button } from './ui/button';
+import { Switch } from './ui/switch';
 import MiniMap from './MiniMap';
 
-const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
-  const [timeframe, setTimeframe] = useState('weekly');
-
-  const populationData = [
-    { name: 'Jan', value: 4000 },
-    { name: 'Feb', value: 3000 },
-    { name: 'Mar', value: 2000 },
-    { name: 'Apr', value: 2780 },
-    { name: 'May', value: 1890 },
-    { name: 'Jun', value: 2390 },
-  ];
-
-  const habitatData = [
-    { area: 'Forest', suitability: 80 },
-    { area: 'Grassland', suitability: 65 },
-    { area: 'Urban', suitability: 30 },
-    { area: 'Wetland', suitability: 75 },
+const PredictionPanel = ({ isOpen, onClose, onLayerToggle, activeLayers, weatherData, habitatPredictions }) => {
+  const weatherLayers = [
+    { id: 'radar', name: 'Radar', icon: Cloud },
+    { id: 'satellite', name: 'Satellite', icon: Sun },
+    { id: 'precipitation', name: 'Precipitation', icon: Droplet },
+    { id: 'temperature', name: 'Temperature', icon: Thermometer },
+    { id: 'wind', name: 'Wind', icon: Wind },
   ];
 
   return (
@@ -35,35 +26,52 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
         X
       </Button>
       <h2 className="text-3xl font-bold mb-6">Mastomys Habitat & Risk Assessment</h2>
-      <MiniMap />
+      <MiniMap habitatPredictions={habitatPredictions} />
+      
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Population Trend</h3>
-        <div className="flex space-x-4 mb-4">
-          {['weekly', 'monthly', 'yearly'].map((tf) => (
-            <Button
-              key={tf}
-              variant={timeframe === tf ? 'default' : 'outline'}
-              onClick={() => setTimeframe(tf)}
-              className="text-sm"
-            >
-              {tf.charAt(0).toUpperCase() + tf.slice(1)}
-            </Button>
-          ))}
-        </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={populationData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
+        <h3 className="text-2xl font-semibold mb-4">Weather Layers</h3>
+        {weatherLayers.map((layer) => (
+          <div key={layer.id} className="flex items-center justify-between mb-2">
+            <span className="flex items-center">
+              <layer.icon className="mr-2 h-5 w-5" />
+              {layer.name}
+            </span>
+            <Switch
+              checked={activeLayers.includes(layer.id)}
+              onCheckedChange={() => onLayerToggle(layer.id)}
+            />
+          </div>
+        ))}
       </div>
+
       <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Habitat Suitability</h3>
+        <h3 className="text-2xl font-semibold mb-4">Current Weather</h3>
+        {weatherData && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center">
+              <Thermometer className="mr-2 text-red-500 h-6 w-6" />
+              <span>{weatherData.temperature}°C</span>
+            </div>
+            <div className="flex items-center">
+              <Droplet className="mr-2 text-blue-500 h-6 w-6" />
+              <span>{weatherData.humidity}% Humidity</span>
+            </div>
+            <div className="flex items-center">
+              <Wind className="mr-2 text-green-500 h-6 w-6" />
+              <span>{weatherData.windSpeed} km/h</span>
+            </div>
+            <div className="flex items-center">
+              <Cloud className="mr-2 text-gray-500 h-6 w-6" />
+              <span>{weatherData.cloudCover}% Cloud Cover</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-2xl font-semibold mb-4">Habitat Suitability Prediction</h3>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={habitatData}>
+          <BarChart data={habitatPredictions}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="area" />
             <YAxis />
@@ -72,32 +80,15 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="mb-6">
-        <h3 className="text-2xl font-semibold mb-4">Environmental Trends</h3>
-        <div className="flex justify-between text-lg">
-          <div className="flex items-center">
-            <Thermometer className="mr-2 text-red-500 h-6 w-6" />
-            <span>+2.5°C</span>
-          </div>
-          <div className="flex items-center">
-            <Droplet className="mr-2 text-blue-500 h-6 w-6" />
-            <span>-5% Humidity</span>
-          </div>
-          <div className="flex items-center">
-            <Wind className="mr-2 text-green-500 h-6 w-6" />
-            <span>+10% Vegetation</span>
-          </div>
-        </div>
-      </div>
+
       <div className="mb-6">
         <h3 className="text-2xl font-semibold mb-4">Risk Summary</h3>
         <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="mb-2"><strong>Highest Predicted Risk:</strong> Urban areas near water sources</p>
-          <p className="mb-2"><strong>Newly Identified Hotspots:</strong> 3 locations in grasslands</p>
-          <p><strong>Habitat Suitability Change:</strong> +15% in forest regions</p>
+          <p className="mb-2"><strong>Highest Predicted Risk:</strong> {habitatPredictions[0]?.area}</p>
+          <p className="mb-2"><strong>Risk Level:</strong> {habitatPredictions[0]?.suitability}%</p>
+          <p><strong>Recommendation:</strong> Monitor closely and implement preventive measures.</p>
         </div>
       </div>
-      <Button onClick={onDetailView} className="w-full text-lg py-3">View Details on Main Map</Button>
     </motion.div>
   );
 };

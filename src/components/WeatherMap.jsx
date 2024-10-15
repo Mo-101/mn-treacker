@@ -85,6 +85,12 @@ const WeatherMap = () => {
     map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
   };
 
+  const handleDetailView = () => {
+    // Implement the logic for handling detail view here
+    console.log('Detail view requested');
+    // For example, you might want to zoom in on a specific area or show more detailed information
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
@@ -143,7 +149,7 @@ const WeatherMap = () => {
               <AITrainingInterface
                 isOpen={aiTrainingOpen}
                 onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={addToConsoleLog}
+                addToConsoleLog={(log) => console.log(log)} // Implement proper logging if needed
               />
             </div>
           )}

@@ -32,34 +32,42 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   useEffect(() => {
     let interval;
     if (isTraining) {
-      interval = setInterval(() => {
-        setTrainingProgress(prev => {
-          const newProgress = prev + 1;
-          if (newProgress >= 100) {
+      interval = setInterval(async () => {
+        try {
+          const response = await fetch('/api/training-progress');
+          const data = await response.json();
+          setTrainingProgress(data.progress);
+          setIsTraining(data.is_training);
+          if (!data.is_training) {
             clearInterval(interval);
-            setIsTraining(false);
             addToConsoleLog('Training completed');
-            return 100;
           }
-          setElapsedTime(prev => prev + 1);
-          setTimeLeft(prev => Math.max(0, prev - 1));
-          setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
-          setKnowledgeLevel(newProgress); // Update knowledge level as training progresses
-          return newProgress;
-        });
+        } catch (error) {
+          console.error('Error fetching training progress:', error);
+        }
       }, 1000);
     }
     return () => clearInterval(interval);
   }, [isTraining, addToConsoleLog]);
 
-  const handleStartTraining = () => {
-    setIsTraining(true);
-    setTrainingProgress(0);
-    setElapsedTime(0);
-    setTimeLeft(100); // Assuming 100 seconds for training
-    setTrainingActivities([]);
-    setKnowledgeLevel(0);
-    addToConsoleLog('Training started');
+  const handleStartTraining = async () => {
+    try {
+      const response = await fetch('/api/start-training', { method: 'POST' });
+      if (response.ok) {
+        setIsTraining(true);
+        setTrainingProgress(0);
+        setElapsedTime(0);
+        setTimeLeft(100); // Assuming 100 seconds for training
+        setTrainingActivities([]);
+        setKnowledgeLevel(0);
+        addToConsoleLog('Training started');
+      } else {
+        addToConsoleLog('Failed to start training');
+      }
+    } catch (error) {
+      console.error('Error starting training:', error);
+      addToConsoleLog('Error starting training');
+    }
   };
 
   const handleDataUpload = () => {
@@ -163,6 +171,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
+
 };
 
 export default AITrainingInterface;

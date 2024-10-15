@@ -42,6 +42,7 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addWeatherLayers();
+      fetchLassaFeverCases();
       console.log('Map loaded and layers added');
     });
 
@@ -68,6 +69,44 @@ const WeatherMap = () => {
       } catch (error) {
         console.error(`Error adding layer ${layer}:`, error);
       }
+    }
+  };
+
+  const fetchLassaFeverCases = async () => {
+    try {
+      const response = await fetch('/api/cases');
+      if (!response.ok) {
+        throw new Error('Failed to fetch Lassa Fever cases');
+      }
+      const data = await response.json();
+      addLassaFeverLayer(data);
+    } catch (error) {
+      console.error('Error fetching Lassa Fever cases:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch Lassa Fever cases. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addLassaFeverLayer = (data) => {
+    if (!map.current.getSource('lassa-fever-cases')) {
+      map.current.addSource('lassa-fever-cases', {
+        type: 'geojson',
+        data: data
+      });
+
+      map.current.addLayer({
+        id: 'lassa-fever-points',
+        type: 'circle',
+        source: 'lassa-fever-cases',
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#FF0000',
+          'circle-opacity': 0.7
+        }
+      });
     }
   };
 

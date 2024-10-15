@@ -15,9 +15,23 @@ export const getWeatherLayer = async (layer) => {
 };
 
 const getAerisLayer = async (layer) => {
-  // Implement Aeris layer fetching logic here
-  // Return null if the API is down or rate limited
-  return null;
+  try {
+    const response = await fetch(`/api/aeris-weather?layer=${layer}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Aeris weather data');
+    }
+    const data = await response.json();
+    // Process the data and return a compatible layer object
+    // This will depend on the exact format of your backend response
+    return {
+      type: 'raster',
+      tiles: [data.tileUrl], // Assuming the backend returns a tileUrl
+      tileSize: 256
+    };
+  } catch (error) {
+    console.error('Error fetching Aeris layer:', error);
+    return null;
+  }
 };
 
 const getOpenWeatherLayer = (layer) => {

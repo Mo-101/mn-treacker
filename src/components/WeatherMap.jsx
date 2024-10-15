@@ -10,7 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import AerisWeather from '@aerisweather/javascript-sdk';
+import { getWeatherLayer } from '../utils/weatherApiUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -26,8 +26,6 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-
-  const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
 
   useEffect(() => {
     if (map.current) return;
@@ -46,30 +44,28 @@ const WeatherMap = () => {
     return () => map.current && map.current.remove();
   }, []);
 
-  const addWeatherLayers = () => {
-    const layers = ['precipitation', 'temperature', 'humidity', 'wind-speed', 'cloud-cover'];
-    layers.forEach(layer => {
-      map.current.addSource(layer, {
-        type: 'raster',
-        tiles: [
-          `https://maps.aerisapi.com/${import.meta.env.VITE_XWEATHER_ID}_${import.meta.env.VITE_XWEATHER_SECRET}/${layer}/{z}/{x}/{y}/current.png`
-        ],
-        tileSize: 256
-      });
-
-      map.current.addLayer({
-        id: layer,
-        type: 'raster',
-        source: layer,
-        layout: {
-          visibility: 'none'
-        },
-        paint: {
-          'raster-opacity': 0.7
-        }
-      });
-      console.log(`Added layer: ${layer}`);
-    });
+  const addWeatherLayers = async () => {
+    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
+    for (const layer of layers) {
+      try {
+        const source = await getWeatherLayer(layer);
+        map.current.addSource(layer, source);
+        map.current.addLayer({
+          id: layer,
+          type: 'raster',
+          source: layer,
+          layout: {
+            visibility: 'none'
+          },
+          paint: {
+            'raster-opacity': 0.7
+          }
+        });
+        console.log(`Added layer: ${layer}`);
+      } catch (error) {
+        console.error(`Error adding layer ${layer}:`, error);
+      }
+    }
   };
 
   const handleLayerToggle = (layerId) => {

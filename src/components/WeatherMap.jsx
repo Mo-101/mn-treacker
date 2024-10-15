@@ -12,9 +12,6 @@ import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
-import SidePanels from './SidePanels';
-import { addCustomLayers, toggleLayer, updatePredictionLayer } from './MapLayers';
-import { fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -31,8 +28,6 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
-  const [weatherData, setWeatherData] = useState({});
-  const [predictions, setPredictions] = useState([]);
 
   useEffect(() => {
     if (map.current) return;
@@ -44,7 +39,7 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      addCustomLayers(map.current);
+      addWeatherLayers();
       fetchLassaFeverCases();
       addOpenWeatherLayer();
       console.log('Map loaded and layers added');
@@ -53,19 +48,29 @@ const WeatherMap = () => {
     return () => map.current && map.current.remove();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const weatherData = await fetchWeatherData(map.current, mapState);
-      setWeatherData(weatherData);
-      const mastomysData = await fetchMastomysData();
-      setMastomysData(mastomysData);
-      // Assuming we have a function to generate predictions based on weather and mastomys data
-      const newPredictions = generatePredictions(weatherData, mastomysData);
-      setPredictions(newPredictions);
-      updatePredictionLayer(map.current, newPredictions);
-    };
-    fetchData();
-  }, [mapState]);
+  const addWeatherLayers = async () => {
+    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
+    for (const layer of layers) {
+      try {
+        const source = await getWeatherLayer(layer);
+        map.current.addSource(layer, source);
+        map.current.addLayer({
+          id: layer,
+          type: 'raster',
+          source: layer,
+          layout: {
+            visibility: 'none'
+          },
+          paint: {
+            'raster-opacity': 0.8
+          }
+        });
+        console.log(`Added layer: ${layer}`);
+      } catch (error) {
+        console.error(`Error adding layer ${layer}:`, error);
+      }
+    }
+  };
 
   const addOpenWeatherLayer = () => {
     const temperatureSource = getOpenWeatherTemperatureLayer();
@@ -77,7 +82,7 @@ const WeatherMap = () => {
       source: 'openWeatherTemperature',
       layout: { visibility: 'none' },
       paint: { 'raster-opacity': 0.8 },
-    }, 'admin-boundaries'); // Add OpenWeather layer below admin-boundaries
+    });
   };
 
   const toggleOpenWeatherLayer = () => {
@@ -125,10 +130,13 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    toggleLayer(map.current, layerId, !activeLayers.includes(layerId));
-    setActiveLayers(prev => 
-      prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
-    );
+    if (activeLayers.includes(layerId)) {
+      map.current.setLayoutProperty(layerId, 'visibility', 'none');
+      setActiveLayers(activeLayers.filter(id => id !== layerId));
+    } else {
+      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+      setActiveLayers([...activeLayers, layerId]);
+    }
   };
 
   const handleSelectAllLayers = () => {
@@ -170,17 +178,33 @@ const WeatherMap = () => {
             onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
           />
         </div>
-        <SidePanels
-          leftPanelOpen={leftPanelOpen}
-          rightPanelOpen={rightPanelOpen}
-          setLeftPanelOpen={setLeftPanelOpen}
-          setRightPanelOpen={setRightPanelOpen}
-          activeLayers={activeLayers}
-          handleLayerToggle={handleLayerToggle}
-          handleOpacityChange={handleOpacityChange}
-          handleSelectAllLayers={handleSelectAllLayers}
-          selectedPoint={selectedPoint}
-        />
+        <AnimatePresence>
+          {leftPanelOpen && (
+            <div className="pointer-events-auto">
+              <LeftSidePanel 
+                isOpen={leftPanelOpen} 
+                onClose={() => setLeftPanelOpen(false)}
+                activeLayers={activeLayers}
+                onLayerToggle={handleLayerToggle}
+                onOpacityChange={handleOpacityChange}
+                layers={['precipitation', 'temp', 'clouds', 'wind']}
+                selectAll={false}
+                onSelectAllLayers={handleSelectAllLayers}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {rightPanelOpen && (
+            <div className="pointer-events-auto">
+              <RightSidePanel 
+                isOpen={rightPanelOpen} 
+                onClose={() => setRightPanelOpen(false)}
+                selectedPoint={selectedPoint}
+              />
+            </div>
+          )}
+        </AnimatePresence>
         <AnimatePresence>
           {predictionPanelOpen && (
             <div className="pointer-events-auto">
@@ -188,9 +212,6 @@ const WeatherMap = () => {
                 isOpen={predictionPanelOpen}
                 onClose={() => setPredictionPanelOpen(false)}
                 onDetailView={handleDetailView}
-                ratSightings={mastomysData}
-                predictions={predictions}
-                weatherData={weatherData}
               />
             </div>
           )}

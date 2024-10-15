@@ -45,19 +45,3 @@ const getOpenWeatherLayer = (layer) => {
 export const getOpenWeatherTemperatureLayer = () => {
   return getOpenWeatherLayer('temp_new');
 };
-
-export const getWeatherData = async (lat, lon) => {
-  try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}&units=metric`);
-    const data = await response.json();
-    return {
-      temperature: data.main.temp,
-      humidity: data.main.humidity,
-      windSpeed: data.wind.speed,
-      description: data.weather[0].description
-    };
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    return null;
-  }
-};

@@ -127,50 +127,12 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
         <div className="flex-grow overflow-auto p-4 space-y-4">
           <AnimatePresence mode="wait">
-            {activeSection === 'upload' && (
-              <motion.div
-                key="upload"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <DataUploadSection onUploadComplete={handleDataUpload} />
-              </motion.div>
-            )}
-
-            {activeSection === 'performance' && (
-              <motion.div
-                key="performance"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <ModelPerformanceDashboard />
-              </motion.div>
-            )}
-
-            {activeSection === 'visualization' && (
-              <motion.div
-                key="visualization"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <DataVisualizationPanel />
-              </motion.div>
-            )}
-
-            {activeSection === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <h2 className="text-xl font-bold mb-4">Settings</h2>
-                {/* Add settings controls here */}
-              </motion.div>
-            )}
+            <Suspense fallback={<div>Loading...</div>}>
+              {activeSection === 'upload' && <DataUploadSection onUploadComplete={handleDataUpload} />}
+              {activeSection === 'performance' && <ModelPerformanceDashboard accuracy={modelAccuracy} />}
+              {activeSection === 'visualization' && <DataVisualizationPanel ratLocations={ratLocations} lassaFeverCases={lassaFeverCases} />}
+              {activeSection === 'settings' && <SettingsPanel />} 
+            </Suspense>
           </AnimatePresence>
 
           <BrainModel knowledgeLevel={knowledgeLevel} />
@@ -183,6 +145,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
             trainingActivities={trainingActivities}
             timeLeft={timeLeft}
             elapsedTime={elapsedTime}
+            accuracy={modelAccuracy}
           />
         </div>
       </div>
@@ -203,10 +166,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
-};
-
-export default AITrainingInterface;
 };
 
 export default AITrainingInterface;

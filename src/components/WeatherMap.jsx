@@ -12,7 +12,7 @@ import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
-import MapLayerToggle from './MapLayerToggle'; // New import
+import MapLayerToggle from './MapLayerToggle';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -223,6 +223,7 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+        <AnimatePresence>
           {rightPanelOpen && (
             <div className="pointer-events-auto">
               <RightSidePanel 

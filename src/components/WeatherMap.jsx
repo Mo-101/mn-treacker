@@ -41,9 +41,9 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      addOpenWeatherLayer();
       addCustomLayers(map.current);
       fetchLassaFeverCases();
+      addOpenWeatherLayer();
       console.log('Map loaded and layers added');
     });
 
@@ -60,7 +60,13 @@ const WeatherMap = () => {
       source: 'openWeatherTemperature',
       layout: { visibility: 'none' },
       paint: { 'raster-opacity': 0.8 },
-    });
+    }, 'admin-boundaries'); // Add OpenWeather layer below admin-boundaries
+  };
+
+  const toggleOpenWeatherLayer = () => {
+    const visibility = showOpenWeather ? 'none' : 'visible';
+    map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
+    setShowOpenWeather(!showOpenWeather);
   };
 
   const fetchLassaFeverCases = async () => {

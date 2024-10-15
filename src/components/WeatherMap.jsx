@@ -34,7 +34,7 @@ const WeatherMap = () => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Updated default style
+      style: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });

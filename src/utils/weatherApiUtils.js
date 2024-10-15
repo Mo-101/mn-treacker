@@ -21,9 +21,11 @@ const getAerisLayer = async (layer) => {
       throw new Error('Failed to fetch Aeris weather data');
     }
     const data = await response.json();
+    // Process the data and return a compatible layer object
+    // This will depend on the exact format of your backend response
     return {
       type: 'raster',
-      tiles: [data.tileUrl],
+      tiles: [data.tileUrl], // Assuming the backend returns a tileUrl
       tileSize: 256
     };
   } catch (error) {
@@ -40,8 +42,4 @@ const getOpenWeatherLayer = (layer) => {
     tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}${intensityParam}`],
     tileSize: 256
   };
-};
-
-export const getOpenWeatherTemperatureLayer = () => {
-  return getOpenWeatherLayer('temp_new');
 };

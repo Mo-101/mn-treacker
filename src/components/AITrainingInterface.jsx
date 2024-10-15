@@ -21,6 +21,12 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    f1Score: 0,
+    accuracy: 0,
+    precision: 0,
+    recall: 0
+  });
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -38,6 +44,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
           const data = await response.json();
           setTrainingProgress(data.progress);
           setIsTraining(data.is_training);
+          setPerformanceMetrics(data.metrics);
           if (!data.is_training) {
             clearInterval(interval);
             addToConsoleLog('Training completed');
@@ -113,7 +120,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <ModelPerformanceDashboard />
+                <ModelPerformanceDashboard metrics={performanceMetrics} />
               </motion.div>
             )}
 
@@ -171,7 +178,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
 };
 
 export default AITrainingInterface;

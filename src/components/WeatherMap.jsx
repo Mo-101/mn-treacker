@@ -12,6 +12,7 @@ import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
+import MapLayerToggle from './MapLayerToggle'; // New import
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -28,6 +29,7 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
+  const [showDefaultStyle, setShowDefaultStyle] = useState(true); // New state
 
   useEffect(() => {
     if (map.current) return;
@@ -42,11 +44,38 @@ const WeatherMap = () => {
       addWeatherLayers();
       fetchLassaFeverCases();
       addOpenWeatherLayer();
+      addDefaultStyleLayer(); // New function call
       console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
+
+  const addDefaultStyleLayer = () => {
+    map.current.addSource('default-style', {
+      type: 'raster',
+      tiles: ['https://api.mapbox.com/styles/v1/akanimo1/cld5h233p000q01qat06k4qw7/tiles/256/{z}/{x}/{y}@2x?access_token=' + mapboxgl.accessToken],
+      tileSize: 256
+    });
+
+    map.current.addLayer({
+      id: 'default-style-layer',
+      type: 'raster',
+      source: 'default-style',
+      layout: { visibility: showDefaultStyle ? 'visible' : 'none' }
+    });
+  };
+
+  const toggleDefaultStyle = () => {
+    setShowDefaultStyle(!showDefaultStyle);
+    if (map.current.getLayer('default-style-layer')) {
+      map.current.setLayoutProperty(
+        'default-style-layer',
+        'visibility',
+        showDefaultStyle ? 'none' : 'visible'
+      );
+    }
+  };
 
   const addWeatherLayers = async () => {
     const layers = ['precipitation', 'temp', 'clouds', 'wind'];
@@ -194,7 +223,6 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
-        <AnimatePresence>
           {rightPanelOpen && (
             <div className="pointer-events-auto">
               <RightSidePanel 
@@ -234,6 +262,10 @@ const WeatherMap = () => {
           <WeatherLayerControls
             showOpenWeather={showOpenWeather}
             toggleOpenWeatherLayer={toggleOpenWeatherLayer}
+          />
+          <MapLayerToggle
+            showDefaultStyle={showDefaultStyle}
+            toggleDefaultStyle={toggleDefaultStyle}
           />
         </div>
       </div>

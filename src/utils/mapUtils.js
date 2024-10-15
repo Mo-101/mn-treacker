@@ -19,7 +19,7 @@ export const initializeMap = (mapContainer, mapState) => {
 };
 
 const addWeatherLayers = async (map) => {
-  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
+  const layers = ['precipitation_new', 'temp_new', 'clouds_new', 'wind_new'];
   for (const layer of layers) {
     try {
       const source = await getWeatherLayer(layer);

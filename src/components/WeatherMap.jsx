@@ -29,6 +29,7 @@ const WeatherMap = () => {
   const [lassaFeverCases, setLassaFeverCases] = useState([]);
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [isTraining, setIsTraining] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
@@ -40,20 +41,6 @@ const WeatherMap = () => {
 
     return () => map.current && map.current.remove();
   }, []);
-
-  useEffect(() => {
-    if (isTraining) {
-      const interval = setInterval(async () => {
-        const progress = await fetchTrainingProgress();
-        setTrainingProgress(progress.progress);
-        setIsTraining(progress.is_training);
-        if (!progress.is_training) {
-          clearInterval(interval);
-        }
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [isTraining]);
 
   const fetchInitialData = async () => {
     try {
@@ -74,20 +61,32 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    const isActive = activeLayers.includes(layerId);
-    toggleLayer(map.current, layerId, !isActive);
-    setActiveLayers(prev =>
-      isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
-    );
+    console.log('Toggling layer:', layerId);
+    setActiveLayers(prev => {
+      const newActiveLayers = prev.includes(layerId)
+        ? prev.filter(id => id !== layerId)
+        : [...prev, layerId];
+      
+      toggleLayer(map.current, layerId, newActiveLayers.includes(layerId));
+      return newActiveLayers;
+    });
   };
 
   const handleOpacityChange = (layerId, opacity) => {
+    console.log(`Changing opacity for layer ${layerId} to ${opacity}`);
     setLayerOpacity(map.current, layerId, opacity);
   };
 
-  const handleDetailView = () => {
-    console.log('Detail view requested');
-    setPredictionPanelOpen(false);
+  const handleSelectAllLayers = () => {
+    const allLayerIds = ['precipitation', 'temp', 'clouds', 'wind'];
+    if (selectAll) {
+      setActiveLayers([]);
+      allLayerIds.forEach(id => toggleLayer(map.current, id, false));
+    } else {
+      setActiveLayers(allLayerIds);
+      allLayerIds.forEach(id => toggleLayer(map.current, id, true));
+    }
+    setSelectAll(!selectAll);
   };
 
   return (
@@ -109,6 +108,8 @@ const WeatherMap = () => {
               activeLayers={activeLayers}
               onLayerToggle={handleLayerToggle}
               onOpacityChange={handleOpacityChange}
+              selectAll={selectAll}
+              onSelectAllLayers={handleSelectAllLayers}
             />
           )}
         </AnimatePresence>

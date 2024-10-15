@@ -1,7 +1,6 @@
 import AerisWeather from '@aerisweather/javascript-sdk';
 
 const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
-const openWeatherApiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 export const getWeatherLayer = async (layer) => {
   try {
@@ -16,17 +15,16 @@ export const getWeatherLayer = async (layer) => {
 
 const getAerisLayer = async (layer) => {
   try {
-    const response = await fetch(`/api/aeris-weather?layer=${layer}`);
+    const response = await fetch(`/api/aeris-weather?layer=${layer}&resolution=high`);
     if (!response.ok) {
       throw new Error('Failed to fetch Aeris weather data');
     }
     const data = await response.json();
-    // Process the data and return a compatible layer object
-    // This will depend on the exact format of your backend response
     return {
       type: 'raster',
-      tiles: [data.tileUrl], // Assuming the backend returns a tileUrl
-      tileSize: 256
+      tiles: [data.tileUrl],
+      tileSize: 512,  // Increase tile size for higher resolution
+      maxzoom: 20  // Increase max zoom for more detail
     };
   } catch (error) {
     console.error('Error fetching Aeris layer:', error);
@@ -36,10 +34,11 @@ const getAerisLayer = async (layer) => {
 
 const getOpenWeatherLayer = (layer) => {
   const baseUrl = 'https://tile.openweathermap.org/map';
-  const intensityParam = '&opacity=0.8&fill_bound=true';
+  const intensityParam = '&opacity=1&fill_bound=true';  // Increase opacity for more intensity
   return {
     type: 'raster',
-    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}${intensityParam}`],
-    tileSize: 256
+    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}${intensityParam}`],
+    tileSize: 512,  // Increase tile size for higher resolution
+    maxzoom: 20  // Increase max zoom for more detail
   };
 };

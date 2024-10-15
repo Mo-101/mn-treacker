@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
@@ -10,15 +9,13 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { getWeatherLayer } from '../utils/weatherApiUtils';
-
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+import { initializeMap, toggleLayer, setLayerOpacity } from '../utils/mapUtils';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [activeLayers, setActiveLayers] = useState(['temp']);  // Set temperature as default active layer
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
@@ -26,51 +23,17 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [activeLayer, setActiveLayer] = useState(null);
-  const [selectAll, setSelectAll] = useState(false);
-
-  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
 
   useEffect(() => {
     if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
-    });
-
+    map.current = initializeMap(mapContainer.current, mapState);
     map.current.on('load', () => {
-      addWeatherLayers();
       fetchLassaFeverCases();
       console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
-
-  const addWeatherLayers = async () => {
-    for (const layer of layers) {
-      try {
-        const source = await getWeatherLayer(layer);
-        map.current.addSource(layer, source);
-        map.current.addLayer({
-          id: layer,
-          type: 'raster',
-          source: layer,
-          layout: {
-            visibility: 'none'
-          },
-          paint: {
-            'raster-opacity': 0.8
-          }
-        });
-        console.log(`Added layer: ${layer}`);
-      } catch (error) {
-        console.error(`Error adding layer ${layer}:`, error);
-      }
-    }
-  };
 
   const fetchLassaFeverCases = async () => {
     try {
@@ -111,39 +74,14 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    if (selectAll) return;
-
-    console.log(`Toggling layer: ${layerId}`);
-    const newVisibility = activeLayer === layerId ? 'none' : 'visible';
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', layer === layerId ? newVisibility : 'none');
-      }
-    });
-
-    setActiveLayer(activeLayer === layerId ? null : layerId);
-    setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
-  };
-
-  const handleSelectAllLayers = () => {
-    const newSelectAllState = !selectAll;
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
-      }
-    });
-
-    setSelectAll(newSelectAllState);
-    setActiveLayer(null);
-    setActiveLayers(newSelectAllState ? layers : []);
+    toggleLayer(map.current, layerId, !activeLayers.includes(layerId));
+    setActiveLayers(prev =>
+      prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
+    );
   };
 
   const handleOpacityChange = (layerId, opacity) => {
-    if (map.current && map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
+    setLayerOpacity(map.current, layerId, opacity);
   };
 
   const handleDetailView = () => {
@@ -174,9 +112,6 @@ const WeatherMap = () => {
                 activeLayers={activeLayers}
                 onLayerToggle={handleLayerToggle}
                 onOpacityChange={handleOpacityChange}
-                layers={layers}
-                selectAll={selectAll}
-                onSelectAllLayers={handleSelectAllLayers}
               />
             </div>
           )}

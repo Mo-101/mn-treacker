@@ -7,6 +7,7 @@ import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
+import NewsScroll from './NewsScroll';
 
 const DataUploadSection = lazy(() => import('./AITrainingComponents/DataUploadSection'));
 const ModelPerformanceDashboard = lazy(() => import('./AITrainingComponents/ModelPerformanceDashboard'));
@@ -27,6 +28,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [isValidated, setIsValidated] = useState(false);
   const [ratLocations, setRatLocations] = useState(null);
   const [lassaFeverCases, setLassaFeverCases] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -38,6 +40,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   useEffect(() => {
     fetchRatLocations();
     fetchLassaFeverCases();
+    fetchWeatherData();
   }, []);
 
   useEffect(() => {
@@ -64,6 +67,16 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       setLassaFeverCases(data);
     } catch (error) {
       addToConsoleLog(`Error fetching Lassa fever cases: ${error}`);
+    }
+  };
+
+  const fetchWeatherData = async () => {
+    try {
+      const response = await fetch('/api/openweather');
+      const data = await response.json();
+      setWeatherData(data);
+    } catch (error) {
+      addToConsoleLog(`Error fetching weather data: ${error}`);
     }
   };
 
@@ -130,7 +143,13 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
             <Suspense fallback={<div>Loading...</div>}>
               {activeSection === 'upload' && <DataUploadSection onUploadComplete={handleDataUpload} />}
               {activeSection === 'performance' && <ModelPerformanceDashboard accuracy={modelAccuracy} />}
-              {activeSection === 'visualization' && <DataVisualizationPanel ratLocations={ratLocations} lassaFeverCases={lassaFeverCases} />}
+              {activeSection === 'visualization' && (
+                <DataVisualizationPanel 
+                  ratLocations={ratLocations} 
+                  lassaFeverCases={lassaFeverCases}
+                  weatherData={weatherData}
+                />
+              )}
               {activeSection === 'settings' && <SettingsPanel />} 
             </Suspense>
           </AnimatePresence>
@@ -164,6 +183,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
           <HelpSection onClose={() => setShowHelp(false)} />
         )}
       </AnimatePresence>
+
+      <NewsScroll weatherData={weatherData} />
     </motion.div>
   );
 };

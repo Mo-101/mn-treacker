@@ -11,7 +11,8 @@ const TrainingControlsPanel = ({
   dataUploaded,
   trainingActivities,
   timeLeft,
-  elapsedTime
+  elapsedTime,
+  accuracy
 }) => {
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
@@ -35,16 +36,14 @@ const TrainingControlsPanel = ({
           </Button>
           {isTraining && (
             <div>
-              <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-                  style={{ width: `${trainingProgress}%`, transition: 'width 0.5s ease-in-out' }}
-                />
-              </div>
-              <p className="text-sm text-gray-300 mt-2">Training Progress: {trainingProgress}%</p>
+              <Progress value={trainingProgress} className="mb-2" />
+              <p className="text-sm text-gray-300">Training Progress: {trainingProgress}%</p>
               <p className="text-sm text-gray-300">Time Left: {timeLeft}s</p>
               <p className="text-sm text-gray-300">Elapsed Time: {elapsedTime}s</p>
             </div>
+          )}
+          {accuracy !== null && (
+            <p className="text-sm text-gray-300">Model Accuracy: {accuracy}%</p>
           )}
           <div className="mt-4 max-h-40 overflow-y-auto">
             <h3 className="text-lg font-semibold mb-2">Training Activities</h3>

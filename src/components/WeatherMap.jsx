@@ -71,26 +71,31 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
+    if (!map.current) return;
+
+    const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+    const newVisibility = visibility === 'visible' ? 'none' : 'visible';
+
+    map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
+
     setActiveLayers(prev => {
-      const newLayers = prev.includes(layerId)
-        ? prev.filter(id => id !== layerId)
-        : [...prev, layerId];
-      
-      map.current.setLayoutProperty(layerId, 'visibility', newLayers.includes(layerId) ? 'visible' : 'none');
-      return newLayers;
+      if (newVisibility === 'visible') {
+        return [...prev, layerId];
+      } else {
+        return prev.filter(id => id !== layerId);
+      }
     });
   };
 
   const handleOpacityChange = (layerId, opacity) => {
-    map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+    if (map.current && map.current.getLayer(layerId)) {
+      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+    }
   };
 
   const handleDetailView = () => {
     console.log('Detail view requested');
-    // Implement the logic for handling detail view here
-    // For example, you might want to zoom in on a specific area or show more detailed information
     setPredictionPanelOpen(false);
-    // Add any additional logic for showing detailed view on the main map
   };
 
   return (

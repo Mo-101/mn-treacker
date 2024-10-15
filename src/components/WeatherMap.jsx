@@ -27,7 +27,11 @@ const WeatherMap = () => {
       });
     });
 
-    return () => map.current.remove();
+    return () => {
+      if (map.current) {
+        map.current.remove();
+      }
+    };
   }, []);
 
   return (

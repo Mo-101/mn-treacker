@@ -64,6 +64,10 @@ const PredictionPanel = ({ isOpen, onClose, onLayerToggle, activeLayers, weather
               <Cloud className="mr-2 text-gray-500 h-6 w-6" />
               <span>{weatherData.cloudCover}% Cloud Cover</span>
             </div>
+            <div className="flex items-center">
+              <Droplet className="mr-2 text-blue-300 h-6 w-6" />
+              <span>{weatherData.precipitation} mm Precipitation</span>
+            </div>
           </div>
         )}
       </div>
@@ -86,7 +90,13 @@ const PredictionPanel = ({ isOpen, onClose, onLayerToggle, activeLayers, weather
         <div className="bg-gray-800 p-4 rounded-lg">
           <p className="mb-2"><strong>Highest Predicted Risk:</strong> {habitatPredictions[0]?.area}</p>
           <p className="mb-2"><strong>Risk Level:</strong> {habitatPredictions[0]?.suitability}%</p>
-          <p><strong>Recommendation:</strong> Monitor closely and implement preventive measures.</p>
+          <p><strong>Recommendation:</strong> {
+            habitatPredictions[0]?.suitability > 80 
+              ? "Immediate action required. Implement preventive measures."
+              : habitatPredictions[0]?.suitability > 60
+                ? "Monitor closely and prepare for potential increase in Mastomys activity."
+                : "Continue routine monitoring."
+          }</p>
         </div>
       </div>
     </motion.div>

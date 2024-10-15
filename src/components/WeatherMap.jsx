@@ -10,12 +10,11 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import AerisWeather from '@aerisweather/javascript-sdk';
 import { addCustomLayers, toggleLayer } from './MapLayers';
 import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
 import { fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
 import { getCachedWeatherData, cacheWeatherData } from '../utils/WeatherDataCache';
-import { predictHabitatSuitability } from '../utils/AIPredictor';
+import { predictHabitatSuitability, monitorPredictions } from '../utils/AIPredictor';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -33,6 +32,7 @@ const WeatherMap = () => {
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [weatherData, setWeatherData] = useState(null);
   const [habitatPredictions, setHabitatPredictions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const aerisApp = useRef(null);
 
   useEffect(() => {
@@ -67,6 +67,12 @@ const WeatherMap = () => {
       }
       const mastomysData = await fetchMastomysData(setMastomysData, addToConsoleLog);
       setMastomysData(mastomysData);
+
+      // Monitor predictions and add notifications
+      if (data && mastomysData) {
+        const predictions = monitorPredictions(data, mastomysData, addNotification);
+        setHabitatPredictions(predictions);
+      }
     };
 
     fetchData();
@@ -75,12 +81,9 @@ const WeatherMap = () => {
     return () => clearInterval(interval);
   }, [mapState]);
 
-  useEffect(() => {
-    if (weatherData && mastomysData.length > 0) {
-      const predictions = predictHabitatSuitability(weatherData, mastomysData);
-      setHabitatPredictions(predictions);
-    }
-  }, [weatherData, mastomysData]);
+  const addNotification = (notification) => {
+    setNotifications(prev => [...prev, notification]);
+  };
 
   const handleLayerToggle = (layerId) => {
     setActiveLayers(prev => {
@@ -170,6 +173,13 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+      </div>
+      <div className="absolute top-4 right-4 z-50">
+        {notifications.map((notification, index) => (
+          <div key={index} className={`p-2 mb-2 rounded ${notification.type === 'alert' ? 'bg-red-500' : 'bg-blue-500'} text-white`}>
+            {notification.message}
+          </div>
+        ))}
       </div>
     </div>
   );

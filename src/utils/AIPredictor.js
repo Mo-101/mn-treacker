@@ -1,25 +1,39 @@
-// This is a simplified AI prediction model. In a real-world scenario, 
-// this would be a more complex machine learning model.
+import { getCachedWeatherData } from './WeatherDataCache';
 
 export const predictHabitatSuitability = (weatherData, mastomysData) => {
   const predictions = [];
-
   const areas = ['Forest', 'Grassland', 'Urban', 'Wetland'];
 
   areas.forEach(area => {
     let suitability = 0;
 
-    // Basic logic for habitat suitability prediction
+    // Enhanced logic for habitat suitability prediction
     if (weatherData.temperature > 20 && weatherData.temperature < 30) {
       suitability += 30;
+    } else if (weatherData.temperature > 30) {
+      suitability -= 10;
     }
 
     if (weatherData.humidity > 60) {
       suitability += 20;
+    } else if (weatherData.humidity < 30) {
+      suitability -= 10;
     }
 
     if (weatherData.cloudCover < 50) {
       suitability += 10;
+    }
+
+    if (weatherData.precipitation > 0 && weatherData.precipitation < 10) {
+      suitability += 15;
+    } else if (weatherData.precipitation > 10) {
+      suitability -= 5;
+    }
+
+    if (weatherData.windSpeed < 15) {
+      suitability += 10;
+    } else {
+      suitability -= 5;
     }
 
     // Adjust suitability based on Mastomys data
@@ -32,6 +46,20 @@ export const predictHabitatSuitability = (weatherData, mastomysData) => {
     predictions.push({ area, suitability });
   });
 
-  // Sort predictions by suitability in descending order
   return predictions.sort((a, b) => b.suitability - a.suitability);
+};
+
+export const monitorPredictions = (weatherData, mastomysData, addNotification) => {
+  const predictions = predictHabitatSuitability(weatherData, mastomysData);
+
+  predictions.forEach((prediction) => {
+    if (prediction.suitability >= 80) {
+      addNotification({
+        type: 'alert',
+        message: `High-risk area detected in ${prediction.area} with suitability score of ${prediction.suitability}%`
+      });
+    }
+  });
+
+  return predictions;
 };

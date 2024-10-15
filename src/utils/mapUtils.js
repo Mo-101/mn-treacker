@@ -1,7 +1,5 @@
 import mapboxgl from 'mapbox-gl';
 
-
-
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
@@ -82,14 +80,20 @@ export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity,
 export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
   try {
     addToConsoleLog('Fetching weather data...');
-    // Implement weather data fetching logic here
-    // For example:
-    // const response = await fetch(`/api/weather?lat=${mapState.lat}&lng=${mapState.lng}`);
-    // const data = await response.json();
-    // Process and use the weather data
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${mapState.lat}&lon=${mapState.lng}&units=metric&appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`);
+    const data = await response.json();
+    
+    return {
+      temperature: data.main.temp,
+      humidity: data.main.humidity,
+      windSpeed: data.wind.speed,
+      cloudCover: data.clouds.all,
+      precipitation: data.rain ? data.rain['1h'] : 0
+    };
   } catch (error) {
     console.error('Error fetching weather data:', error);
     addToConsoleLog('Failed to fetch weather data');
+    return null;
   }
 };
 

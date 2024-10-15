@@ -10,7 +10,8 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { getWeatherLayer } from '../utils/weatherApiUtils';
+import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
+import WeatherLayerControls from './WeatherLayerControls';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -26,16 +27,13 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [activeLayer, setActiveLayer] = useState(null);
-  const [selectAll, setSelectAll] = useState(false);
-
-  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
+  const [showOpenWeather, setShowOpenWeather] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
+      style: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });
@@ -43,6 +41,7 @@ const WeatherMap = () => {
     map.current.on('load', () => {
       addWeatherLayers();
       fetchLassaFeverCases();
+      addOpenWeatherLayer();
       console.log('Map loaded and layers added');
     });
 
@@ -50,6 +49,7 @@ const WeatherMap = () => {
   }, []);
 
   const addWeatherLayers = async () => {
+    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
     for (const layer of layers) {
       try {
         const source = await getWeatherLayer(layer);
@@ -70,6 +70,25 @@ const WeatherMap = () => {
         console.error(`Error adding layer ${layer}:`, error);
       }
     }
+  };
+
+  const addOpenWeatherLayer = () => {
+    const temperatureSource = getOpenWeatherTemperatureLayer();
+    map.current.addSource('openWeatherTemperature', temperatureSource);
+
+    map.current.addLayer({
+      id: 'openWeatherTemperatureLayer',
+      type: 'raster',
+      source: 'openWeatherTemperature',
+      layout: { visibility: 'none' },
+      paint: { 'raster-opacity': 0.8 },
+    });
+  };
+
+  const toggleOpenWeatherLayer = () => {
+    const visibility = showOpenWeather ? 'none' : 'visible';
+    map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
+    setShowOpenWeather(!showOpenWeather);
   };
 
   const fetchLassaFeverCases = async () => {
@@ -111,19 +130,13 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    if (selectAll) return;
-
-    console.log(`Toggling layer: ${layerId}`);
-    const newVisibility = activeLayer === layerId ? 'none' : 'visible';
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', layer === layerId ? newVisibility : 'none');
-      }
-    });
-
-    setActiveLayer(activeLayer === layerId ? null : layerId);
-    setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
+    if (activeLayers.includes(layerId)) {
+      map.current.setLayoutProperty(layerId, 'visibility', 'none');
+      setActiveLayers(activeLayers.filter(id => id !== layerId));
+    } else {
+      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+      setActiveLayers([...activeLayers, layerId]);
+    }
   };
 
   const handleSelectAllLayers = () => {
@@ -174,8 +187,8 @@ const WeatherMap = () => {
                 activeLayers={activeLayers}
                 onLayerToggle={handleLayerToggle}
                 onOpacityChange={handleOpacityChange}
-                layers={layers}
-                selectAll={selectAll}
+                layers={['precipitation', 'temp', 'clouds', 'wind']}
+                selectAll={false}
                 onSelectAllLayers={handleSelectAllLayers}
               />
             </div>
@@ -217,6 +230,12 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+        <div className="pointer-events-auto absolute bottom-4 left-4">
+          <WeatherLayerControls
+            showOpenWeather={showOpenWeather}
+            toggleOpenWeatherLayer={toggleOpenWeatherLayer}
+          />
+        </div>
       </div>
     </div>
   );

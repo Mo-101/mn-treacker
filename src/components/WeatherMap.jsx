@@ -131,12 +131,17 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    if (activeLayers.includes(layerId)) {
-      map.current.setLayoutProperty(layerId, 'visibility', 'none');
-      setActiveLayers(activeLayers.filter(id => id !== layerId));
+    if (map.current && map.current.getLayer(layerId)) {
+      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+      const newVisibility = visibility === 'visible' ? 'none' : 'visible';
+      map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
+      setActiveLayers(prev => 
+        newVisibility === 'visible' 
+          ? [...prev, layerId] 
+          : prev.filter(id => id !== layerId)
+      );
     } else {
-      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
-      setActiveLayers([...activeLayers, layerId]);
+      console.warn(`Layer ${layerId} not found on the map.`);
     }
   };
 

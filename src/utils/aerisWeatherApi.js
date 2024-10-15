@@ -60,3 +60,42 @@ export const setAerisLayerOpacity = async (layerName, opacity) => {
     return { success: false, error: error.message };
   }
 };
+
+// Helper function to safely extract data from a Request object
+const extractRequestData = (request) => {
+  if (request instanceof Request) {
+    return {
+      url: request.url,
+      method: request.method,
+      headers: Object.fromEntries(request.headers),
+    };
+  }
+  return String(request);
+};
+
+// Wrap fetch to handle errors without cloning the Request object
+const safeFetch = async (...args) => {
+  try {
+    const response = await fetch(...args);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    const errorDetails = {
+      message: error.message,
+      request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0]),
+    };
+    // Use the existing reportHTTPError function if available, otherwise just log
+    if (typeof reportHTTPError === 'function') {
+      reportHTTPError(errorDetails);
+    } else {
+      console.error('HTTP Error:', errorDetails);
+    }
+    throw error;
+  }
+};
+
+// Replace global fetch with our safe version
+window.fetch = safeFetch;

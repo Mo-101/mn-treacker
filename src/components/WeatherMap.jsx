@@ -55,10 +55,10 @@ const WeatherMap = () => {
           type: 'raster',
           source: layer,
           layout: {
-            visibility: 'none'
+            visibility: 'visible'
           },
           paint: {
-            'raster-opacity': 0.7
+            'raster-opacity': 0.8
           }
         });
         console.log(`Added layer: ${layer}`);

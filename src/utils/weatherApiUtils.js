@@ -22,9 +22,10 @@ const getAerisLayer = async (layer) => {
 
 const getOpenWeatherLayer = (layer) => {
   const baseUrl = 'https://tile.openweathermap.org/map';
+  const intensityParam = '&opacity=0.8&fill_bound=true';
   return {
     type: 'raster',
-    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}`],
+    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}${intensityParam}`],
     tileSize: 256
   };
 };

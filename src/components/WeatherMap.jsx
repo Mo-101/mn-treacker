@@ -95,6 +95,11 @@ const WeatherMap = () => {
     // Implement logic to show details on the main map
   };
 
+  const handleExportSnapshot = () => {
+    console.log('Exporting map snapshot');
+    // Implement export functionality here
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
@@ -125,6 +130,7 @@ const WeatherMap = () => {
               isOpen={rightPanelOpen} 
               onClose={() => setRightPanelOpen(false)}
               selectedPoint={selectedPoint}
+              onExportSnapshot={handleExportSnapshot}
             />
           )}
         </AnimatePresence>

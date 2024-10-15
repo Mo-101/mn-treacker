@@ -7,9 +7,12 @@ import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
 import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
-import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
+import NewsScroll from './NewsScroll';
+import RatDataLayer from './RatDataLayer';
+import LassaFeverLayer from './LassaFeverLayer';
 import { initializeMap, toggleLayer, setLayerOpacity } from '../utils/mapUtils';
+import { fetchRatData, fetchLassaFeverCases, fetchTrainingProgress } from '../utils/dataFetching';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
@@ -21,140 +24,51 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
-  const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [ratDetections, setRatDetections] = useState([]);
-  const [ratPredictions, setRatPredictions] = useState([]);
+  const [ratData, setRatData] = useState({ detections: [], predictions: [] });
+  const [lassaFeverCases, setLassaFeverCases] = useState([]);
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [isTraining, setIsTraining] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
     map.current = initializeMap(mapContainer.current, mapState);
     map.current.on('load', () => {
-      fetchLassaFeverCases();
-      fetchRatDetectionsAndPredictions();
+      fetchInitialData();
       console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
 
-  const fetchLassaFeverCases = async () => {
+  useEffect(() => {
+    if (isTraining) {
+      const interval = setInterval(async () => {
+        const progress = await fetchTrainingProgress();
+        setTrainingProgress(progress.progress);
+        setIsTraining(progress.is_training);
+        if (!progress.is_training) {
+          clearInterval(interval);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isTraining]);
+
+  const fetchInitialData = async () => {
     try {
-      const response = await fetch('/api/cases');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Lassa Fever cases');
-      }
-      const data = await response.json();
-      addLassaFeverLayer(data);
+      const [ratDataResponse, lassaFeverResponse] = await Promise.all([
+        fetchRatData(),
+        fetchLassaFeverCases()
+      ]);
+      setRatData(ratDataResponse);
+      setLassaFeverCases(lassaFeverResponse);
     } catch (error) {
-      console.error('Error fetching Lassa Fever cases:', error);
+      console.error('Error fetching initial data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch Lassa Fever cases. Please try again later.",
+        description: "Failed to fetch initial data. Please try again later.",
         variant: "destructive",
-      });
-    }
-  };
-
-  const fetchRatDetectionsAndPredictions = async () => {
-    try {
-      const response = await fetch('/api/rat-data');
-      if (!response.ok) {
-        throw new Error('Failed to fetch rat detections and predictions');
-      }
-      const data = await response.json();
-      setRatDetections(data.detections);
-      setRatPredictions(data.predictions);
-      addRatLayers();
-    } catch (error) {
-      console.error('Error fetching rat data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch rat detection and prediction data. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addLassaFeverLayer = (data) => {
-    if (!map.current.getSource('lassa-fever-cases')) {
-      map.current.addSource('lassa-fever-cases', {
-        type: 'geojson',
-        data: data
-      });
-
-      map.current.addLayer({
-        id: 'lassa-fever-points',
-        type: 'circle',
-        source: 'lassa-fever-cases',
-        paint: {
-          'circle-radius': 6,
-          'circle-color': '#FF0000',
-          'circle-opacity': 0.7
-        }
-      });
-    }
-  };
-
-  const addRatLayers = () => {
-    if (!map.current.getSource('rat-detections')) {
-      map.current.addSource('rat-detections', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: ratDetections.map(detection => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [detection.lng, detection.lat]
-            },
-            properties: {
-              id: detection.id
-            }
-          }))
-        }
-      });
-
-      map.current.addLayer({
-        id: 'rat-detection-points',
-        type: 'circle',
-        source: 'rat-detections',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#FF0000',
-          'circle-opacity': 0.7
-        }
-      });
-    }
-
-    if (!map.current.getSource('rat-predictions')) {
-      map.current.addSource('rat-predictions', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: ratPredictions.map(prediction => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [prediction.lng, prediction.lat]
-            },
-            properties: {
-              id: prediction.id,
-              probability: prediction.probability
-            }
-          }))
-        }
-      });
-
-      map.current.addLayer({
-        id: 'rat-prediction-points',
-        type: 'circle',
-        source: 'rat-predictions',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#00FF00',
-          'circle-opacity': ['interpolate', ['linear'], ['get', 'probability'], 0, 0.1, 1, 0.7]
-        }
       });
     }
   };
@@ -178,9 +92,6 @@ const WeatherMap = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
-      {map.current && (
-        <MastomysTracker data={mastomysData} map={map.current} />
-      )}
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">
           <TopNavigationBar 
@@ -191,54 +102,52 @@ const WeatherMap = () => {
         </div>
         <AnimatePresence>
           {leftPanelOpen && (
-            <div className="pointer-events-auto">
-              <LeftSidePanel 
-                isOpen={leftPanelOpen} 
-                onClose={() => setLeftPanelOpen(false)}
-                activeLayers={activeLayers}
-                onLayerToggle={handleLayerToggle}
-                onOpacityChange={handleOpacityChange}
-              />
-            </div>
+            <LeftSidePanel 
+              isOpen={leftPanelOpen} 
+              onClose={() => setLeftPanelOpen(false)}
+              activeLayers={activeLayers}
+              onLayerToggle={handleLayerToggle}
+              onOpacityChange={handleOpacityChange}
+            />
           )}
         </AnimatePresence>
         <AnimatePresence>
           {rightPanelOpen && (
-            <div className="pointer-events-auto">
-              <RightSidePanel 
-                isOpen={rightPanelOpen} 
-                onClose={() => setRightPanelOpen(false)}
-                selectedPoint={selectedPoint}
-              />
-            </div>
+            <RightSidePanel 
+              isOpen={rightPanelOpen} 
+              onClose={() => setRightPanelOpen(false)}
+              selectedPoint={selectedPoint}
+            />
           )}
         </AnimatePresence>
         <AnimatePresence>
           {predictionPanelOpen && (
-            <div className="pointer-events-auto">
-              <PredictionPanel
-                isOpen={predictionPanelOpen}
-                onClose={() => setPredictionPanelOpen(false)}
-                onDetailView={handleDetailView}
-              />
-            </div>
+            <PredictionPanel
+              isOpen={predictionPanelOpen}
+              onClose={() => setPredictionPanelOpen(false)}
+              onDetailView={handleDetailView}
+            />
           )}
         </AnimatePresence>
-        <div className="pointer-events-auto">
-          <FloatingInsightsBar />
-        </div>
+        <FloatingInsightsBar />
         <AnimatePresence>
           {aiTrainingOpen && (
-            <div className="pointer-events-auto">
-              <AITrainingInterface
-                isOpen={aiTrainingOpen}
-                onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={(log) => console.log(log)}
-              />
-            </div>
+            <AITrainingInterface
+              isOpen={aiTrainingOpen}
+              onClose={() => setAiTrainingOpen(false)}
+              trainingProgress={trainingProgress}
+              isTraining={isTraining}
+            />
           )}
         </AnimatePresence>
       </div>
+      {map.current && (
+        <>
+          <RatDataLayer map={map.current} ratData={ratData} />
+          <LassaFeverLayer map={map.current} cases={lassaFeverCases} />
+        </>
+      )}
+      <NewsScroll />
     </div>
   );
 };

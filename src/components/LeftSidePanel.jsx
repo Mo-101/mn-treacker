@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Thermometer, Droplet, Wind, Sun } from 'lucide-react';
+import { X, Cloud, Thermometer, Sun, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';

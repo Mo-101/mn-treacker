@@ -10,11 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { addCustomLayers, toggleLayer } from './MapLayers';
-import { initializeAerisMap, cleanupAerisMap } from '../utils/aerisMapUtils';
-import { fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
-import { getCachedWeatherData, cacheWeatherData } from '../utils/WeatherDataCache';
-import { predictHabitatSuitability, monitorPredictions } from '../utils/AIPredictor';
+import AerisWeather from '@aerisweather/javascript-sdk';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -30,10 +26,8 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [weatherData, setWeatherData] = useState(null);
-  const [habitatPredictions, setHabitatPredictions] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const aerisApp = useRef(null);
+
+  const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
 
   useEffect(() => {
     if (map.current) return;
@@ -45,45 +39,35 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      addCustomLayers(map.current);
-      initializeAerisMap(mapContainer.current, aerisApp, mapState, toast, addToConsoleLog);
+      addWeatherLayers();
     });
 
-    return () => {
-      if (map.current) map.current.remove();
-      cleanupAerisMap(aerisApp);
-    };
+    return () => map.current && map.current.remove();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const cachedData = getCachedWeatherData();
-      if (cachedData) {
-        setWeatherData(cachedData);
-      } else {
-        const fetchedData = await fetchWeatherData(map.current, mapState, addToConsoleLog);
-        if (fetchedData) {
-          setWeatherData(fetchedData);
-          cacheWeatherData(fetchedData);
+  const addWeatherLayers = () => {
+    const layers = ['precipitation', 'temperature', 'humidity', 'wind-speed', 'cloud-cover'];
+    layers.forEach(layer => {
+      map.current.addSource(layer, {
+        type: 'raster',
+        tiles: [
+          `https://maps.aerisapi.com/${import.meta.env.VITE_XWEATHER_ID}_${import.meta.env.VITE_XWEATHER_SECRET}/${layer}/{z}/{x}/{y}/current.png`
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: layer,
+        type: 'raster',
+        source: layer,
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'raster-opacity': 0.7
         }
-      }
-      await fetchMastomysData(setMastomysData, addToConsoleLog);
-
-      // Monitor predictions and add notifications
-      if (weatherData && mastomysData.length > 0) {
-        const predictions = monitorPredictions(weatherData, mastomysData, addNotification);
-        setHabitatPredictions(predictions);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 900000); // 15 minutes
-
-    return () => clearInterval(interval);
-  }, [mapState, weatherData, mastomysData]);
-
-  const addNotification = (notification) => {
-    setNotifications(prev => [...prev, notification]);
+      });
+    });
   };
 
   const handleLayerToggle = (layerId) => {
@@ -92,20 +76,21 @@ const WeatherMap = () => {
         ? prev.filter(id => id !== layerId)
         : [...prev, layerId];
       
-      toggleLayer(map.current, layerId, newLayers.includes(layerId));
+      map.current.setLayoutProperty(layerId, 'visibility', newLayers.includes(layerId) ? 'visible' : 'none');
       return newLayers;
     });
   };
 
   const handleOpacityChange = (layerId, opacity) => {
-    if (map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
+    map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
   };
 
-  const addToConsoleLog = (log) => {
-    console.log(log);
-    // Implement proper logging if needed
+  const handleDetailView = () => {
+    console.log('Detail view requested');
+    // Implement the logic for handling detail view here
+    // For example, you might want to zoom in on a specific area or show more detailed information
+    setPredictionPanelOpen(false);
+    // Add any additional logic for showing detailed view on the main map
   };
 
   return (
@@ -152,10 +137,7 @@ const WeatherMap = () => {
               <PredictionPanel
                 isOpen={predictionPanelOpen}
                 onClose={() => setPredictionPanelOpen(false)}
-                onLayerToggle={handleLayerToggle}
-                activeLayers={activeLayers}
-                weatherData={weatherData}
-                habitatPredictions={habitatPredictions}
+                onDetailView={handleDetailView}
               />
             </div>
           )}
@@ -169,18 +151,11 @@ const WeatherMap = () => {
               <AITrainingInterface
                 isOpen={aiTrainingOpen}
                 onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={addToConsoleLog}
+                addToConsoleLog={(log) => console.log(log)} // Implement proper logging if needed
               />
             </div>
           )}
         </AnimatePresence>
-      </div>
-      <div className="absolute top-4 right-4 z-50">
-        {notifications.map((notification, index) => (
-          <div key={index} className={`p-2 mb-2 rounded ${notification.type === 'alert' ? 'bg-red-500' : 'bg-blue-500'} text-white`}>
-            {notification.message}
-          </div>
-        ))}
       </div>
     </div>
   );

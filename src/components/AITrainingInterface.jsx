@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
-import DataUploadSection from './AITrainingComponents/DataUploadSection';
-import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
-import DataVisualizationPanel from './AITrainingComponents/DataVisualizationPanel';
-import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
+import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
+
+const DataUploadSection = lazy(() => import('./AITrainingComponents/DataUploadSection'));
+const ModelPerformanceDashboard = lazy(() => import('./AITrainingComponents/ModelPerformanceDashboard'));
+const DataVisualizationPanel = lazy(() => import('./AITrainingComponents/DataVisualizationPanel'));
+const SettingsPanel = lazy(() => import('./AITrainingComponents/SettingsPanel'));
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -18,9 +20,13 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [isTraining, setIsTraining] = useState(false);
   const [dataUploaded, setDataUploaded] = useState(false);
   const [trainingActivities, setTrainingActivities] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(100);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
+  const [modelAccuracy, setModelAccuracy] = useState(null);
+  const [isValidated, setIsValidated] = useState(false);
+  const [ratLocations, setRatLocations] = useState(null);
+  const [lassaFeverCases, setLassaFeverCases] = useState(null);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -30,49 +36,75 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   ];
 
   useEffect(() => {
-    let interval;
-    if (isTraining) {
-      interval = setInterval(async () => {
-        try {
-          const response = await fetch('/api/training-progress');
-          const data = await response.json();
-          setTrainingProgress(data.progress);
-          setIsTraining(data.is_training);
-          if (!data.is_training) {
-            clearInterval(interval);
-            addToConsoleLog('Training completed');
-          }
-        } catch (error) {
-          console.error('Error fetching training progress:', error);
-        }
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTraining, addToConsoleLog]);
+    fetchRatLocations();
+    fetchLassaFeverCases();
+  }, []);
 
-  const handleStartTraining = async () => {
+  useEffect(() => {
+    if (isTraining) {
+      const interval = setInterval(fetchTrainingProgress, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isTraining]);
+
+  const fetchRatLocations = async () => {
     try {
-      const response = await fetch('/api/start-training', { method: 'POST' });
-      if (response.ok) {
-        setIsTraining(true);
-        setTrainingProgress(0);
-        setElapsedTime(0);
-        setTimeLeft(100); // Assuming 100 seconds for training
-        setTrainingActivities([]);
-        setKnowledgeLevel(0);
-        addToConsoleLog('Training started');
-      } else {
-        addToConsoleLog('Failed to start training');
+      const response = await fetch('/api/rat-locations');
+      const data = await response.json();
+      setRatLocations(data);
+    } catch (error) {
+      addToConsoleLog(`Error fetching rat locations: ${error}`);
+    }
+  };
+
+  const fetchLassaFeverCases = async () => {
+    try {
+      const response = await fetch('/api/cases');
+      const data = await response.json();
+      setLassaFeverCases(data);
+    } catch (error) {
+      addToConsoleLog(`Error fetching Lassa fever cases: ${error}`);
+    }
+  };
+
+  const fetchTrainingProgress = async () => {
+    try {
+      const response = await fetch('/api/training-progress');
+      const data = await response.json();
+      setTrainingProgress(data.progress);
+      setIsTraining(data.is_training);
+      if (data.progress >= 100) {
+        setIsTraining(false);
+        setModelAccuracy(data.progress);
       }
     } catch (error) {
-      console.error('Error starting training:', error);
-      addToConsoleLog('Error starting training');
+      addToConsoleLog(`Error fetching training progress: ${error}`);
+    }
+  };
+
+  const handleStartTraining = async () => {
+    if (isValidated && dataUploaded) {
+      try {
+        await fetch('/api/start-training', { method: 'POST' });
+        setIsTraining(true);
+        addToConsoleLog('Training started');
+      } catch (error) {
+        addToConsoleLog(`Error starting training: ${error}`);
+      }
+    } else {
+      addToConsoleLog('Data validation required before training.');
     }
   };
 
   const handleDataUpload = () => {
     setDataUploaded(true);
+    validateData();
     addToConsoleLog('Data uploaded successfully');
+  };
+
+  const validateData = async () => {
+    setIsValidated(true);
+    addToConsoleLog('Data validation completed');
   };
 
   return (
@@ -172,6 +204,9 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     </motion.div>
   );
 
+};
+
+export default AITrainingInterface;
 };
 
 export default AITrainingInterface;

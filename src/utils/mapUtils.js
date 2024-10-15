@@ -1,12 +1,11 @@
 import mapboxgl from 'mapbox-gl';
-
-
+import { getWeatherData } from './weatherApiUtils';
 
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      style: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
       pitch: 45,
@@ -79,31 +78,25 @@ export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity,
   addToConsoleLog(`Layer opacity set to ${opacity}%`);
 };
 
-export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
+export const fetchWeatherData = async (map, mapState) => {
   try {
-    addToConsoleLog('Fetching weather data...');
-    // Implement weather data fetching logic here
-    // For example:
-    // const response = await fetch(`/api/weather?lat=${mapState.lat}&lng=${mapState.lng}`);
-    // const data = await response.json();
-    // Process and use the weather data
+    const center = map.getCenter();
+    const weatherData = await getWeatherData(center.lat, center.lng);
+    return weatherData;
   } catch (error) {
     console.error('Error fetching weather data:', error);
-    addToConsoleLog('Failed to fetch weather data');
+    return null;
   }
 };
 
-export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
+export const fetchMastomysData = async () => {
   try {
-    addToConsoleLog('Fetching Mastomys data...');
-    // Implement Mastomys data fetching logic here
-    // For example:
-    // const response = await fetch('/api/mastomys-data');
-    // const data = await response.json();
-    // setMastomysData(data);
+    const response = await fetch('/api/mastomys-data');
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Error fetching Mastomys data:', error);
-    addToConsoleLog('Failed to fetch Mastomys data');
+    return [];
   }
 };
 
@@ -121,6 +114,41 @@ export const updatePredictionLayer = (map, predictionData) => {
           risk: point.risk
         }
       }))
+    });
+  } else {
+    map.addSource('prediction-hotspots', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: predictionData.map(point => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [point.lng, point.lat]
+          },
+          properties: {
+            risk: point.risk
+          }
+        }))
+      }
+    });
+
+    map.addLayer({
+      id: 'prediction-hotspots',
+      type: 'circle',
+      source: 'prediction-hotspots',
+      paint: {
+        'circle-radius': 10,
+        'circle-color': [
+          'interpolate',
+          ['linear'],
+          ['get', 'risk'],
+          0, '#00ff00',
+          0.5, '#ffff00',
+          1, '#ff0000'
+        ],
+        'circle-opacity': 0.7
+      }
     });
   }
 };

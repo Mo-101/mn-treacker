@@ -13,7 +13,8 @@ import PredictionPanel from './PredictionPanel';
 import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
-import { addCustomLayers, toggleLayer } from './MapLayers';
+import { addCustomLayers, toggleLayer, updatePredictionLayer } from './MapLayers';
+import { fetchWeatherData, fetchMastomysData } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -30,6 +31,8 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
+  const [weatherData, setWeatherData] = useState({});
+  const [predictions, setPredictions] = useState([]);
 
   useEffect(() => {
     if (map.current) return;
@@ -49,6 +52,20 @@ const WeatherMap = () => {
 
     return () => map.current && map.current.remove();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const weatherData = await fetchWeatherData(map.current, mapState);
+      setWeatherData(weatherData);
+      const mastomysData = await fetchMastomysData();
+      setMastomysData(mastomysData);
+      // Assuming we have a function to generate predictions based on weather and mastomys data
+      const newPredictions = generatePredictions(weatherData, mastomysData);
+      setPredictions(newPredictions);
+      updatePredictionLayer(map.current, newPredictions);
+    };
+    fetchData();
+  }, [mapState]);
 
   const addOpenWeatherLayer = () => {
     const temperatureSource = getOpenWeatherTemperatureLayer();
@@ -108,13 +125,10 @@ const WeatherMap = () => {
   };
 
   const handleLayerToggle = (layerId) => {
-    if (activeLayers.includes(layerId)) {
-      map.current.setLayoutProperty(layerId, 'visibility', 'none');
-      setActiveLayers(activeLayers.filter(id => id !== layerId));
-    } else {
-      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
-      setActiveLayers([...activeLayers, layerId]);
-    }
+    toggleLayer(map.current, layerId, !activeLayers.includes(layerId));
+    setActiveLayers(prev => 
+      prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
+    );
   };
 
   const handleSelectAllLayers = () => {
@@ -174,6 +188,9 @@ const WeatherMap = () => {
                 isOpen={predictionPanelOpen}
                 onClose={() => setPredictionPanelOpen(false)}
                 onDetailView={handleDetailView}
+                ratSightings={mastomysData}
+                predictions={predictions}
+                weatherData={weatherData}
               />
             </div>
           )}

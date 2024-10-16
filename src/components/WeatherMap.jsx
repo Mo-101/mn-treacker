@@ -40,6 +40,12 @@ const WeatherMap = () => {
       addOpenWeatherLayer(map.current);
       addAdminBoundariesLayer(map.current);
       fetchLassaFeverCasesData();
+      
+      // Hide all weather layers by default
+      ['precipitation', 'clouds', 'wind', 'openWeatherTemperatureLayer'].forEach(layer => {
+        toggleLayer(map.current, layer, false);
+      });
+
       console.log('Map loaded and layers added');
     });
 

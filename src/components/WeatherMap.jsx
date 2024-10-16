@@ -13,7 +13,7 @@ import PredictionPanel from './PredictionPanel';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 import { fetchRatLocations, fetchLassaFeverCases, fetchWeatherData } from '../utils/api';
-import { initializeMap, addWeatherLayers, addOpenWeatherLayer, toggleLayer } from '../utils/mapUtils';
+import { initializeMap, addWeatherLayers, addOpenWeatherLayer, addAdminBoundariesLayer, toggleLayer, setLayerOpacity } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -37,8 +37,9 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       addWeatherLayers(map.current);
-      fetchLassaFeverCasesData();
       addOpenWeatherLayer(map.current);
+      addAdminBoundariesLayer(map.current);
+      fetchLassaFeverCasesData();
       console.log('Map loaded and layers added');
     });
 
@@ -98,9 +99,7 @@ const WeatherMap = () => {
   };
 
   const handleOpacityChange = (layerId, opacity) => {
-    if (map.current && map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
+    setLayerOpacity(map.current, layerId, opacity);
   };
 
   const handleDetailView = () => {

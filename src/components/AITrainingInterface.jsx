@@ -10,6 +10,7 @@ import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel'
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
+import { startTraining, getTrainingProgress } from '../utils/api';
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -34,8 +35,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     if (isTraining) {
       interval = setInterval(async () => {
         try {
-          const response = await fetch('/api/training-progress');
-          const data = await response.json();
+          const data = await getTrainingProgress();
           setTrainingProgress(data.progress);
           setIsTraining(data.is_training);
           if (!data.is_training) {
@@ -52,8 +52,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
   const handleStartTraining = async () => {
     try {
-      const response = await fetch('/api/start-training', { method: 'POST' });
-      if (response.ok) {
+      const response = await startTraining();
+      if (response.message === "Training started") {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
@@ -68,11 +68,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       console.error('Error starting training:', error);
       addToConsoleLog('Error starting training');
     }
-  };
-
-  const handleDataUpload = () => {
-    setDataUploaded(true);
-    addToConsoleLog('Data uploaded successfully');
   };
 
   return (
@@ -171,7 +166,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
 };
 
 export default AITrainingInterface;

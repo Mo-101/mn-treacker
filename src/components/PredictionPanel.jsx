@@ -1,35 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import MiniMap from './MiniMap';
-import { fetchPredictions, fetchHabitatSuitability } from '../utils/api';
 
 const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
   const [timeframe, setTimeframe] = useState('weekly');
-  const [populationData, setPopulationData] = useState([]);
-  const [habitatData, setHabitatData] = useState([]);
-  const [environmentalTrends, setEnvironmentalTrends] = useState({});
-  const [riskSummary, setRiskSummary] = useState({});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const predictions = await fetchPredictions();
-        setPopulationData(predictions.populationTrend);
-        setEnvironmentalTrends(predictions.environmentalTrends);
-        setRiskSummary(predictions.riskSummary);
+  const populationData = [
+    { name: 'Jan', value: 4000 },
+    { name: 'Feb', value: 3000 },
+    { name: 'Mar', value: 2000 },
+    { name: 'Apr', value: 2780 },
+    { name: 'May', value: 1890 },
+    { name: 'Jun', value: 2390 },
+  ];
 
-        const habitatSuitability = await fetchHabitatSuitability();
-        setHabitatData(habitatSuitability);
-      } catch (error) {
-        console.error('Error fetching prediction data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const habitatData = [
+    { area: 'Forest', suitability: 80 },
+    { area: 'Grassland', suitability: 65 },
+    { area: 'Urban', suitability: 30 },
+    { area: 'Wetland', suitability: 75 },
+  ];
 
   return (
     <motion.div
@@ -84,24 +77,24 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
         <div className="flex justify-between text-lg">
           <div className="flex items-center">
             <Thermometer className="mr-2 text-red-500 h-6 w-6" />
-            <span>{environmentalTrends.temperature}</span>
+            <span>+2.5°C</span>
           </div>
           <div className="flex items-center">
             <Droplet className="mr-2 text-blue-500 h-6 w-6" />
-            <span>{environmentalTrends.humidity}</span>
+            <span>-5% Humidity</span>
           </div>
           <div className="flex items-center">
             <Wind className="mr-2 text-green-500 h-6 w-6" />
-            <span>{environmentalTrends.vegetation}</span>
+            <span>+10% Vegetation</span>
           </div>
         </div>
       </div>
       <div className="mb-6">
         <h3 className="text-2xl font-semibold mb-4">Risk Summary</h3>
         <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="mb-2"><strong>Highest Predicted Risk:</strong> {riskSummary.highestRisk}</p>
-          <p className="mb-2"><strong>Newly Identified Hotspots:</strong> {riskSummary.newHotspots}</p>
-          <p><strong>Habitat Suitability Change:</strong> {riskSummary.habitatChange}</p>
+          <p className="mb-2"><strong>Highest Predicted Risk:</strong> Urban areas near water sources</p>
+          <p className="mb-2"><strong>Newly Identified Hotspots:</strong> 3 locations in grasslands</p>
+          <p><strong>Habitat Suitability Change:</strong> +15% in forest regions</p>
         </div>
       </div>
       <Button onClick={onDetailView} className="w-full text-lg py-3">View Details on Main Map</Button>

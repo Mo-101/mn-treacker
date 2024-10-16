@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { fetchRatLocations } from '../utils/api';
 
 const MastomysTracker = ({ map }) => {
   const [ratLocations, setRatLocations] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchRatLocations = async () => {
       try {
-        const data = await fetchRatLocations();
+        const response = await fetch('/api/rat-locations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch rat locations');
+        }
+        const data = await response.json();
         setRatLocations(data.features);
       } catch (error) {
         console.error('Error fetching rat locations:', error);
       }
     };
 
-    fetchData();
+    fetchRatLocations();
   }, []);
 
   useEffect(() => {

@@ -10,7 +10,6 @@ import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel'
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
-import { startTraining, getTrainingProgress, fetchModelPerformance, fetchDatasets } from '../utils/api';
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -22,8 +21,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
-  const [modelPerformance, setModelPerformance] = useState(null);
-  const [datasets, setDatasets] = useState([]);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -33,26 +30,17 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   ];
 
   useEffect(() => {
-    fetchDatasets().then(setDatasets).catch(console.error);
-  }, []);
-
-  useEffect(() => {
     let interval;
     if (isTraining) {
       interval = setInterval(async () => {
         try {
-          const data = await getTrainingProgress();
+          const response = await fetch('/api/training-progress');
+          const data = await response.json();
           setTrainingProgress(data.progress);
           setIsTraining(data.is_training);
-          setTimeLeft(data.time_left);
-          setElapsedTime(data.elapsed_time);
-          setTrainingActivities(data.activities);
-          setKnowledgeLevel(data.knowledge_level);
           if (!data.is_training) {
             clearInterval(interval);
             addToConsoleLog('Training completed');
-            const performance = await fetchModelPerformance();
-            setModelPerformance(performance);
           }
         } catch (error) {
           console.error('Error fetching training progress:', error);
@@ -64,12 +52,12 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
   const handleStartTraining = async () => {
     try {
-      const response = await startTraining();
-      if (response.message === "Training started") {
+      const response = await fetch('/api/start-training', { method: 'POST' });
+      if (response.ok) {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
-        setTimeLeft(100);
+        setTimeLeft(100); // Assuming 100 seconds for training
         setTrainingActivities([]);
         setKnowledgeLevel(0);
         addToConsoleLog('Training started');
@@ -82,7 +70,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     }
   };
 
-  const handleDataUpload = (uploadedData) => {
+  const handleDataUpload = () => {
     setDataUploaded(true);
     addToConsoleLog('Data uploaded successfully');
   };
@@ -114,7 +102,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <DataUploadSection onUploadComplete={handleDataUpload} datasets={datasets} />
+                <DataUploadSection onUploadComplete={handleDataUpload} />
               </motion.div>
             )}
 
@@ -125,7 +113,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <ModelPerformanceDashboard performance={modelPerformance} />
+                <ModelPerformanceDashboard />
               </motion.div>
             )}
 
@@ -183,6 +171,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
+
 };
 
 export default AITrainingInterface;

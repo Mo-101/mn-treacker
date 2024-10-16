@@ -9,6 +9,8 @@ import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
 import NewsScroll from './NewsScroll';
 import { debounce } from 'lodash';
+import { initializeTracking } from '../utils/tracking';
+import { fetchWithErrorHandling } from '../utils/apiHelpers';
 
 const DataUploadSection = lazy(() => import('./AITrainingComponents/DataUploadSection'));
 const ModelPerformanceDashboard = lazy(() => import('./AITrainingComponents/ModelPerformanceDashboard'));
@@ -32,20 +34,13 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [weatherData, setWeatherData] = useState(null);
   const [fetchError, setFetchError] = useState(null);
 
-  const navItems = [
-    { icon: Upload, label: 'Upload', section: 'upload' },
-    { icon: BarChart2, label: 'Performance', section: 'performance' },
-    { icon: Map, label: 'Visualization', section: 'visualization' },
-    { icon: Settings, label: 'Settings', section: 'settings' },
-  ];
-
   useEffect(() => {
+    initializeTracking();
     fetchRatLocations();
     fetchLassaFeverCases();
     fetchWeatherData();
   }, []);
 
-  // Debounce the fetchTrainingProgress function
   const fetchTrainingProgress = debounce(async () => {
     try {
       const response = await fetch('/api/training-progress');
@@ -74,11 +69,9 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
   const fetchRatLocations = async () => {
     try {
-      const response = await fetch('/api/rat-locations');
-      if (!response.ok) throw new Error('Failed to fetch rat locations');
-      const data = await response.json();
+      const data = await fetchWithErrorHandling('/api/rat-locations');
       setRatLocations(data);
-      setFetchError(null); // Reset error on success
+      setFetchError(null);
     } catch (error) {
       setFetchError(`Error fetching rat locations: ${error.message}`);
       addToConsoleLog(`Error fetching rat locations: ${error}`);
@@ -87,8 +80,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
   const fetchLassaFeverCases = async () => {
     try {
-      const response = await fetch('/api/cases');
-      const data = await response.json();
+      const data = await fetchWithErrorHandling('/api/cases');
       setLassaFeverCases(data);
     } catch (error) {
       addToConsoleLog(`Error fetching Lassa fever cases: ${error}`);
@@ -97,8 +89,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
 
   const fetchWeatherData = async () => {
     try {
-      const response = await fetch('/api/openweather');
-      const data = await response.json();
+      const data = await fetchWithErrorHandling('/api/openweather');
       setWeatherData(data);
     } catch (error) {
       addToConsoleLog(`Error fetching weather data: ${error}`);

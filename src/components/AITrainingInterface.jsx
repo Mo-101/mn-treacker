@@ -8,6 +8,7 @@ import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel'
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
 import NewsScroll from './NewsScroll';
+import { debounce } from 'lodash';
 
 const DataUploadSection = lazy(() => import('./AITrainingComponents/DataUploadSection'));
 const ModelPerformanceDashboard = lazy(() => import('./AITrainingComponents/ModelPerformanceDashboard'));
@@ -44,10 +45,30 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
     fetchWeatherData();
   }, []);
 
+  // Debounce the fetchTrainingProgress function
+  const fetchTrainingProgress = debounce(async () => {
+    try {
+      const response = await fetch('/api/training-progress');
+      const data = await response.json();
+      setTrainingProgress(data.progress);
+      setIsTraining(data.is_training);
+      if (data.progress >= 100) {
+        setIsTraining(false);
+        setModelAccuracy(data.progress);
+      }
+    } catch (error) {
+      addToConsoleLog(`Error fetching training progress: ${error}`);
+    }
+  }, 1000);
+
   useEffect(() => {
     if (isTraining) {
+      fetchTrainingProgress();
       const interval = setInterval(fetchTrainingProgress, 1000);
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        fetchTrainingProgress.cancel(); // Ensure the debounce timer is cleared
+      };
     }
   }, [isTraining]);
 
@@ -81,21 +102,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       setWeatherData(data);
     } catch (error) {
       addToConsoleLog(`Error fetching weather data: ${error}`);
-    }
-  };
-
-  const fetchTrainingProgress = async () => {
-    try {
-      const response = await fetch('/api/training-progress');
-      const data = await response.json();
-      setTrainingProgress(data.progress);
-      setIsTraining(data.is_training);
-      if (data.progress >= 100) {
-        setIsTraining(false);
-        setModelAccuracy(data.progress);
-      }
-    } catch (error) {
-      addToConsoleLog(`Error fetching training progress: ${error}`);
     }
   };
 

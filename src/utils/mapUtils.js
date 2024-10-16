@@ -1,45 +1,43 @@
 import mapboxgl from 'mapbox-gl';
 
-export const initializeMap = (mapContainer, mapState) => {
-  const map = new mapboxgl.Map({
-    container: mapContainer,
-    style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // New default style
-    center: [mapState.lng, mapState.lat],
-    zoom: mapState.zoom
-  });
 
-  return map;
-};
 
-export const addWeatherLayers = async (map) => {
-  const layers = ['precipitation', 'clouds', 'wind'];
-  for (const layer of layers) {
-    try {
-      const source = await getWeatherLayer(layer);
-      map.addSource(layer, source);
-      map.addLayer({
-        id: layer,
-        type: 'raster',
-        source: layer,
-        layout: { visibility: 'none' },
-        paint: { 'raster-opacity': 0.8 }
+export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
+  try {
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom,
+      pitch: 45,
+      bearing: 0,
+      antialias: true
+    });
+
+    map.current.on('load', () => {
+      map.current.addControl(new mapboxgl.NavigationControl());
+      addCustomLayers(map.current);
+      updateMapState();
+    });
+
+    map.current.on('move', updateMapState);
+
+    map.current.on('style.load', () => {
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
       });
-      console.log(`Added layer: ${layer}`);
-    } catch (error) {
-      console.error(`Error adding layer ${layer}:`, error);
-    }
-  }
-};
-
-export const toggleLayer = (map, layerId, visible) => {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-  }
-};
-
-export const setLayerOpacity = (map, layerId, opacity) => {
-  if (map.getLayer(layerId)) {
-    map.setPaintProperty(layerId, 'raster-opacity', opacity);
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    });
+  } catch (error) {
+    console.error('Error initializing map:', error);
+    toast({
+      title: "Error",
+      description: "Failed to initialize map. Please try again later.",
+      variant: "destructive",
+    });
   }
 };
 
@@ -50,6 +48,12 @@ export const updateMapState = (map, setMapState) => {
     lat: center.lat.toFixed(4),
     zoom: map.getZoom().toFixed(2)
   });
+};
+
+export const toggleLayer = (map, layerId, visible) => {
+  if (map.getLayer(layerId)) {
+    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+  }
 };
 
 export const handleLayerToggle = (layerId, map, setActiveLayers, addToConsoleLog) => {

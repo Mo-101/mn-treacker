@@ -1,21 +1,15 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
-import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
+import DataUploadSection from './AITrainingComponents/DataUploadSection';
+import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
+import DataVisualizationPanel from './AITrainingComponents/DataVisualizationPanel';
 import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel';
+import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
-import NewsScroll from './NewsScroll';
-import { debounce } from 'lodash';
-import { initializeTracking } from '../utils/tracking';
-import { fetchWithErrorHandling } from '../utils/apiHelpers';
-
-const DataUploadSection = lazy(() => import('./AITrainingComponents/DataUploadSection'));
-const ModelPerformanceDashboard = lazy(() => import('./AITrainingComponents/ModelPerformanceDashboard'));
-const DataVisualizationPanel = lazy(() => import('./AITrainingComponents/DataVisualizationPanel'));
-const SettingsPanel = lazy(() => import('./AITrainingComponents/SettingsPanel'));
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -24,102 +18,61 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [isTraining, setIsTraining] = useState(false);
   const [dataUploaded, setDataUploaded] = useState(false);
   const [trainingActivities, setTrainingActivities] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(100);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
-  const [modelAccuracy, setModelAccuracy] = useState(null);
-  const [isValidated, setIsValidated] = useState(false);
-  const [ratLocations, setRatLocations] = useState(null);
-  const [lassaFeverCases, setLassaFeverCases] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
-  const [fetchError, setFetchError] = useState(null);
+
+  const navItems = [
+    { icon: Upload, label: 'Upload', section: 'upload' },
+    { icon: BarChart2, label: 'Performance', section: 'performance' },
+    { icon: Map, label: 'Visualization', section: 'visualization' },
+    { icon: Settings, label: 'Settings', section: 'settings' },
+  ];
 
   useEffect(() => {
-    initializeTracking();
-    fetchRatLocations();
-    fetchLassaFeverCases();
-    fetchWeatherData();
-  }, []);
-
-  const fetchTrainingProgress = debounce(async () => {
-    try {
-      const response = await fetch('/api/training-progress');
-      const data = await response.json();
-      setTrainingProgress(data.progress);
-      setIsTraining(data.is_training);
-      if (data.progress >= 100) {
-        setIsTraining(false);
-        setModelAccuracy(data.progress);
-      }
-    } catch (error) {
-      addToConsoleLog(`Error fetching training progress: ${error}`);
-    }
-  }, 1000);
-
-  useEffect(() => {
+    let interval;
     if (isTraining) {
-      fetchTrainingProgress();
-      const interval = setInterval(fetchTrainingProgress, 1000);
-      return () => {
-        clearInterval(interval);
-        fetchTrainingProgress.cancel(); // Ensure the debounce timer is cleared
-      };
+      interval = setInterval(async () => {
+        try {
+          const response = await fetch('/api/training-progress');
+          const data = await response.json();
+          setTrainingProgress(data.progress);
+          setIsTraining(data.is_training);
+          if (!data.is_training) {
+            clearInterval(interval);
+            addToConsoleLog('Training completed');
+          }
+        } catch (error) {
+          console.error('Error fetching training progress:', error);
+        }
+      }, 1000);
     }
-  }, [isTraining]);
-
-  const fetchRatLocations = async () => {
-    try {
-      const data = await fetchWithErrorHandling('/api/rat-locations');
-      setRatLocations(data);
-      setFetchError(null);
-    } catch (error) {
-      setFetchError(`Error fetching rat locations: ${error.message}`);
-      addToConsoleLog(`Error fetching rat locations: ${error}`);
-    }
-  };
-
-  const fetchLassaFeverCases = async () => {
-    try {
-      const data = await fetchWithErrorHandling('/api/cases');
-      setLassaFeverCases(data);
-    } catch (error) {
-      addToConsoleLog(`Error fetching Lassa fever cases: ${error}`);
-    }
-  };
-
-  const fetchWeatherData = async () => {
-    try {
-      const data = await fetchWithErrorHandling('/api/openweather');
-      setWeatherData(data);
-    } catch (error) {
-      addToConsoleLog(`Error fetching weather data: ${error}`);
-    }
-  };
+    return () => clearInterval(interval);
+  }, [isTraining, addToConsoleLog]);
 
   const handleStartTraining = async () => {
-    if (isValidated && dataUploaded) {
-      try {
-        await fetch('/api/start-training', { method: 'POST' });
+    try {
+      const response = await fetch('/api/start-training', { method: 'POST' });
+      if (response.ok) {
         setIsTraining(true);
+        setTrainingProgress(0);
+        setElapsedTime(0);
+        setTimeLeft(100); // Assuming 100 seconds for training
+        setTrainingActivities([]);
+        setKnowledgeLevel(0);
         addToConsoleLog('Training started');
-      } catch (error) {
-        addToConsoleLog(`Error starting training: ${error}`);
+      } else {
+        addToConsoleLog('Failed to start training');
       }
-    } else {
-      addToConsoleLog('Data validation required before training.');
+    } catch (error) {
+      console.error('Error starting training:', error);
+      addToConsoleLog('Error starting training');
     }
   };
 
   const handleDataUpload = () => {
     setDataUploaded(true);
-    validateData();
     addToConsoleLog('Data uploaded successfully');
-  };
-
-  const validateData = async () => {
-    // In a real scenario, you would implement actual data validation logic here
-    setIsValidated(true);
-    addToConsoleLog('Data validation completed');
   };
 
   return (
@@ -141,20 +94,51 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         <InteractiveSidebar />
 
         <div className="flex-grow overflow-auto p-4 space-y-4">
-          {fetchError && <p className="text-red-500">{fetchError}</p>}
           <AnimatePresence mode="wait">
-            <Suspense fallback={<div>Loading...</div>}>
-              {activeSection === 'upload' && <DataUploadSection onUploadComplete={handleDataUpload} />}
-              {activeSection === 'performance' && <ModelPerformanceDashboard accuracy={modelAccuracy} />}
-              {activeSection === 'visualization' && (
-                <DataVisualizationPanel 
-                  ratLocations={ratLocations} 
-                  lassaFeverCases={lassaFeverCases}
-                  weatherData={weatherData}
-                />
-              )}
-              {activeSection === 'settings' && <SettingsPanel />} 
-            </Suspense>
+            {activeSection === 'upload' && (
+              <motion.div
+                key="upload"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <DataUploadSection onUploadComplete={handleDataUpload} />
+              </motion.div>
+            )}
+
+            {activeSection === 'performance' && (
+              <motion.div
+                key="performance"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <ModelPerformanceDashboard />
+              </motion.div>
+            )}
+
+            {activeSection === 'visualization' && (
+              <motion.div
+                key="visualization"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <DataVisualizationPanel />
+              </motion.div>
+            )}
+
+            {activeSection === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <h2 className="text-xl font-bold mb-4">Settings</h2>
+                {/* Add settings controls here */}
+              </motion.div>
+            )}
           </AnimatePresence>
 
           <BrainModel knowledgeLevel={knowledgeLevel} />
@@ -167,7 +151,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
             trainingActivities={trainingActivities}
             timeLeft={timeLeft}
             elapsedTime={elapsedTime}
-            accuracy={modelAccuracy}
           />
         </div>
       </div>
@@ -186,10 +169,9 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
           <HelpSection onClose={() => setShowHelp(false)} />
         )}
       </AnimatePresence>
-
-      <NewsScroll weatherData={weatherData} />
     </motion.div>
   );
+
 };
 
 export default AITrainingInterface;

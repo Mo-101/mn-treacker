@@ -10,7 +10,7 @@ import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel'
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
-import { startTraining, getTrainingProgress } from '../utils/api';
+import { startTraining, getTrainingProgress, fetchModelPerformance, fetchDatasets } from '../utils/api';
 
 const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
@@ -22,6 +22,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
+  const [modelPerformance, setModelPerformance] = useState(null);
+  const [datasets, setDatasets] = useState([]);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -31,6 +33,10 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   ];
 
   useEffect(() => {
+    fetchDatasets().then(setDatasets).catch(console.error);
+  }, []);
+
+  useEffect(() => {
     let interval;
     if (isTraining) {
       interval = setInterval(async () => {
@@ -38,9 +44,15 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
           const data = await getTrainingProgress();
           setTrainingProgress(data.progress);
           setIsTraining(data.is_training);
+          setTimeLeft(data.time_left);
+          setElapsedTime(data.elapsed_time);
+          setTrainingActivities(data.activities);
+          setKnowledgeLevel(data.knowledge_level);
           if (!data.is_training) {
             clearInterval(interval);
             addToConsoleLog('Training completed');
+            const performance = await fetchModelPerformance();
+            setModelPerformance(performance);
           }
         } catch (error) {
           console.error('Error fetching training progress:', error);
@@ -57,7 +69,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
-        setTimeLeft(100); // Assuming 100 seconds for training
+        setTimeLeft(100);
         setTrainingActivities([]);
         setKnowledgeLevel(0);
         addToConsoleLog('Training started');
@@ -68,6 +80,11 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       console.error('Error starting training:', error);
       addToConsoleLog('Error starting training');
     }
+  };
+
+  const handleDataUpload = (uploadedData) => {
+    setDataUploaded(true);
+    addToConsoleLog('Data uploaded successfully');
   };
 
   return (
@@ -97,7 +114,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <DataUploadSection onUploadComplete={handleDataUpload} />
+                <DataUploadSection onUploadComplete={handleDataUpload} datasets={datasets} />
               </motion.div>
             )}
 
@@ -108,7 +125,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <ModelPerformanceDashboard />
+                <ModelPerformanceDashboard performance={modelPerformance} />
               </motion.div>
             )}
 

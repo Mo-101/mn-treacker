@@ -22,3 +22,9 @@ export const uploadDataset = (formData) =>
     method: 'POST',
     body: formData,
   });
+
+export const fetchModelPerformance = () => fetchWithErrorHandling(`${API_BASE_URL}/model-performance`);
+
+export const fetchPredictions = () => fetchWithErrorHandling(`${API_BASE_URL}/predictions`);
+
+export const fetchHabitatSuitability = () => fetchWithErrorHandling(`${API_BASE_URL}/habitat-suitability`);

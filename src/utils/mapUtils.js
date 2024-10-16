@@ -1,4 +1,5 @@
 import mapboxgl from 'mapbox-gl';
+import { getWeatherLayer, getOpenWeatherTemperatureLayer } from './weatherApiUtils';
 
 export const initializeMap = (mapContainer, mapState) => {
   const map = new mapboxgl.Map({

@@ -29,6 +29,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [ratLocations, setRatLocations] = useState(null);
   const [lassaFeverCases, setLassaFeverCases] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -53,9 +54,12 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const fetchRatLocations = async () => {
     try {
       const response = await fetch('/api/rat-locations');
+      if (!response.ok) throw new Error('Failed to fetch rat locations');
       const data = await response.json();
       setRatLocations(data);
+      setFetchError(null); // Reset error on success
     } catch (error) {
+      setFetchError(`Error fetching rat locations: ${error.message}`);
       addToConsoleLog(`Error fetching rat locations: ${error}`);
     }
   };
@@ -140,6 +144,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         <InteractiveSidebar />
 
         <div className="flex-grow overflow-auto p-4 space-y-4">
+          {fetchError && <p className="text-red-500">{fetchError}</p>}
           <AnimatePresence mode="wait">
             <Suspense fallback={<div>Loading...</div>}>
               {activeSection === 'upload' && <DataUploadSection onUploadComplete={handleDataUpload} />}

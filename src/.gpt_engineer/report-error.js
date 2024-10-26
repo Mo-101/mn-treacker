@@ -22,16 +22,18 @@ function extractErrorInfo(error) {
 // Safe postMessage function
 function postMessage(message) {
   try {
-    // Ensure the message is cloneable by converting it to a plain object
-    const safeMessage = JSON.parse(JSON.stringify({
+    const safeMessage = {
       type: message.type || 'error',
       error: typeof message.error === 'object' ? extractErrorInfo(message.error) : String(message.error),
-      request: message.request ? extractRequestData(message.request) : undefined,
-    }));
+    };
+    
+    if (message.request) {
+      safeMessage.request = extractRequestData(message.request);
+    }
+    
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);
-    // Send a simplified error message if JSON serialization fails
     window.parent.postMessage({
       type: 'error',
       error: {
@@ -49,12 +51,8 @@ function reportHTTPError(error) {
     error: extractErrorInfo(error),
   };
   
-  if (error.request) {
-    errorDetails.request = extractRequestData(error.request);
-  }
-  
   postMessage(errorDetails);
 }
 
-// Export functions if needed
+// Export functions
 export { postMessage, reportHTTPError };

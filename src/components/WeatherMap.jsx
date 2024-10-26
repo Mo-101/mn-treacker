@@ -41,14 +41,22 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', () => {
-      addWeatherLayers();
+      addWeatherLayers(map.current);
       fetchLassaFeverCases();
-      addOpenWeatherLayer();
+      addOpenWeatherLayer(map.current);
       console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
+
+  const toggleOpenWeatherLayer = () => {
+    if (map.current) {
+      const visibility = showOpenWeather ? 'none' : 'visible';
+      map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
+      setShowOpenWeather(!showOpenWeather);
+    }
+  };
 
   const handleLayerToggle = (layerId) => {
     if (activeLayers.includes(layerId)) {

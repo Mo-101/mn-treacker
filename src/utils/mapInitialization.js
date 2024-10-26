@@ -4,7 +4,7 @@ import { getWeatherLayer, getOpenWeatherTemperatureLayer } from './weatherApiUti
 export const initializeMap = (mapContainer, mapState) => {
   const map = new mapboxgl.Map({
     container: mapContainer,
-    style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // New default style
+    style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
     center: [mapState.lng, mapState.lat],
     zoom: mapState.zoom
   });
@@ -30,6 +30,20 @@ export const addWeatherLayers = async (map) => {
       console.error(`Error adding layer ${layer}:`, error);
     }
   }
+
+  // Add temperature layer with the previous default style
+  map.addSource('temperature', {
+    type: 'raster',
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+  });
+
+  map.addLayer({
+    id: 'temperature',
+    type: 'raster',
+    source: 'temperature',
+    layout: { visibility: 'none' },
+    paint: { 'raster-opacity': 0.8 }
+  });
 };
 
 export const addOpenWeatherLayer = (map) => {
@@ -40,7 +54,7 @@ export const addOpenWeatherLayer = (map) => {
     id: 'openWeatherTemperatureLayer',
     type: 'raster',
     source: 'openWeatherTemperature',
-    layout: { visibility: 'visible' }, // Set to visible by default
+    layout: { visibility: 'visible' },
     paint: { 'raster-opacity': 0.8 },
   });
 };

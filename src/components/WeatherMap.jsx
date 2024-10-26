@@ -10,7 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { getWeatherLayer, getOpenWeatherTemperatureLayer } from '../utils/weatherApiUtils';
+import { initializeMap, addWeatherLayers } from '../utils/mapInitialization';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 
@@ -32,9 +32,10 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });
@@ -48,87 +49,6 @@ const WeatherMap = () => {
 
     return () => map.current && map.current.remove();
   }, []);
-
-  const addWeatherLayers = async () => {
-    const layers = ['precipitation', 'temp', 'clouds', 'wind'];
-    for (const layer of layers) {
-      try {
-        const source = await getWeatherLayer(layer);
-        map.current.addSource(layer, source);
-        map.current.addLayer({
-          id: layer,
-          type: 'raster',
-          source: layer,
-          layout: {
-            visibility: 'none'
-          },
-          paint: {
-            'raster-opacity': 0.8
-          }
-        });
-        console.log(`Added layer: ${layer}`);
-      } catch (error) {
-        console.error(`Error adding layer ${layer}:`, error);
-      }
-    }
-  };
-
-  const addOpenWeatherLayer = () => {
-    const temperatureSource = getOpenWeatherTemperatureLayer();
-    map.current.addSource('openWeatherTemperature', temperatureSource);
-
-    map.current.addLayer({
-      id: 'openWeatherTemperatureLayer',
-      type: 'raster',
-      source: 'openWeatherTemperature',
-      layout: { visibility: 'none' },
-      paint: { 'raster-opacity': 0.8 },
-    });
-  };
-
-  const toggleOpenWeatherLayer = () => {
-    const visibility = showOpenWeather ? 'none' : 'visible';
-    map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
-    setShowOpenWeather(!showOpenWeather);
-  };
-
-  const fetchLassaFeverCases = async () => {
-    try {
-      const response = await fetch('/api/cases');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Lassa Fever cases');
-      }
-      const data = await response.json();
-      addLassaFeverLayer(data);
-    } catch (error) {
-      console.error('Error fetching Lassa Fever cases:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch Lassa Fever cases. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addLassaFeverLayer = (data) => {
-    if (!map.current.getSource('lassa-fever-cases')) {
-      map.current.addSource('lassa-fever-cases', {
-        type: 'geojson',
-        data: data
-      });
-
-      map.current.addLayer({
-        id: 'lassa-fever-points',
-        type: 'circle',
-        source: 'lassa-fever-cases',
-        paint: {
-          'circle-radius': 6,
-          'circle-color': '#FF0000',
-          'circle-opacity': 0.7
-        }
-      });
-    }
-  };
 
   const handleLayerToggle = (layerId) => {
     if (activeLayers.includes(layerId)) {

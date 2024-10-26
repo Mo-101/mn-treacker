@@ -5,7 +5,6 @@ function extractRequestData(request) {
       url: request.url,
       method: request.method,
       headers: Object.fromEntries(request.headers),
-      // Add other properties you need, but avoid those that can't be cloned
     };
   }
   return String(request);
@@ -16,48 +15,46 @@ function extractErrorInfo(error) {
   return {
     message: error.message,
     stack: error.stack,
+    type: error.name,
   };
 }
 
-// Modified postMessage function
+// Safe postMessage function
 function postMessage(message) {
   try {
-    // Extract only necessary information and ensure it's cloneable
-    const safeMessage = JSON.parse(JSON.stringify(message));
+    // Ensure the message is cloneable by converting it to a plain object
+    const safeMessage = JSON.parse(JSON.stringify({
+      type: message.type || 'error',
+      error: typeof message.error === 'object' ? extractErrorInfo(message.error) : String(message.error),
+      request: message.request ? extractRequestData(message.request) : undefined,
+    }));
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);
-    // Send a simplified error message
+    // Send a simplified error message if JSON serialization fails
     window.parent.postMessage({
       type: 'error',
-      message: 'Failed to send message',
-      originalError: String(error)
+      error: {
+        message: 'Failed to send message',
+        originalError: String(error),
+      },
     }, '*');
   }
 }
 
 // Function to report HTTP errors
 function reportHTTPError(error) {
-  const errorDetails = extractErrorInfo(error);
+  const errorDetails = {
+    type: 'http_error',
+    error: extractErrorInfo(error),
+  };
   
   if (error.request) {
     errorDetails.request = extractRequestData(error.request);
   }
   
-  postMessage({
-    type: 'http_error',
-    error: errorDetails,
-  });
+  postMessage(errorDetails);
 }
-
-// Wrap the fetch function to catch and report errors
-const originalFetch = window.fetch;
-window.fetch = function(...args) {
-  return originalFetch.apply(this, args).catch(error => {
-    reportHTTPError(error);
-    throw error;
-  });
-};
 
 // Export functions if needed
 export { postMessage, reportHTTPError };

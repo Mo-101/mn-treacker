@@ -88,8 +88,8 @@ const safeFetch = async (...args) => {
       request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0]),
     };
     // Use the existing reportHTTPError function if available, otherwise just log
-    if (typeof reportHTTPError === 'function') {
-      reportHTTPError(errorDetails);
+    if (typeof window.reportHTTPError === 'function') {
+      window.reportHTTPError(errorDetails);
     } else {
       console.error('HTTP Error:', errorDetails);
     }

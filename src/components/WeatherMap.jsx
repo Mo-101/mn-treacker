@@ -10,7 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { initializeMap, addWeatherLayers } from '../utils/mapInitialization';
+import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 
@@ -54,6 +54,7 @@ const WeatherMap = () => {
     if (map.current) {
       const visibility = showOpenWeather ? 'none' : 'visible';
       map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
+      map.current.setLayoutProperty('temperature', 'visibility', visibility);
       setShowOpenWeather(!showOpenWeather);
     }
   };

@@ -13,6 +13,7 @@ import PredictionPanel from './PredictionPanel';
 import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
+import { fetchLassaFeverCases } from '../utils/api';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -40,9 +41,19 @@ const WeatherMap = () => {
       zoom: mapState.zoom
     });
 
-    map.current.on('load', () => {
+    map.current.on('load', async () => {
       addWeatherLayers(map.current);
-      fetchLassaFeverCases();
+      try {
+        const cases = await fetchLassaFeverCases();
+        console.log('Fetched Lassa fever cases:', cases);
+      } catch (error) {
+        console.error('Error fetching Lassa fever cases:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch Lassa fever data",
+          variant: "destructive",
+        });
+      }
       addOpenWeatherLayer(map.current);
       console.log('Map loaded and layers added');
     });

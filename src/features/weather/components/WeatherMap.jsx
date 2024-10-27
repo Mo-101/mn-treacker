@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useToast } from "../../../components/ui/use-toast";
-import { WindGL } from '../assets/wind/scripts/WindGL';
 import LayerToggle from '../../map/components/LayerToggle';
 import { defaultLayers } from '../../../utils/layerConfig';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +9,6 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const windCanvas = useRef(null);
-  const windGL = useRef(null);
   const [activeLayers, setActiveLayers] = useState(['satellite']);
   const [windOpacity, setWindOpacity] = useState(0.3);
   const { toast } = useToast();
@@ -25,7 +23,6 @@ const WeatherMap = () => {
       zoom: 2
     });
 
-    // Initialize WindGL
     const canvas = document.createElement('canvas');
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
@@ -35,16 +32,11 @@ const WeatherMap = () => {
     mapContainer.current.appendChild(canvas);
     windCanvas.current = canvas;
 
-    const gl = canvas.getContext('webgl', { antialiasing: false });
-    windGL.current = new WindGL(gl);
-
-    // Resize handler
     const handleResize = () => {
-      if (map.current && windCanvas.current && windGL.current) {
+      if (map.current && windCanvas.current) {
         const { clientWidth, clientHeight } = mapContainer.current;
         windCanvas.current.width = clientWidth;
         windCanvas.current.height = clientHeight;
-        windGL.current.resize();
       }
     };
 

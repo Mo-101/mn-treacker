@@ -1,5 +1,14 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+/* Existing styles here */
 
-/* Add any other global styles or imports here */
+/* Temperature legend styles */
+.temperature-legend {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.temperature-legend.hidden {
+  display: none;
+}

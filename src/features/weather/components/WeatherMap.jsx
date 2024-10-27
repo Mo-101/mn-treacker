@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useToast } from "../../../components/ui/use-toast";
-import LayerToggle from '../../map/components/LayerToggle';
+import LayerToggle from "../../map/components/LayerToggle";
 import { defaultLayers } from '../../../utils/layerConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 

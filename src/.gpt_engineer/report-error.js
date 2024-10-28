@@ -2,25 +2,26 @@
 function extractRequestData(request) {
   if (request instanceof Request) {
     try {
+      // Only extract string and boolean properties that can be safely cloned
       return {
-        url: request.url,
-        method: request.method,
-        headers: Object.fromEntries(request.headers),
-        mode: request.mode,
-        credentials: request.credentials,
-        cache: request.cache,
-        redirect: request.redirect,
-        referrer: request.referrer,
-        referrerPolicy: request.referrerPolicy,
-        integrity: request.integrity,
-        keepalive: request.keepalive,
-        signal: request.signal ? 'AbortSignal' : undefined,
-        isHistoryNavigation: request.isHistoryNavigation,
+        url: request.url || '',
+        method: request.method || '',
+        headers: request.headers ? Object.fromEntries(request.headers) : {},
+        mode: request.mode || '',
+        credentials: request.credentials || '',
+        cache: request.cache || '',
+        redirect: request.redirect || '',
+        referrer: request.referrer || '',
+        referrerPolicy: request.referrerPolicy || '',
+        integrity: request.integrity || '',
+        keepalive: Boolean(request.keepalive),
+        hasSignal: Boolean(request.signal),
+        isHistoryNavigation: Boolean(request.isHistoryNavigation)
       };
     } catch (error) {
       return {
         error: 'Failed to extract request data',
-        message: error.message
+        message: String(error.message)
       };
     }
   }
@@ -30,23 +31,29 @@ function extractRequestData(request) {
 // Function to extract relevant error information
 function extractErrorInfo(error) {
   return {
-    message: error.message,
-    stack: error.stack,
-    type: error.name,
+    message: String(error.message),
+    stack: String(error.stack),
+    type: String(error.name),
   };
 }
 
 // Safe postMessage function
 function postMessage(message) {
   try {
-    // Create a cloneable message object
+    // Create a cloneable message object with only serializable data
     const safeMessage = {
-      type: message.type || 'error',
-      error: typeof message.error === 'object' ? extractErrorInfo(message.error) : String(message.error),
+      type: String(message.type || 'error'),
       timestamp: new Date().toISOString()
     };
     
-    // Safely handle request data if present
+    // Safely handle error data
+    if (message.error) {
+      safeMessage.error = typeof message.error === 'object' 
+        ? extractErrorInfo(message.error)
+        : String(message.error);
+    }
+    
+    // Safely handle request data
     if (message.request) {
       safeMessage.request = extractRequestData(message.request);
     }
@@ -54,15 +61,13 @@ function postMessage(message) {
     // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    console.error('Error in postMessage:', error);
     // Fallback error message that's guaranteed to be cloneable
     window.parent.postMessage({
       type: 'error',
       error: {
-        message: 'Failed to send message',
-        originalError: String(error),
+        message: 'Failed to send message: ' + String(error),
         timestamp: new Date().toISOString()
-      },
+      }
     }, '*');
   }
 }

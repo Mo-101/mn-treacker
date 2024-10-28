@@ -1,25 +1,27 @@
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { navItems } from "./nav-items";
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import WeatherMap from './features/weather/components/WeatherMap';
-import AITrainingInterface from './features/ai-training/components/AITrainingInterface';
-import TopNavigationBar from './components/TopNavigationBar';
-import BottomPanel from './components/BottomPanel';
 
-const App = () => {
-  return (
-    <Router>
-      <div className="h-screen flex flex-col">
-        <TopNavigationBar />
-        <main className="flex-1 relative">
+const queryClient = new QueryClient();
+
+const App = () => (
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<WeatherMap />} />
-            <Route path="/ai-training" element={<AITrainingInterface />} />
+            {navItems.map(({ to, page }) => (
+              <Route key={to} path={to} element={page} />
+            ))}
           </Routes>
-        </main>
-        <BottomPanel />
-      </div>
-    </Router>
-  );
-};
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
 
 export default App;

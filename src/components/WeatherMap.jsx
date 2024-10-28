@@ -1,115 +1,167 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { useToast } from "./ui/use-toast";
-import { WindGL } from '../assets/weather/scripts/WindGL';
-import LayerToggle from './LayerToggle';
-import { defaultLayers } from '../utils/layerConfig';
-import { motion, AnimatePresence } from 'framer-motion';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { AnimatePresence } from 'framer-motion';
+import { useToast } from './ui/use-toast';
+import TopNavigationBar from './TopNavigationBar';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
+import FloatingInsightsBar from './FloatingInsightsButton';
+import AITrainingInterface from './AITrainingInterface';
+import MastomysTracker from './MastomysTracker';
+import PredictionPanel from './PredictionPanel';
+import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
+import WeatherLayerControls from './WeatherLayerControls';
+import SidePanels from './SidePanels';
+import { fetchLassaFeverCases } from '../utils/api';
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const windCanvas = useRef(null);
-  const windGL = useRef(null);
-  const [activeLayers, setActiveLayers] = useState(['satellite']);
-  const [windOpacity, setWindOpacity] = useState(0.3);
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [mastomysData, setMastomysData] = useState([]);
+  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [showOpenWeather, setShowOpenWeather] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
-
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [0, 0],
-      zoom: 2
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom
     });
 
-    // Initialize WindGL
-    const canvas = document.createElement('canvas');
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.opacity = windOpacity.toString();
-    mapContainer.current.appendChild(canvas);
-    windCanvas.current = canvas;
-
-    const gl = canvas.getContext('webgl', { antialiasing: false });
-    windGL.current = new WindGL(gl);
-
-    // Resize handler
-    const handleResize = () => {
-      if (map.current && windCanvas.current && windGL.current) {
-        const { clientWidth, clientHeight } = mapContainer.current;
-        windCanvas.current.width = clientWidth;
-        windCanvas.current.height = clientHeight;
-        windGL.current.resize();
+    map.current.on('load', async () => {
+      addWeatherLayers(map.current);
+      try {
+        const cases = await fetchLassaFeverCases();
+        console.log('Fetched Lassa fever cases:', cases);
+      } catch (error) {
+        console.error('Error fetching Lassa fever cases:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch Lassa fever data",
+          variant: "destructive",
+        });
       }
-    };
+      addOpenWeatherLayer(map.current);
+      console.log('Map loaded and layers added');
+    });
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      map.current?.remove();
-    };
+    return () => map.current && map.current.remove();
   }, []);
 
+  const toggleOpenWeatherLayer = () => {
+    if (map.current) {
+      const visibility = showOpenWeather ? 'none' : 'visible';
+      map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
+      map.current.setLayoutProperty('temperature', 'visibility', visibility);
+      setShowOpenWeather(!showOpenWeather);
+    }
+  };
+
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => {
-      if (prev.includes(layerId)) {
-        return prev.filter(id => id !== layerId);
+    if (activeLayers.includes(layerId)) {
+      map.current.setLayoutProperty(layerId, 'visibility', 'none');
+      setActiveLayers(activeLayers.filter(id => id !== layerId));
+    } else {
+      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+      setActiveLayers([...activeLayers, layerId]);
+    }
+  };
+
+  const handleSelectAllLayers = () => {
+    const newSelectAllState = !selectAll;
+
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
       }
-      return [...prev, layerId];
     });
 
-    if (layerId === 'wind') {
-      windCanvas.current.style.display = 
-        activeLayers.includes('wind') ? 'none' : 'block';
-    }
-
-    toast({
-      title: `${activeLayers.includes(layerId) ? 'Disabled' : 'Enabled'} ${
-        defaultLayers.find(l => l.id === layerId)?.name
-      }`,
-      duration: 2000,
-    });
+    setSelectAll(newSelectAllState);
+    setActiveLayer(null);
+    setActiveLayers(newSelectAllState ? layers : []);
   };
 
-  const handleReset = () => {
-    setActiveLayers(['satellite']);
-    setWindOpacity(0.3);
-    if (windCanvas.current) {
-      windCanvas.current.style.display = 'none';
+  const handleOpacityChange = (layerId, opacity) => {
+    if (map.current && map.current.getLayer(layerId)) {
+      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
     }
-    toast({
-      title: "Reset to default view",
-      duration: 2000,
-    });
   };
 
-  const handleWindOpacityChange = (opacity) => {
-    setWindOpacity(opacity);
-    if (windCanvas.current) {
-      windCanvas.current.style.opacity = opacity.toString();
-    }
+  const handleDetailView = () => {
+    console.log('Detail view requested');
+    setPredictionPanelOpen(false);
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
-      <AnimatePresence>
-        <LayerToggle
-          layers={defaultLayers}
+      {map.current && (
+        <MastomysTracker data={mastomysData} map={map.current} />
+      )}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="pointer-events-auto">
+          <TopNavigationBar 
+            onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+            onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+            onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
+          />
+        </div>
+        <SidePanels
+          leftPanelOpen={leftPanelOpen}
+          rightPanelOpen={rightPanelOpen}
+          setLeftPanelOpen={setLeftPanelOpen}
+          setRightPanelOpen={setRightPanelOpen}
           activeLayers={activeLayers}
-          onLayerToggle={handleLayerToggle}
-          onReset={handleReset}
-          windOpacity={windOpacity}
-          onWindOpacityChange={handleWindOpacityChange}
+          handleLayerToggle={handleLayerToggle}
+          handleOpacityChange={handleOpacityChange}
+          handleSelectAllLayers={handleSelectAllLayers}
+          selectedPoint={selectedPoint}
         />
-      </AnimatePresence>
+        <AnimatePresence>
+          {predictionPanelOpen && (
+            <div className="pointer-events-auto">
+              <PredictionPanel
+                isOpen={predictionPanelOpen}
+                onClose={() => setPredictionPanelOpen(false)}
+                onDetailView={handleDetailView}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <div className="pointer-events-auto">
+          <FloatingInsightsBar />
+        </div>
+        <AnimatePresence>
+          {aiTrainingOpen && (
+            <div className="pointer-events-auto">
+              <AITrainingInterface
+                isOpen={aiTrainingOpen}
+                onClose={() => setAiTrainingOpen(false)}
+                addToConsoleLog={(log) => console.log(log)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <div className="pointer-events-auto absolute bottom-4 left-4">
+          <WeatherLayerControls
+            showOpenWeather={showOpenWeather}
+            toggleOpenWeatherLayer={toggleOpenWeatherLayer}
+          />
+        </div>
+      </div>
     </div>
   );
 };

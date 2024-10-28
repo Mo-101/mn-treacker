@@ -87,13 +87,11 @@ const safeFetch = async (...args) => {
       message: error.message,
       request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0]),
     };
-    // Use a structured clone-safe version of the error details
-    const safeErrorDetails = JSON.parse(JSON.stringify(errorDetails));
-    if (typeof window.parent.postMessage === 'function') {
-      window.parent.postMessage({
-        type: 'error',
-        error: safeErrorDetails
-      }, '*');
+    // Use the existing reportHTTPError function if available, otherwise just log
+    if (typeof window.reportHTTPError === 'function') {
+      window.reportHTTPError(errorDetails);
+    } else {
+      console.error('HTTP Error:', errorDetails);
     }
     throw error;
   }

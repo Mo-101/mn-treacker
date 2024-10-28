@@ -5,18 +5,14 @@ function extractRequestData(request) {
       return {
         url: request.url,
         method: request.method,
-        headers: Object.fromEntries(request.headers),
-        cache: request.cache,
-        mode: request.mode,
-        credentials: request.credentials,
-        redirect: request.redirect,
-        referrer: request.referrer,
-        referrerPolicy: request.referrerPolicy,
-        integrity: request.integrity,
-        keepalive: request.keepalive,
+        // Only extract headers that are safe to clone
+        headers: {
+          'content-type': request.headers.get('content-type'),
+          'accept': request.headers.get('accept')
+        }
       };
     } catch (err) {
-      return `Request to ${request.url}`;
+      return `Request to ${request.url || 'unknown URL'}`;
     }
   }
   return String(request);
@@ -88,7 +84,7 @@ function reportHTTPError(error) {
   postMessage(errorDetails);
 }
 
-// Wrap fetch to handle errors without cloning the Request object
+// Wrap fetch to handle errors
 const originalFetch = window.fetch;
 window.fetch = async function(...args) {
   try {

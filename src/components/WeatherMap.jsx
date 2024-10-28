@@ -14,6 +14,7 @@ import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/m
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
 import { fetchLassaFeverCases } from '../utils/api';
+import MapLegend from './MapLegend';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -161,6 +162,7 @@ const WeatherMap = () => {
             toggleOpenWeatherLayer={toggleOpenWeatherLayer}
           />
         </div>
+        <MapLegend activeLayers={activeLayers} />
       </div>
     </div>
   );

@@ -7,6 +7,10 @@ import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { useToast } from './ui/use-toast';
 import { format } from 'date-fns';
+import DetectionMap from './DetectionMap';
+import DetectionTimeSeries from './DetectionTimeSeries';
+
+// ... keep existing code (imports and initial state)
 
 const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
   const [expandedDetection, setExpandedDetection] = useState(null);
@@ -62,7 +66,7 @@ const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
         <CardTitle className="text-2xl font-bold">Real-Time Detection Feed</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="flex space-x-2">
           <Input
             type="file"
@@ -87,6 +91,24 @@ const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="bg-white/20 border-none"
         />
+
+        <Card className="bg-white/10">
+          <CardHeader>
+            <CardTitle className="text-lg">Detection Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetectionMap detections={detections} />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10">
+          <CardHeader>
+            <CardTitle className="text-lg">Confidence Timeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetectionTimeSeries detections={detections} />
+          </CardContent>
+        </Card>
 
         <div className="space-y-2">
           {detections.map((detection, index) => (

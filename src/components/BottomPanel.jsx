@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const BottomPanel = ({ consoleLog }) => {
+const BottomPanel = ({ consoleLog = [] }) => {
   return (
     <motion.div
       initial={{ y: '100%' }}

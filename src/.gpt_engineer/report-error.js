@@ -4,7 +4,11 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      headers: Object.fromEntries(request.headers),
+      // Convert headers to a plain object that can be cloned
+      headers: Array.from(request.headers).reduce((obj, [key, value]) => {
+        obj[key] = value;
+        return obj;
+      }, {})
     };
   }
   return String(request);
@@ -22,18 +26,22 @@ function extractErrorInfo(error) {
 // Safe postMessage function
 function postMessage(message) {
   try {
+    // Create a cloneable message object
     const safeMessage = {
       type: message.type || 'error',
       error: typeof message.error === 'object' ? extractErrorInfo(message.error) : String(message.error),
     };
     
+    // Safely handle request data if present
     if (message.request) {
       safeMessage.request = extractRequestData(message.request);
     }
     
+    // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     console.error('Error in postMessage:', error);
+    // Fallback error message that's guaranteed to be cloneable
     window.parent.postMessage({
       type: 'error',
       error: {

@@ -9,26 +9,6 @@ const MastomysTracker = ({ map }) => {
   useEffect(() => {
     const fetchRatLocations = async () => {
       try {
-        // Use mock data if in development or if API is not available
-        if (import.meta.env.DEV || !import.meta.env.VITE_API_URL) {
-          const mockData = {
-            features: [
-              {
-                geometry: {
-                  coordinates: [3.3792, 6.5244], // Lagos coordinates
-                  type: "Point"
-                },
-                properties: {
-                  timestamp: new Date().toISOString(),
-                  confidence: 0.95
-                }
-              }
-            ]
-          };
-          setRatLocations(mockData.features);
-          return;
-        }
-
         const response = await fetch('/api/rat-locations');
         if (!response.ok) {
           throw new Error('Failed to fetch rat locations');
@@ -38,9 +18,9 @@ const MastomysTracker = ({ map }) => {
       } catch (error) {
         console.error('Error fetching rat locations:', error);
         toast({
-          title: "Warning",
-          description: "Using sample data - couldn't fetch real rat locations",
-          variant: "warning",
+          title: "Error",
+          description: "Failed to fetch rat location data",
+          variant: "destructive",
         });
       }
     };
@@ -73,8 +53,6 @@ const MastomysTracker = ({ map }) => {
         const context = this.context;
 
         context.clearRect(0, 0, this.width, this.height);
-
-        // Draw the outer circle
         context.beginPath();
         context.arc(
           this.width / 2,
@@ -86,7 +64,6 @@ const MastomysTracker = ({ map }) => {
         context.fillStyle = `rgba(180, 34, 34, ${1 - t})`;
         context.fill();
 
-        // Draw the core circle
         context.beginPath();
         context.arc(
           this.width / 2,
@@ -101,22 +78,14 @@ const MastomysTracker = ({ map }) => {
         context.fill();
         context.stroke();
 
-        this.data = context.getImageData(
-          0,
-          0,
-          this.width,
-          this.height
-        ).data;
-
+        this.data = context.getImageData(0, 0, this.width, this.height).data;
         map.triggerRepaint();
         return true;
       }
     };
 
-    // Add the custom image
     map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
 
-    // Add rat locations to the map
     if (!map.getSource('rat-locations')) {
       map.addSource('rat-locations', {
         type: 'geojson',
@@ -126,7 +95,6 @@ const MastomysTracker = ({ map }) => {
         }
       });
 
-      // Add a layer for the glowing dots
       map.addLayer({
         id: 'rat-points-glow',
         type: 'symbol',
@@ -137,7 +105,6 @@ const MastomysTracker = ({ map }) => {
         }
       });
     } else {
-      // Update existing source
       map.getSource('rat-locations').setData({
         type: 'FeatureCollection',
         features: ratLocations

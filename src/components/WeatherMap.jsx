@@ -22,7 +22,7 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [mapState, setMapState] = useState({ lng: 8.6753, lat: 9.0820, zoom: 6 });
   const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -32,7 +32,6 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
-
   const [pathTrackingData, setPathTrackingData] = useState([]);
 
   useEffect(() => {
@@ -50,31 +49,15 @@ const WeatherMap = () => {
       try {
         const cases = await fetchLassaFeverCases();
         console.log('Fetched Lassa fever cases:', cases);
-        
-        // Mock path tracking data - replace with real data in production
-        setPathTrackingData([
-          {
-            coordinates: [
-              [mapState.lng, mapState.lat],
-              [mapState.lng + 0.1, mapState.lat + 0.1],
-              [mapState.lng + 0.2, mapState.lat + 0.15]
-            ],
-            speed: 5,
-            timestamp: Date.now(),
-            density: 0.5,
-            isKeyPoint: true
-          }
-        ]);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
           title: "Error",
-          description: "Failed to fetch data",
+          description: "Failed to fetch Lassa fever cases data",
           variant: "destructive",
         });
       }
       addOpenWeatherLayer(map.current);
-      console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
@@ -99,29 +82,10 @@ const WeatherMap = () => {
     }
   };
 
-  const handleSelectAllLayers = () => {
-    const newSelectAllState = !selectAll;
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
-      }
-    });
-
-    setSelectAll(newSelectAllState);
-    setActiveLayer(null);
-    setActiveLayers(newSelectAllState ? layers : []);
-  };
-
   const handleOpacityChange = (layerId, opacity) => {
     if (map.current && map.current.getLayer(layerId)) {
       map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
     }
-  };
-
-  const handleDetailView = () => {
-    console.log('Detail view requested');
-    setPredictionPanelOpen(false);
   };
 
   return (
@@ -149,7 +113,6 @@ const WeatherMap = () => {
           activeLayers={activeLayers}
           handleLayerToggle={handleLayerToggle}
           handleOpacityChange={handleOpacityChange}
-          handleSelectAllLayers={handleSelectAllLayers}
           selectedPoint={selectedPoint}
         />
         <AnimatePresence>
@@ -158,7 +121,6 @@ const WeatherMap = () => {
               <PredictionPanel
                 isOpen={predictionPanelOpen}
                 onClose={() => setPredictionPanelOpen(false)}
-                onDetailView={handleDetailView}
               />
             </div>
           )}
@@ -166,17 +128,6 @@ const WeatherMap = () => {
         <div className="pointer-events-auto">
           <FloatingInsightsBar />
         </div>
-        <AnimatePresence>
-          {aiTrainingOpen && (
-            <div className="pointer-events-auto">
-              <AITrainingInterface
-                isOpen={aiTrainingOpen}
-                onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={(log) => console.log(log)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
         <div className="pointer-events-auto absolute bottom-4 left-4">
           <WeatherLayerControls
             showOpenWeather={showOpenWeather}

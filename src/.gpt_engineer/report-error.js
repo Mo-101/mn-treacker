@@ -4,8 +4,8 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      // Only include headers that can be safely cloned
-      headers: Object.fromEntries([...request.headers])
+      // Convert headers to a plain object
+      headers: Object.fromEntries(request.headers.entries())
     };
   }
   return String(request);
@@ -14,9 +14,9 @@ function extractRequestData(request) {
 // Function to extract relevant error information
 function extractErrorInfo(error) {
   return {
-    message: String(error.message),
-    stack: String(error.stack),
-    type: String(error.name)
+    message: error?.message || String(error),
+    stack: error?.stack,
+    type: error?.name || 'Error'
   };
 }
 
@@ -31,9 +31,7 @@ function postMessage(message) {
     
     // Safely handle error data
     if (message.error) {
-      safeMessage.error = typeof message.error === 'object' 
-        ? extractErrorInfo(message.error)
-        : String(message.error);
+      safeMessage.error = extractErrorInfo(message.error);
     }
     
     // Safely handle request data
@@ -45,10 +43,11 @@ function postMessage(message) {
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     // Fallback error message
+    console.error('Error in postMessage:', error);
     window.parent.postMessage({
       type: 'error',
       error: {
-        message: 'Failed to send message: ' + String(error),
+        message: 'Failed to send error report: ' + String(error),
         timestamp: new Date().toISOString()
       }
     }, '*');
@@ -66,5 +65,27 @@ function reportHTTPError(error) {
   postMessage(errorDetails);
 }
 
-// Export functions
+// Wrap fetch to handle errors without cloning the Request object
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  try {
+    const response = await originalFetch.apply(this, args);
+    if (!response.ok) {
+      const error = new Error(`HTTP error! status: ${response.status}`);
+      reportHTTPError({
+        message: error.message,
+        request: extractRequestData(args[0])
+      });
+      throw error;
+    }
+    return response;
+  } catch (error) {
+    reportHTTPError({
+      message: error.message,
+      request: extractRequestData(args[0])
+    });
+    throw error;
+  }
+};
+
 export { postMessage, reportHTTPError };

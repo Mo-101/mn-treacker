@@ -12,7 +12,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const windCanvas = useRef(null);
-  const [activeLayers, setActiveLayers] = useState(['satellite']);
+  const [activeLayers, setActiveLayers] = useState([]);
   const [windOpacity, setWindOpacity] = useState(0.3);
   const { toast } = useToast();
 
@@ -33,6 +33,7 @@ const WeatherMap = () => {
       canvas.style.left = '0';
       canvas.style.pointerEvents = 'none';
       canvas.style.opacity = windOpacity.toString();
+      canvas.style.display = 'none'; // Hide wind canvas by default
       mapContainer.current.appendChild(canvas);
       windCanvas.current = canvas;
 
@@ -63,27 +64,30 @@ const WeatherMap = () => {
 
   const handleLayerToggle = (layerId) => {
     setActiveLayers(prev => {
-      if (prev.includes(layerId)) {
-        return prev.filter(id => id !== layerId);
+      const isCurrentlyActive = prev.includes(layerId);
+      const newLayers = isCurrentlyActive 
+        ? prev.filter(id => id !== layerId)
+        : [...prev, layerId];
+
+      if (layerId === 'wind') {
+        if (windCanvas.current) {
+          windCanvas.current.style.display = isCurrentlyActive ? 'none' : 'block';
+        }
       }
-      return [...prev, layerId];
-    });
 
-    if (layerId === 'wind') {
-      windCanvas.current.style.display = 
-        activeLayers.includes('wind') ? 'none' : 'block';
-    }
+      toast({
+        title: `${isCurrentlyActive ? 'Disabled' : 'Enabled'} ${
+          defaultLayers.find(l => l.id === layerId)?.name
+        }`,
+        duration: 2000,
+      });
 
-    toast({
-      title: `${activeLayers.includes(layerId) ? 'Disabled' : 'Enabled'} ${
-        defaultLayers.find(l => l.id === layerId)?.name
-      }`,
-      duration: 2000,
+      return newLayers;
     });
   };
 
   const handleReset = () => {
-    setActiveLayers(['satellite']);
+    setActiveLayers([]);
     setWindOpacity(0.3);
     if (windCanvas.current) {
       windCanvas.current.style.display = 'none';

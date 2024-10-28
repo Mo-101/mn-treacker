@@ -4,8 +4,8 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      // Only include headers that can be safely cloned
-      headers: Object.fromEntries([...request.headers])
+      // Convert headers to a plain object
+      headers: Object.fromEntries(request.headers.entries())
     };
   }
   return String(request);
@@ -14,9 +14,9 @@ function extractRequestData(request) {
 // Function to extract relevant error information
 function extractErrorInfo(error) {
   return {
-    message: String(error.message),
-    stack: String(error.stack),
-    type: String(error.name)
+    message: String(error.message || ''),
+    stack: String(error.stack || ''),
+    type: String(error.name || 'Error')
   };
 }
 

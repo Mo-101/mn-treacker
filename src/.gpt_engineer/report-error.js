@@ -4,11 +4,15 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      // Convert headers to a plain object that can be cloned
-      headers: Array.from(request.headers).reduce((obj, [key, value]) => {
-        obj[key] = value;
-        return obj;
-      }, {})
+      // Convert headers to a plain object
+      headers: Object.fromEntries(request.headers),
+      // Add other relevant request properties that can be safely cloned
+      mode: request.mode,
+      credentials: request.credentials,
+      cache: request.cache,
+      redirect: request.redirect,
+      referrer: request.referrer,
+      integrity: request.integrity
     };
   }
   return String(request);
@@ -30,6 +34,7 @@ function postMessage(message) {
     const safeMessage = {
       type: message.type || 'error',
       error: typeof message.error === 'object' ? extractErrorInfo(message.error) : String(message.error),
+      timestamp: new Date().toISOString()
     };
     
     // Safely handle request data if present
@@ -47,6 +52,7 @@ function postMessage(message) {
       error: {
         message: 'Failed to send message',
         originalError: String(error),
+        timestamp: new Date().toISOString()
       },
     }, '*');
   }
@@ -57,6 +63,7 @@ function reportHTTPError(error) {
   const errorDetails = {
     type: 'http_error',
     error: extractErrorInfo(error),
+    timestamp: new Date().toISOString()
   };
   
   postMessage(errorDetails);

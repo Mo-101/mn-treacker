@@ -1,20 +1,16 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    try {
-      return {
-        url: request.url,
-        method: request.method,
-        // Only extract safe-to-clone headers
-        headers: Object.fromEntries([...request.headers].filter(([key]) => {
-          // Only include safe headers that don't contain sensitive data
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        }))
-      };
-    } catch (err) {
-      return `Request to ${request.url || 'unknown URL'}`;
-    }
+    return {
+      url: request.url,
+      method: request.method,
+      // Only extract safe-to-clone headers
+      headers: Object.fromEntries([...request.headers].filter(([key]) => {
+        // Only include safe headers that don't contain sensitive data
+        const safeHeaders = ['content-type', 'accept', 'content-length'];
+        return safeHeaders.includes(key.toLowerCase());
+      }))
+    };
   }
   return String(request);
 }

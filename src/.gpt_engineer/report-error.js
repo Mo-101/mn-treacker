@@ -5,11 +5,12 @@ function extractRequestData(request) {
       return {
         url: request.url,
         method: request.method,
-        // Only extract headers that are safe to clone
-        headers: {
-          'content-type': request.headers.get('content-type'),
-          'accept': request.headers.get('accept')
-        }
+        // Only extract safe-to-clone headers
+        headers: Object.fromEntries([...request.headers].filter(([key]) => {
+          // Only include safe headers that don't contain sensitive data
+          const safeHeaders = ['content-type', 'accept', 'content-length'];
+          return safeHeaders.includes(key.toLowerCase());
+        }))
       };
     } catch (err) {
       return `Request to ${request.url || 'unknown URL'}`;
@@ -23,7 +24,8 @@ function extractErrorInfo(error) {
   return {
     message: error?.message || String(error),
     stack: error?.stack,
-    type: error?.name || 'Error'
+    type: error?.name || 'Error',
+    timestamp: new Date().toISOString()
   };
 }
 
@@ -43,22 +45,18 @@ function postMessage(message) {
     
     // Safely handle request data
     if (message.request) {
-      try {
-        safeMessage.request = extractRequestData(message.request);
-      } catch (err) {
-        safeMessage.request = 'Request data could not be serialized';
-      }
+      safeMessage.request = extractRequestData(message.request);
     }
     
     // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    // Fallback error message
     console.error('Error in postMessage:', error);
+    // Fallback error message
     window.parent.postMessage({
       type: 'error',
       error: {
-        message: 'Failed to send error report: ' + String(error),
+        message: 'Failed to send error report',
         timestamp: new Date().toISOString()
       }
     }, '*');
@@ -73,12 +71,8 @@ function reportHTTPError(error) {
     timestamp: new Date().toISOString()
   };
   
-  try {
-    if (error.request) {
-      errorDetails.request = extractRequestData(error.request);
-    }
-  } catch (err) {
-    errorDetails.request = 'Request data could not be extracted';
+  if (error.request) {
+    errorDetails.request = extractRequestData(error.request);
   }
   
   postMessage(errorDetails);
@@ -91,18 +85,14 @@ window.fetch = async function(...args) {
     const response = await originalFetch.apply(this, args);
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
-      reportHTTPError({
-        message: error.message,
-        request: args[0]
-      });
+      error.request = args[0];
+      reportHTTPError(error);
       throw error;
     }
     return response;
   } catch (error) {
-    reportHTTPError({
-      message: error.message,
-      request: args[0]
-    });
+    error.request = args[0];
+    reportHTTPError(error);
     throw error;
   }
 };

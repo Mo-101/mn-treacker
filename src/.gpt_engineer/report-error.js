@@ -85,7 +85,7 @@ window.fetch = async function(...args) {
       const error = new Error(`HTTP error! status: ${response.status}`);
       reportHTTPError({
         message: error.message,
-        request: args[0] instanceof Request ? extractRequestData(args[0]) : args[0]
+        request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0])
       });
       throw error;
     }
@@ -93,7 +93,7 @@ window.fetch = async function(...args) {
   } catch (error) {
     reportHTTPError({
       message: error.message,
-      request: args[0] instanceof Request ? extractRequestData(args[0]) : args[0]
+      request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0])
     });
     throw error;
   }

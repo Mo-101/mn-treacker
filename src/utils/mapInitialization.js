@@ -22,7 +22,7 @@ export const addWeatherLayers = async (map) => {
         id: layer,
         type: 'raster',
         source: layer,
-        layout: { visibility: 'none' },
+        layout: { visibility: 'none' },  // Set to 'none' by default
         paint: { 'raster-opacity': 0.8 }
       });
       console.log(`Added layer: ${layer}`);
@@ -31,7 +31,7 @@ export const addWeatherLayers = async (map) => {
     }
   }
 
-  // Add temperature layer with the previous default style
+  // Add temperature layer with visibility set to 'none'
   map.addSource('temperature', {
     type: 'raster',
     url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
@@ -41,7 +41,7 @@ export const addWeatherLayers = async (map) => {
     id: 'temperature',
     type: 'raster',
     source: 'temperature',
-    layout: { visibility: 'none' },
+    layout: { visibility: 'none' },  // Set to 'none' by default
     paint: { 'raster-opacity': 0.8 }
   });
 };
@@ -54,7 +54,7 @@ export const addOpenWeatherLayer = (map) => {
     id: 'openWeatherTemperatureLayer',
     type: 'raster',
     source: 'openWeatherTemperature',
-    layout: { visibility: 'visible' },
+    layout: { visibility: 'none' },  // Set to 'none' by default
     paint: { 'raster-opacity': 0.8 },
   });
 };

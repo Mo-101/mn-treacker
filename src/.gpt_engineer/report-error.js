@@ -1,19 +1,28 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      // Convert headers to a plain object
-      headers: Object.fromEntries(request.headers),
-      // Add other relevant request properties that can be safely cloned
-      mode: request.mode,
-      credentials: request.credentials,
-      cache: request.cache,
-      redirect: request.redirect,
-      referrer: request.referrer,
-      integrity: request.integrity
-    };
+    try {
+      return {
+        url: request.url,
+        method: request.method,
+        headers: Object.fromEntries(request.headers),
+        mode: request.mode,
+        credentials: request.credentials,
+        cache: request.cache,
+        redirect: request.redirect,
+        referrer: request.referrer,
+        referrerPolicy: request.referrerPolicy,
+        integrity: request.integrity,
+        keepalive: request.keepalive,
+        signal: request.signal ? 'AbortSignal' : undefined,
+        isHistoryNavigation: request.isHistoryNavigation,
+      };
+    } catch (error) {
+      return {
+        error: 'Failed to extract request data',
+        message: error.message
+      };
+    }
   }
   return String(request);
 }

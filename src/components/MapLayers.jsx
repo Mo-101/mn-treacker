@@ -21,104 +21,66 @@ export const addCustomLayers = (map) => {
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
+  addWindSpeedHeatMap(map);
   addAdminBoundariesLayer(map);
 };
 
-const addTemperatureLayer = (map) => {
-  // Using OpenWeatherMap temperature layer
-  const temperatureSource = {
-    type: 'raster',
-    tiles: [
-      `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
-    ],
-    tileSize: 256,
-    attribution: '© OpenWeatherMap'
-  };
-
-  map.addSource('temperature', temperatureSource);
-  map.addLayer({
-    id: 'temperature',
-    type: 'raster',
-    source: 'temperature',
-    paint: { 
-      'raster-opacity': 0.7,
-      'raster-fade-duration': 0
-    },
-    layout: { visibility: 'none' }
-  });
-
-  // Add temperature legend
-  const legend = document.createElement('div');
-  legend.className = 'temperature-legend hidden';
-  legend.innerHTML = `
-    <div class="bg-black/70 p-2 rounded-lg text-white text-sm">
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-red-500"></div>
-        <span>Hot (>30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-yellow-500"></div>
-        <span>Warm (20-30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-blue-500"></div>
-        <span>Cool (<20°C)</span>
-      </div>
-    </div>
-  `;
-  map.getContainer().appendChild(legend);
-
-  // Show/hide legend based on layer visibility
-  map.on('layout', (e) => {
-    if (e.layer.id === 'temperature') {
-      legend.classList.toggle('hidden', e.layout.visibility === 'none');
+const addWindSpeedHeatMap = (map) => {
+  map.addSource('wind-speed', {
+    type: 'geojson',
+    data: {
+      type: 'FeatureCollection',
+      features: []
     }
   });
-};
 
-const addVegetationLayer = (map) => {
-  addLayer(map, 'vegetation', {
-    type: 'raster',
-    url: 'mapbox://mapbox.terrain-rgb'
-  }, 'raster', { 'raster-opacity': 0.7 });
-};
-
-const addPrecipitationLayer = (map) => {
-  addLayer(map, 'precipitation', {
-    type: 'raster',
-    url: 'mapbox://mapbox.precipitation'
-  }, 'raster', { 'raster-opacity': 0.7 });
-};
-
-const addCloudsLayer = (map) => {
-  addLayer(map, 'clouds', {
-    type: 'raster',
-    url: 'mapbox://mapbox.satellite'
-  }, 'raster', { 'raster-opacity': 0.5 });
-};
-
-const addRadarLayer = (map) => {
-  addLayer(map, 'radar', {
-    type: 'raster',
-    url: 'mapbox://mapbox.radar'
-  }, 'raster', { 'raster-opacity': 0.7 });
-};
-
-const addAdminBoundariesLayer = (map) => {
-  map.addSource('admin-boundaries', {
-    type: 'vector',
-    url: 'mapbox://mapbox.mapbox-streets-v8'
-  });
   map.addLayer({
-    id: 'admin-boundaries',
-    type: 'line',
-    source: 'admin-boundaries',
-    'source-layer': 'admin',
+    id: 'wind-speed-heat',
+    type: 'heatmap',
+    source: 'wind-speed',
     paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
-      'line-width': 1  // Reduced stroke width
-    },
-    layout: { visibility: 'visible' }
+      // Increase the heatmap weight based on wind speed
+      'heatmap-weight': [
+        'interpolate',
+        ['linear'],
+        ['get', 'windSpeed'],
+        0, 0,
+        10, 0.3,
+        20, 0.6,
+        30, 0.9,
+        40, 1
+      ],
+      // Increase the heatmap color weight by zoom level
+      'heatmap-intensity': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0, 1,
+        9, 3
+      ],
+      // Color gradient for wind speed
+      'heatmap-color': [
+        'interpolate',
+        ['linear'],
+        ['heatmap-density'],
+        0, 'rgba(33,102,172,0)',
+        0.2, 'rgb(103,169,207)',
+        0.4, 'rgb(209,229,240)',
+        0.6, 'rgb(253,219,199)',
+        0.8, 'rgb(239,138,98)',
+        1, 'rgb(178,24,43)'
+      ],
+      // Adjust the heatmap radius by zoom level
+      'heatmap-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0, 2,
+        9, 20
+      ],
+      // Decrease opacity based on zoom level
+      'heatmap-opacity': 0.8
+    }
   });
 };
 
@@ -137,5 +99,24 @@ export const toggleLayer = (map, layerId, visible) => {
     console.log('Admin boundaries layer is always visible');
   } else {
     console.warn(`Layer ${layerId} not found on the map.`);
+  }
+};
+
+// Update wind speed data
+export const updateWindSpeedData = (map, windData) => {
+  if (map.getSource('wind-speed')) {
+    map.getSource('wind-speed').setData({
+      type: 'FeatureCollection',
+      features: windData.map(point => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [point.longitude, point.latitude]
+        },
+        properties: {
+          windSpeed: point.speed
+        }
+      }))
+    });
   }
 };

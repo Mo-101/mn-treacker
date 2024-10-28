@@ -26,11 +26,11 @@ const MapLegend = ({ activeLayers }) => {
       scale: ['0%', '50%', '100%']
     },
     {
-      id: 'wind',
+      id: 'wind-speed-heat',
       icon: Wind,
       name: 'Wind Speed',
-      gradient: 'from-green-300 to-green-700',
-      scale: ['0km/h', '25km/h', '50km/h']
+      gradient: 'from-blue-500 via-yellow-500 to-red-500',
+      scale: ['0km/h', '20km/h', '40km/h']
     }
   ];
 

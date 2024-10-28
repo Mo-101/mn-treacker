@@ -5,6 +5,9 @@ import LayerToggle from "../../map/components/LayerToggle";
 import { defaultLayers } from '../../../utils/layerConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Set Mapbox token
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -16,37 +19,46 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [0, 0],
-      zoom: 2
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [0, 0],
+        zoom: 2
+      });
 
-    const canvas = document.createElement('canvas');
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.opacity = windOpacity.toString();
-    mapContainer.current.appendChild(canvas);
-    windCanvas.current = canvas;
+      const canvas = document.createElement('canvas');
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.opacity = windOpacity.toString();
+      mapContainer.current.appendChild(canvas);
+      windCanvas.current = canvas;
 
-    const handleResize = () => {
-      if (map.current && windCanvas.current) {
-        const { clientWidth, clientHeight } = mapContainer.current;
-        windCanvas.current.width = clientWidth;
-        windCanvas.current.height = clientHeight;
-      }
-    };
+      const handleResize = () => {
+        if (map.current && windCanvas.current) {
+          const { clientWidth, clientHeight } = mapContainer.current;
+          windCanvas.current.width = clientWidth;
+          windCanvas.current.height = clientHeight;
+        }
+      };
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+      window.addEventListener('resize', handleResize);
+      handleResize();
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      map.current?.remove();
-    };
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        map.current?.remove();
+      };
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your Mapbox access token.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
   const handleLayerToggle = (layerId) => {

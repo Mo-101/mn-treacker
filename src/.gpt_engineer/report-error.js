@@ -43,7 +43,9 @@ function postMessage(message) {
     
     // Safely handle request data
     if (message.request) {
-      safeMessage.request = extractRequestData(message.request);
+      safeMessage.request = typeof message.request === 'string' 
+        ? message.request 
+        : extractRequestData(message.request);
     }
     
     // Post the sanitized message
@@ -70,7 +72,9 @@ function reportHTTPError(error) {
   };
   
   if (error.request) {
-    errorDetails.request = extractRequestData(error.request);
+    errorDetails.request = typeof error.request === 'string'
+      ? error.request
+      : extractRequestData(error.request);
   }
   
   postMessage(errorDetails);
@@ -85,7 +89,9 @@ window.fetch = async function(...args) {
       const error = new Error(`HTTP error! status: ${response.status}`);
       reportHTTPError({
         message: error.message,
-        request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0])
+        request: args[0] instanceof Request 
+          ? extractRequestData(args[0]) 
+          : String(args[0])
       });
       throw error;
     }
@@ -93,7 +99,9 @@ window.fetch = async function(...args) {
   } catch (error) {
     reportHTTPError({
       message: error.message,
-      request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0])
+      request: args[0] instanceof Request 
+        ? extractRequestData(args[0]) 
+        : String(args[0])
     });
     throw error;
   }

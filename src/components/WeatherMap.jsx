@@ -10,6 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
+import PathTrackingLayer from './PathTrackingLayer';
 import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
 import WeatherLayerControls from './WeatherLayerControls';
 import SidePanels from './SidePanels';
@@ -32,6 +33,8 @@ const WeatherMap = () => {
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
 
+  const [pathTrackingData, setPathTrackingData] = useState([]);
+
   useEffect(() => {
     if (map.current) return;
     
@@ -47,11 +50,26 @@ const WeatherMap = () => {
       try {
         const cases = await fetchLassaFeverCases();
         console.log('Fetched Lassa fever cases:', cases);
+        
+        // Mock path tracking data - replace with real data in production
+        setPathTrackingData([
+          {
+            coordinates: [
+              [mapState.lng, mapState.lat],
+              [mapState.lng + 0.1, mapState.lat + 0.1],
+              [mapState.lng + 0.2, mapState.lat + 0.15]
+            ],
+            speed: 5,
+            timestamp: Date.now(),
+            density: 0.5,
+            isKeyPoint: true
+          }
+        ]);
       } catch (error) {
-        console.error('Error fetching Lassa fever cases:', error);
+        console.error('Error fetching data:', error);
         toast({
           title: "Error",
-          description: "Failed to fetch Lassa fever data",
+          description: "Failed to fetch data",
           variant: "destructive",
         });
       }
@@ -110,7 +128,10 @@ const WeatherMap = () => {
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
-        <MastomysTracker data={mastomysData} map={map.current} />
+        <>
+          <MastomysTracker data={mastomysData} map={map.current} />
+          <PathTrackingLayer map={map.current} trackingData={pathTrackingData} />
+        </>
       )}
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">

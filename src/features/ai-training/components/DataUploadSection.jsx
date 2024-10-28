@@ -7,6 +7,7 @@ import { Card, CardContent } from '../../../components/ui/card';
 
 const DataUploadSection = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [dataSourceUrl, setDataSourceUrl] = useState('https://terabox.com/s/1XqnU4Y9S2p_WPFu1YeIe8A');
 
   const simulateUpload = () => {
     setUploadProgress(0);
@@ -25,10 +26,15 @@ const DataUploadSection = ({ onUploadComplete }) => {
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
       <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Data Upload</h2>
+        <h2 className="text-2xl font-bold mb-4 text-white">Data Upload</h2>
         <div className="space-y-4">
           <div>
-            <Input placeholder="Enter data source URL" className="mb-2" />
+            <Input 
+              placeholder="Enter data source URL" 
+              className="mb-2"
+              value={dataSourceUrl}
+              onChange={(e) => setDataSourceUrl(e.target.value)}
+            />
             <Button onClick={simulateUpload} className="w-full">
               <Link className="h-4 w-4 mr-2" />
               Upload from URL

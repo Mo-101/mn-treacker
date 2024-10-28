@@ -4,8 +4,15 @@ function extractRequestData(request) {
     return {
       url: request.url,
       method: request.method,
-      // Convert headers to a plain object
-      headers: Object.fromEntries(request.headers.entries())
+      headers: Object.fromEntries(request.headers),
+      cache: request.cache,
+      mode: request.mode,
+      credentials: request.credentials,
+      redirect: request.redirect,
+      referrer: request.referrer,
+      referrerPolicy: request.referrerPolicy,
+      integrity: request.integrity,
+      keepalive: request.keepalive,
     };
   }
   return String(request);
@@ -62,6 +69,10 @@ function reportHTTPError(error) {
     timestamp: new Date().toISOString()
   };
   
+  if (error.request) {
+    errorDetails.request = extractRequestData(error.request);
+  }
+  
   postMessage(errorDetails);
 }
 
@@ -74,7 +85,7 @@ window.fetch = async function(...args) {
       const error = new Error(`HTTP error! status: ${response.status}`);
       reportHTTPError({
         message: error.message,
-        request: extractRequestData(args[0])
+        request: args[0] instanceof Request ? args[0] : null
       });
       throw error;
     }
@@ -82,7 +93,7 @@ window.fetch = async function(...args) {
   } catch (error) {
     reportHTTPError({
       message: error.message,
-      request: extractRequestData(args[0])
+      request: args[0] instanceof Request ? args[0] : null
     });
     throw error;
   }

@@ -29,14 +29,13 @@ const PathTrackingLayer = ({ map, trackingData }) => {
   useEffect(() => {
     if (!map || !processedData) return;
 
-    // Add the path source
     map.addSource('movement-paths', {
       type: 'geojson',
       data: processedData,
-      lineMetrics: true
+      lineMetrics: true,
+      tolerance: 0.1 // Increased precision for high resolution
     });
 
-    // Add the main path layer
     map.addLayer({
       id: 'path-lines',
       type: 'line',
@@ -50,23 +49,23 @@ const PathTrackingLayer = ({ map, trackingData }) => {
           'interpolate',
           ['linear'],
           ['get', 'density'],
-          0, '#00ff00',
-          0.5, '#ffff00',
-          1, '#ff0000'
+          0, '#ff3333',    // Light red for low density
+          0.5, '#ff0000',  // Medium red
+          1, '#cc0000'     // Dark red for high density
         ],
         'line-width': [
           'interpolate',
           ['linear'],
           ['zoom'],
-          10, 1,
-          15, 3,
-          20, 6
+          10, 2,  // Slightly thicker at low zoom
+          15, 4,  // Medium thickness
+          20, 8   // Thicker at high zoom for better visibility
         ],
-        'line-opacity': 0.8
+        'line-opacity': 0.9,  // Increased opacity
+        'line-blur': 0.5      // Slight blur for smoother appearance
       }
     });
 
-    // Add direction arrows
     map.addLayer({
       id: 'direction-symbols',
       type: 'symbol',
@@ -121,7 +120,6 @@ const PathTrackingLayer = ({ map, trackingData }) => {
       map.getCanvas().style.cursor = '';
     });
 
-    // Cleanup function
     return () => {
       if (map.getLayer('path-lines')) map.removeLayer('path-lines');
       if (map.getLayer('direction-symbols')) map.removeLayer('direction-symbols');

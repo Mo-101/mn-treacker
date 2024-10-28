@@ -1,54 +1,56 @@
 import React from 'react';
 import { Button } from '../ui/button';
-import { Progress } from '../ui/progress';
-import { Brain, Activity } from 'lucide-react';
+import { Slider } from '../ui/slider';
 import { Card, CardContent } from '../ui/card';
+import { Progress } from '../ui/progress';
 
 const TrainingControlsPanel = ({ 
   onStartTraining, 
   isTraining, 
   trainingProgress, 
   dataUploaded,
-  trainingActivities = []
+  trainingActivities,
+  timeLeft,
+  elapsedTime
 }) => {
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
       <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4 text-yellow-400">Training Controls</h2>
+        <h2 className="text-2xl font-bold mb-4">Training Controls</h2>
         <div className="space-y-4">
+          <div>
+            <label className="block mb-2">Learning Rate</label>
+            <Slider defaultValue={[0.001]} max={0.1} step={0.001} />
+          </div>
+          <div>
+            <label className="block mb-2">Batch Size</label>
+            <Slider defaultValue={[32]} max={128} step={1} />
+          </div>
           <Button 
-            className={`w-full ${dataUploaded ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500'}`}
+            className={`w-full ${dataUploaded ? 'animate-pulse bg-green-500 hover:bg-green-600' : ''}`}
             onClick={onStartTraining}
             disabled={isTraining || !dataUploaded}
           >
-            <Brain className="mr-2 h-4 w-4" />
-            {isTraining ? 'Training in Progress...' : 'Start Training'}
+            {isTraining ? 'Training...' : 'Start Training'}
           </Button>
-
           {isTraining && (
-            <div className="space-y-4">
-              <Progress value={trainingProgress} className="h-2" />
-              <div className="flex justify-between text-yellow-400">
-                <div className="flex items-center">
-                  <Activity className="mr-2 h-4 w-4" />
-                  <span>Progress: {trainingProgress.toFixed(1)}%</span>
-                </div>
+            <div>
+              <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                  style={{ width: `${trainingProgress}%`, transition: 'width 0.5s ease-in-out' }}
+                />
               </div>
+              <p className="text-sm text-gray-300 mt-2">Training Progress: {trainingProgress}%</p>
+              <p className="text-sm text-gray-300">Time Left: {timeLeft}s</p>
+              <p className="text-sm text-gray-300">Elapsed Time: {elapsedTime}s</p>
             </div>
           )}
-
-          <div className="mt-4 max-h-40 overflow-y-auto space-y-2">
-            <h3 className="text-lg font-semibold text-yellow-400">Training Activities</h3>
+          <div className="mt-4 max-h-40 overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-2">Training Activities</h3>
             {trainingActivities.map((activity, index) => (
-              <p key={index} className="text-sm text-yellow-400/80 bg-black/20 p-2 rounded">
-                {activity}
-              </p>
+              <p key={index} className="text-sm text-gray-300">{activity}</p>
             ))}
-            {trainingActivities.length === 0 && (
-              <p className="text-sm text-yellow-400/60 italic">
-                No training activities yet
-              </p>
-            )}
           </div>
         </div>
       </CardContent>

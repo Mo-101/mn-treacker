@@ -1,17 +1,12 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    try {
-      return {
-        url: request.url || '',
-        method: request.method || 'GET',
-        headers: Object.fromEntries(Array.from(request.headers || []))
-      };
-    } catch (e) {
-      return {
-        error: 'Could not extract request data: ' + String(e)
-      };
-    }
+    return {
+      url: request.url,
+      method: request.method,
+      // Only include headers that can be safely cloned
+      headers: Object.fromEntries([...request.headers])
+    };
   }
   return String(request);
 }
@@ -19,9 +14,9 @@ function extractRequestData(request) {
 // Function to extract relevant error information
 function extractErrorInfo(error) {
   return {
-    message: String(error?.message || ''),
-    stack: String(error?.stack || ''),
-    type: String(error?.name || 'Error')
+    message: String(error.message),
+    stack: String(error.stack),
+    type: String(error.name)
   };
 }
 

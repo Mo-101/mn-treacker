@@ -1,19 +1,23 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: Object.fromEntries(request.headers),
-      cache: request.cache,
-      mode: request.mode,
-      credentials: request.credentials,
-      redirect: request.redirect,
-      referrer: request.referrer,
-      referrerPolicy: request.referrerPolicy,
-      integrity: request.integrity,
-      keepalive: request.keepalive,
-    };
+    try {
+      return {
+        url: request.url,
+        method: request.method,
+        headers: Object.fromEntries(request.headers),
+        cache: request.cache,
+        mode: request.mode,
+        credentials: request.credentials,
+        redirect: request.redirect,
+        referrer: request.referrer,
+        referrerPolicy: request.referrerPolicy,
+        integrity: request.integrity,
+        keepalive: request.keepalive,
+      };
+    } catch (err) {
+      return `Request to ${request.url}`;
+    }
   }
   return String(request);
 }
@@ -43,9 +47,11 @@ function postMessage(message) {
     
     // Safely handle request data
     if (message.request) {
-      safeMessage.request = typeof message.request === 'string' 
-        ? message.request 
-        : extractRequestData(message.request);
+      try {
+        safeMessage.request = extractRequestData(message.request);
+      } catch (err) {
+        safeMessage.request = 'Request data could not be serialized';
+      }
     }
     
     // Post the sanitized message
@@ -71,10 +77,12 @@ function reportHTTPError(error) {
     timestamp: new Date().toISOString()
   };
   
-  if (error.request) {
-    errorDetails.request = typeof error.request === 'string'
-      ? error.request
-      : extractRequestData(error.request);
+  try {
+    if (error.request) {
+      errorDetails.request = extractRequestData(error.request);
+    }
+  } catch (err) {
+    errorDetails.request = 'Request data could not be extracted';
   }
   
   postMessage(errorDetails);
@@ -89,9 +97,7 @@ window.fetch = async function(...args) {
       const error = new Error(`HTTP error! status: ${response.status}`);
       reportHTTPError({
         message: error.message,
-        request: args[0] instanceof Request 
-          ? extractRequestData(args[0]) 
-          : String(args[0])
+        request: args[0]
       });
       throw error;
     }
@@ -99,9 +105,7 @@ window.fetch = async function(...args) {
   } catch (error) {
     reportHTTPError({
       message: error.message,
-      request: args[0] instanceof Request 
-        ? extractRequestData(args[0]) 
-        : String(args[0])
+      request: args[0]
     });
     throw error;
   }

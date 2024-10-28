@@ -1,29 +1,12 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    try {
-      // Only extract string and boolean properties that can be safely cloned
-      return {
-        url: request.url || '',
-        method: request.method || '',
-        headers: request.headers ? Object.fromEntries(request.headers) : {},
-        mode: request.mode || '',
-        credentials: request.credentials || '',
-        cache: request.cache || '',
-        redirect: request.redirect || '',
-        referrer: request.referrer || '',
-        referrerPolicy: request.referrerPolicy || '',
-        integrity: request.integrity || '',
-        keepalive: Boolean(request.keepalive),
-        hasSignal: Boolean(request.signal),
-        isHistoryNavigation: Boolean(request.isHistoryNavigation)
-      };
-    } catch (error) {
-      return {
-        error: 'Failed to extract request data',
-        message: String(error.message)
-      };
-    }
+    return {
+      url: request.url,
+      method: request.method,
+      // Only include headers that can be safely cloned
+      headers: Object.fromEntries([...request.headers])
+    };
   }
   return String(request);
 }
@@ -33,16 +16,16 @@ function extractErrorInfo(error) {
   return {
     message: String(error.message),
     stack: String(error.stack),
-    type: String(error.name),
+    type: String(error.name)
   };
 }
 
 // Safe postMessage function
 function postMessage(message) {
   try {
-    // Create a cloneable message object with only serializable data
+    // Create a cloneable message object
     const safeMessage = {
-      type: String(message.type || 'error'),
+      type: 'error',
       timestamp: new Date().toISOString()
     };
     
@@ -61,7 +44,7 @@ function postMessage(message) {
     // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    // Fallback error message that's guaranteed to be cloneable
+    // Fallback error message
     window.parent.postMessage({
       type: 'error',
       error: {

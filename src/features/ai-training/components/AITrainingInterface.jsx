@@ -7,7 +7,7 @@ import DataUploadSection from './DataUploadSection';
 import ModelPerformanceDashboard from './ModelPerformanceDashboard';
 import DataVisualizationPanel from './DataVisualizationPanel';
 import TrainingControlsPanel from './TrainingControlsPanel';
-import InteractiveSidebar from './InteractiveSidebar';
+import InteractiveSidebar from '../../../components/AITrainingComponents/InteractiveSidebar';
 import HelpSection from './HelpSection';
 import BrainModel from './BrainModel';
 
@@ -57,7 +57,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
-        setTimeLeft(100); // Assuming 100 seconds for training
+        setTimeLeft(100);
         setTrainingActivities([]);
         setKnowledgeLevel(0);
         addToConsoleLog('Training started');
@@ -136,7 +136,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 exit={{ opacity: 0 }}
               >
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
-                {/* Add settings controls here */}
               </motion.div>
             )}
           </AnimatePresence>
@@ -171,7 +170,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
 };
 
 export default AITrainingInterface;

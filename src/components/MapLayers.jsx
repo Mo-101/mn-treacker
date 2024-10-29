@@ -10,7 +10,7 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
       type,
       source: id,
       paint,
-      layout: { visibility: 'none', ...layout }
+      layout: { visibility: 'visible', ...layout }  // Changed default visibility to 'visible'
     });
   }
 };
@@ -20,7 +20,7 @@ export const addCustomLayers = (map) => {
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
-  addAdminBoundariesLayer(map);
+  addAdminBoundariesLayer(map);  // Ensure this is called
 };
 
 const addVegetationLayer = (map) => {
@@ -58,26 +58,65 @@ const addRadarLayer = (map) => {
 };
 
 const addAdminBoundariesLayer = (map) => {
-  map.addSource('admin-boundaries', {
-    type: 'vector',
-    url: 'mapbox://mapbox.mapbox-streets-v8'
-  });
-  map.addLayer({
-    id: 'admin-boundaries',
-    type: 'line',
-    source: 'admin-boundaries',
-    'source-layer': 'admin',
-    paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
-      'line-width': 1  // Reduced stroke width
-    },
-    layout: { visibility: 'visible' }
-  });
+  if (!map.getSource('admin-boundaries')) {
+    map.addSource('admin-boundaries', {
+      type: 'vector',
+      url: 'mapbox://mapbox.boundaries-adm0-v3,mapbox.boundaries-adm1-v3,mapbox.boundaries-adm2-v3'
+    });
+  }
+
+  // Add country boundaries
+  if (!map.getLayer('admin-boundaries-country')) {
+    map.addLayer({
+      id: 'admin-boundaries-country',
+      type: 'line',
+      source: 'admin-boundaries',
+      'source-layer': 'boundaries_admin_0',
+      paint: {
+        'line-color': '#FFD700',  // Gold color for country boundaries
+        'line-width': 2,
+        'line-opacity': 0.8
+      },
+      layout: { visibility: 'visible' }
+    });
+  }
+
+  // Add state/province boundaries
+  if (!map.getLayer('admin-boundaries-state')) {
+    map.addLayer({
+      id: 'admin-boundaries-state',
+      type: 'line',
+      source: 'admin-boundaries',
+      'source-layer': 'boundaries_admin_1',
+      paint: {
+        'line-color': '#FFA500',  // Orange color for state boundaries
+        'line-width': 1,
+        'line-opacity': 0.6
+      },
+      layout: { visibility: 'visible' }
+    });
+  }
+
+  // Add district/county boundaries
+  if (!map.getLayer('admin-boundaries-district')) {
+    map.addLayer({
+      id: 'admin-boundaries-district',
+      type: 'line',
+      source: 'admin-boundaries',
+      'source-layer': 'boundaries_admin_2',
+      paint: {
+        'line-color': '#FFE4B5',  // Moccasin color for district boundaries
+        'line-width': 0.5,
+        'line-opacity': 0.4
+      },
+      layout: { visibility: 'visible' }
+    });
+  }
 };
 
 export const toggleLayer = (map, layerId, visible) => {
   console.log(`Attempting to toggle layer ${layerId} to ${visible ? 'visible' : 'hidden'}`);
-  if (map.getLayer(layerId) && layerId !== 'admin-boundaries') {
+  if (map.getLayer(layerId)) {
     const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
     console.log(`Current visibility of ${layerId}: ${currentVisibility}`);
     if (currentVisibility !== (visible ? 'visible' : 'none')) {
@@ -86,8 +125,6 @@ export const toggleLayer = (map, layerId, visible) => {
     } else {
       console.log(`Layer ${layerId} visibility unchanged`);
     }
-  } else if (layerId === 'admin-boundaries') {
-    console.log('Admin boundaries layer is always visible');
   } else {
     console.warn(`Layer ${layerId} not found on the map.`);
   }

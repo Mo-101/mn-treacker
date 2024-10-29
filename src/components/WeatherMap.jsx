@@ -46,57 +46,107 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return;
     
-    const customStyle = {
-      version: 8,
-      sources: {
-        'google-satellite': {
-          type: 'raster',
-          tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
-          tileSize: 256
-        },
-        'google-hybrid': {
-          type: 'raster',
-          tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
-          tileSize: 256
-        }
-      },
-      layers: [
-        {
-          id: 'satellite-base',
-          type: 'raster',
-          source: 'google-satellite',
-          minzoom: 0,
-          maxzoom: 22
-        },
-        {
-          id: 'hybrid-overlay',
-          type: 'raster',
-          source: 'google-hybrid',
-          minzoom: 0,
-          maxzoom: 22
-        }
-      ]
-    };
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: customStyle,
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
       bearing: 360.0,
-      pitch: 0,
-      attributionControl: false
+      pitch: 45,
+      maxZoom: 20,
+      minZoom: 1.5,
+      attributionControl: true,
+      terrain: {
+        source: 'mapbox-dem',
+        exaggeration: 1.5
+      }
+    });
+
+    map.current.on('load', async () => {
+      // Add terrain source
+      map.current.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+
+      // Add high-quality satellite imagery
+      map.current.addSource('satellite', {
+        type: 'raster',
+        url: 'mapbox://mapbox.satellite',
+        tileSize: 512,
+        maxzoom: 22
+      });
+
+      map.current.addLayer({
+        id: 'satellite-layer',
+        type: 'raster',
+        source: 'satellite',
+        paint: {
+          'raster-saturation': 0.2,
+          'raster-contrast': 0.1,
+          'raster-brightness-max': 0.9
+        }
+      });
+
+      // Add GeoJSON source for points
+      map.current.addSource('points', {
+        type: 'geojson',
+        data: '/points.geojson',
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50
+      });
+
+      // Add clustered points layer
+      map.current.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'points',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#51bbd6',
+            100,
+            '#f1f075',
+            750,
+            '#f28cb1'
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            20,
+            100,
+            30,
+            750,
+            40
+          ]
+        }
+      });
+
+      // Add individual points layer
+      map.current.addLayer({
+        id: 'unclustered-point',
+        type: 'circle',
+        source: 'points',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#11b4da',
+          'circle-radius': 8,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fff'
+        }
+      });
+
+      await addCustomLayers(map.current);
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
-    map.current.addControl(new mapboxgl.AttributionControl({
-      customAttribution: 'Imagery © Google',
-      compact: false
-    }));
-
-    map.current.on('load', async () => {
-      await addCustomLayers(map.current);
-    });
+    map.current.addControl(new mapboxgl.FullscreenControl());
+    map.current.addControl(new mapboxgl.ScaleControl());
 
     return () => map.current && map.current.remove();
   }, []);

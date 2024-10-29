@@ -1,22 +1,50 @@
 export const addWeatherLayers = (map) => {
-  const layers = ['temperature', 'precipitation', 'clouds', 'radar', 'wind'];
+  const layers = [
+    {
+      id: 'temperature',
+      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      maxzoom: 20
+    },
+    {
+      id: 'precipitation',
+      url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      maxzoom: 20
+    },
+    {
+      id: 'clouds',
+      url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      maxzoom: 20
+    },
+    {
+      id: 'wind',
+      url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      maxzoom: 20
+    },
+    {
+      id: 'pressure',
+      url: `https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      maxzoom: 20
+    }
+  ];
   
   layers.forEach(layer => {
-    map.addSource(`weather-${layer}`, {
+    map.addSource(`weather-${layer.id}`, {
       type: 'raster',
-      tiles: [`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`],
-      tileSize: 256
+      tiles: [layer.url],
+      tileSize: 256,
+      maxzoom: layer.maxzoom
     });
 
     map.addLayer({
-      id: `weather-${layer}`,
+      id: `weather-${layer.id}`,
       type: 'raster',
-      source: `weather-${layer}`,
+      source: `weather-${layer.id}`,
       layout: {
         visibility: 'none'
       },
       paint: {
-        'raster-opacity': 0.8
+        'raster-opacity': 0.8,
+        'raster-fade-duration': 0
       }
     });
   });
@@ -25,16 +53,16 @@ export const addWeatherLayers = (map) => {
 export const addAdminBoundariesLayer = (map) => {
   map.addSource('admin-boundaries', {
     type: 'vector',
-    url: 'mapbox://mapbox.mapbox-streets-v8'
+    url: 'mapbox://mapbox.boundaries-adm2-v3'
   });
 
   map.addLayer({
     id: 'admin-boundaries-layer',
     type: 'line',
     source: 'admin-boundaries',
-    'source-layer': 'admin',
+    'source-layer': 'boundaries_admin_2',
     paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',
+      'line-color': 'rgba(255, 255, 255, 0.5)',
       'line-width': 1
     },
     layout: {
@@ -43,7 +71,6 @@ export const addAdminBoundariesLayer = (map) => {
   });
 };
 
-// Main function that adds all custom layers
 export const addCustomLayers = (map) => {
   addWeatherLayers(map);
   addAdminBoundariesLayer(map);

@@ -2,18 +2,19 @@
 const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
+      // Only extract safe, serializable properties
       return {
         url: request.url || '',
         method: request.method || 'GET',
-        headers: Array.from(request.headers.entries()).reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {})
+        // Convert headers to a plain object
+        headers: Object.fromEntries(request.headers || [])
       };
     }
+    // If it's a string URL
     if (typeof request === 'string') {
       return { url: request };
     }
+    // For other types, return null
     return null;
   } catch (err) {
     console.warn('Error extracting request data:', err);
@@ -51,9 +52,11 @@ const postMessage = (message) => {
       }
     }
 
-    // Ensure the message is cloneable
-    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
-    window.parent.postMessage(cloneableMessage, '*');
+    // Test if message is cloneable before sending
+    JSON.parse(JSON.stringify(safeMessage));
+    
+    // Send the message
+    window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message

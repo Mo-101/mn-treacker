@@ -2,10 +2,24 @@
 function extractRequestData(request) {
   if (request instanceof Request) {
     // Create a simple serializable object with only necessary request info
-    return {
+    const safeRequest = {
       url: request.url || '',
-      method: request.method || 'GET'
+      method: request.method || 'GET',
+      headers: {}
     };
+
+    // Safely extract headers without accessing the Headers object directly
+    if (request.headers && typeof request.headers.get === 'function') {
+      const safeHeaders = ['content-type', 'accept', 'content-length'];
+      safeHeaders.forEach(header => {
+        const value = request.headers.get(header);
+        if (value) {
+          safeRequest.headers[header] = value;
+        }
+      });
+    }
+
+    return safeRequest;
   }
   return String(request);
 }
@@ -34,14 +48,12 @@ function postMessage(message) {
     }
     
     if (message.request) {
-      // Extract safe request data before attempting to send
       safeMessage.request = extractRequestData(message.request);
     }
     
     // Send the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    // Fallback error message if something goes wrong
     console.warn('Error in postMessage:', error);
     window.parent.postMessage({
       type: 'error',

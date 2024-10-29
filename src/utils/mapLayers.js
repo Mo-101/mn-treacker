@@ -1,4 +1,4 @@
-export const addCustomLayers = (map) => {
+export const addWeatherLayers = (map) => {
   const layers = ['temperature', 'precipitation', 'clouds', 'radar', 'wind'];
   
   layers.forEach(layer => {
@@ -19,26 +19,6 @@ export const addCustomLayers = (map) => {
         'raster-opacity': 0.8
       }
     });
-  });
-
-  // Add admin boundaries layer
-  map.addSource('admin-boundaries', {
-    type: 'vector',
-    url: 'mapbox://mapbox.mapbox-streets-v8'
-  });
-
-  map.addLayer({
-    id: 'admin-boundaries-layer',
-    type: 'line',
-    source: 'admin-boundaries',
-    'source-layer': 'admin',
-    paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',
-      'line-width': 1
-    },
-    layout: {
-      visibility: 'visible'
-    }
   });
 };
 

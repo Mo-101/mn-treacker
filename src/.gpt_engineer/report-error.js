@@ -3,20 +3,24 @@ function extractRequestData(request) {
   if (request instanceof Request) {
     // Create a simple serializable object with only necessary request info
     const safeRequest = {
-      url: request.url,
-      method: request.method,
-      // Only include safe headers as a plain object
+      url: request.url || '',
+      method: request.method || 'GET',
       headers: {}
     };
 
-    // Safely extract headers
-    if (request.headers && typeof request.headers.forEach === 'function') {
-      const safeHeaders = ['content-type', 'accept', 'content-length'];
-      request.headers.forEach((value, key) => {
-        if (safeHeaders.includes(key.toLowerCase())) {
-          safeRequest.headers[key] = value;
-        }
-      });
+    // Safely extract headers without accessing the Headers object directly
+    try {
+      if (request.headers) {
+        // Convert headers to a plain object
+        request.headers.forEach((value, key) => {
+          const safeHeaders = ['content-type', 'accept', 'content-length'];
+          if (safeHeaders.includes(key.toLowerCase())) {
+            safeRequest.headers[key] = value;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Could not extract headers from request:', e);
     }
 
     return safeRequest;
@@ -48,12 +52,15 @@ function postMessage(message) {
     }
     
     if (message.request) {
+      // Extract safe request data before attempting to send
       safeMessage.request = extractRequestData(message.request);
     }
     
+    // Send the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
     // Fallback error message if something goes wrong
+    console.warn('Error in postMessage:', error);
     window.parent.postMessage({
       type: 'error',
       error: {

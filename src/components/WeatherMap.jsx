@@ -10,6 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import PredictionPanel from './PredictionPanel';
 import DetectionSpotLayer from './DetectionSpotLayer';
+import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
@@ -120,7 +121,10 @@ const WeatherMap = () => {
     <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       {map.current && (
-        <DetectionSpotLayer map={map.current} detections={detections} />
+        <>
+          <DetectionSpotLayer map={map.current} detections={detections} />
+          <LassaFeverCasesLayer map={map.current} />
+        </>
       )}
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">

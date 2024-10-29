@@ -1,15 +1,10 @@
 // Function to safely extract data from a Request object
 const extractRequestData = (request) => {
   if (request instanceof Request) {
-    // Create a simple serializable object with only string properties
+    // Only extract string properties that can be safely serialized
     return {
       url: request.url || '',
-      method: request.method || 'GET',
-      // Convert headers to a plain object with only safe headers
-      headers: Object.fromEntries(
-        Array.from(request.headers)
-          .filter(([key]) => ['content-type', 'accept', 'content-length'].includes(key.toLowerCase()))
-      )
+      method: request.method || 'GET'
     };
   }
   if (typeof request === 'string') {
@@ -48,9 +43,7 @@ const postMessage = (message) => {
       }
     }
 
-    // Ensure the message is cloneable by converting to and from JSON
-    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
-    window.parent.postMessage(cloneableMessage, '*');
+    window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message

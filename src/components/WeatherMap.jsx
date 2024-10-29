@@ -40,7 +40,7 @@ const WeatherMap = () => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: 'mapbox://styles/mapbox/satellite-v9', // Changed to high-res satellite base
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
       projection: 'mercator',
@@ -48,6 +48,37 @@ const WeatherMap = () => {
     });
 
     map.current.on('load', async () => {
+      // Add terrain source for enhanced 3D effect
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+
+      // Add terrain layer
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+      // Add satellite layer with enhanced settings
+      map.current.addSource('satellite', {
+        'type': 'raster',
+        'url': 'mapbox://mapbox.satellite',
+        'tileSize': 512,
+        'maxzoom': 22
+      });
+
+      map.current.addLayer({
+        'id': 'enhanced-satellite',
+        'type': 'raster',
+        'source': 'satellite',
+        'paint': {
+          'raster-saturation': 0.5,
+          'raster-contrast': 0.2,
+          'raster-brightness-min': 0.2,
+          'raster-brightness-max': 1
+        }
+      }, 'temperature');
+
       // Add temperature layer
       map.current.addSource('temperature', {
         type: 'raster',

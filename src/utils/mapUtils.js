@@ -1,7 +1,5 @@
 import mapboxgl from 'mapbox-gl';
 
-
-
 export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
   try {
     map.current = new mapboxgl.Map({
@@ -11,10 +9,33 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
       zoom: mapState.zoom,
       pitch: 45,
       bearing: 0,
-      antialias: true
+      antialias: true,
+      terrain: {
+        source: 'mapbox-dem',
+        exaggeration: 1.5
+      }
     });
 
     map.current.on('load', () => {
+      // Add terrain source
+      map.current.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+
+      // Add sky layer for better 3D visualization
+      map.current.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 90.0],
+          'sky-atmosphere-sun-intensity': 15
+        }
+      });
+
       map.current.addControl(new mapboxgl.NavigationControl());
       addCustomLayers(map.current);
       updateMapState();
@@ -22,13 +43,8 @@ export const initializeMap = (mapContainer, map, mapState, setMapState, addCusto
 
     map.current.on('move', updateMapState);
 
+    // Enable terrain
     map.current.on('style.load', () => {
-      map.current.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-      });
       map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
     });
   } catch (error) {

@@ -3,24 +3,26 @@ function extractRequestData(request) {
   try {
     if (request instanceof Request) {
       // Create a simple serializable object with basic request info
+      const headers = {};
+      try {
+        request.headers.forEach((value, key) => {
+          const safeHeaders = ['content-type', 'accept', 'content-length'];
+          if (safeHeaders.includes(key.toLowerCase())) {
+            headers[key] = value;
+          }
+        });
+      } catch (e) {
+        // Headers might not be accessible
+      }
+
       return {
         url: request.url || 'unknown',
         method: request.method || 'unknown',
-        // Convert headers to a simple object with only safe headers
-        headers: Array.from(request.headers || [])
-          .filter(([key]) => {
-            const safeHeaders = ['content-type', 'accept', 'content-length'];
-            return safeHeaders.includes(key.toLowerCase());
-          })
-          .reduce((acc, [key, value]) => {
-            acc[key] = value;
-            return acc;
-          }, {})
+        headers
       };
     }
     return String(request);
   } catch (err) {
-    // Fallback if request cannot be processed
     return 'Unable to process request details';
   }
 }

@@ -1,17 +1,25 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    return {
+    // Create a simple serializable object with only necessary request info
+    const safeRequest = {
       url: request.url,
       method: request.method,
-      // Only include safe headers
-      headers: Object.fromEntries(
-        Array.from(request.headers.entries()).filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        })
-      )
+      // Only include safe headers as a plain object
+      headers: {}
     };
+
+    // Safely extract headers
+    if (request.headers && typeof request.headers.forEach === 'function') {
+      const safeHeaders = ['content-type', 'accept', 'content-length'];
+      request.headers.forEach((value, key) => {
+        if (safeHeaders.includes(key.toLowerCase())) {
+          safeRequest.headers[key] = value;
+        }
+      });
+    }
+
+    return safeRequest;
   }
   return String(request);
 }
@@ -29,6 +37,7 @@ function extractErrorInfo(error) {
 // Safe postMessage function
 function postMessage(message) {
   try {
+    // Create a serializable message object
     const safeMessage = {
       type: 'error',
       timestamp: new Date().toISOString()
@@ -44,6 +53,7 @@ function postMessage(message) {
     
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
+    // Fallback error message if something goes wrong
     window.parent.postMessage({
       type: 'error',
       error: {

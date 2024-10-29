@@ -61,6 +61,20 @@ const MastomysTracker = ({ map }) => {
         }
       });
 
+      // Add glow effect layer
+      map.addLayer({
+        id: 'rat-points-glow',
+        type: 'circle',
+        source: 'rat-locations',
+        paint: {
+          'circle-radius': 15,
+          'circle-color': '#B42222',
+          'circle-opacity': 0.15,
+          'circle-blur': 1
+        }
+      });
+
+      // Add main point layer
       map.addLayer({
         id: 'rat-points',
         type: 'circle',
@@ -68,9 +82,23 @@ const MastomysTracker = ({ map }) => {
         paint: {
           'circle-radius': 6,
           'circle-color': '#B42222',
-          'circle-opacity': 0.7
+          'circle-opacity': 0.7,
+          // Add pulsing animation
+          'circle-radius-transition': {
+            duration: 2000,
+            delay: 0
+          }
         }
       });
+
+      // Add pulsing animation
+      let size = 6;
+      const pulseAnimation = () => {
+        size = size === 6 ? 8 : 6;
+        map.setPaintProperty('rat-points', 'circle-radius', size);
+        requestAnimationFrame(pulseAnimation);
+      };
+      pulseAnimation();
     } else {
       // Update existing source
       map.getSource('rat-locations').setData({
@@ -81,6 +109,7 @@ const MastomysTracker = ({ map }) => {
 
     return () => {
       if (map.getLayer('rat-points')) map.removeLayer('rat-points');
+      if (map.getLayer('rat-points-glow')) map.removeLayer('rat-points-glow');
       if (map.getSource('rat-locations')) map.removeSource('rat-locations');
     };
   }, [map, ratLocations]);

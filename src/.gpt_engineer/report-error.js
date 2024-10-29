@@ -3,16 +3,20 @@ const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
       // Only extract safe, serializable properties
-      const headers = {};
-      request.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      
-      return {
-        url: request.url,
-        method: request.method,
-        headers
+      const safeRequest = {
+        url: request.url || '',
+        method: request.method || 'GET',
+        headers: {}
       };
+      
+      // Safely extract headers
+      if (request.headers && typeof request.headers.forEach === 'function') {
+        request.headers.forEach((value, key) => {
+          safeRequest.headers[key] = value;
+        });
+      }
+      
+      return safeRequest;
     }
     // If it's a string URL
     if (typeof request === 'string') {
@@ -50,14 +54,14 @@ const postMessage = (message) => {
 
     // Only add request info if it exists and can be serialized
     if (message.request) {
-      const requestData = extractRequestData(message.request);
-      if (requestData) {
-        safeMessage.request = requestData;
+      const safeRequest = extractRequestData(message.request);
+      if (safeRequest) {
+        safeMessage.request = safeRequest;
       }
     }
 
-    // Verify message is cloneable before sending
-    const cloneTest = JSON.parse(JSON.stringify(safeMessage));
+    // Test if message is cloneable before sending
+    const cloneTest = structuredClone(safeMessage);
     
     // Send the message
     window.parent.postMessage(cloneTest, '*');
@@ -83,9 +87,9 @@ const reportHTTPError = (error) => {
     };
 
     if (error.request) {
-      const requestData = extractRequestData(error.request);
-      if (requestData) {
-        errorDetails.request = requestData;
+      const safeRequest = extractRequestData(error.request);
+      if (safeRequest) {
+        errorDetails.request = safeRequest;
       }
     }
 

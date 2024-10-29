@@ -67,7 +67,11 @@ const extractRequestData = (request) => {
     return {
       url: request.url,
       method: request.method,
-      headers: Object.fromEntries(request.headers),
+      // Only include safe headers
+      headers: Object.fromEntries([...request.headers].filter(([key]) => {
+        const safeHeaders = ['content-type', 'accept', 'content-length'];
+        return safeHeaders.includes(key.toLowerCase());
+      }))
     };
   }
   return String(request);
@@ -78,21 +82,20 @@ const safeFetch = async (...args) => {
   try {
     const response = await fetch(...args);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const error = new Error(`HTTP error! status: ${response.status}`);
+      // Extract safe request data before reporting
+      const requestData = extractRequestData(args[0]);
+      if (typeof window.reportHTTPError === 'function') {
+        window.reportHTTPError({
+          message: error.message,
+          request: requestData
+        });
+      }
+      throw error;
     }
     return response;
   } catch (error) {
     console.error('Fetch error:', error);
-    const errorDetails = {
-      message: error.message,
-      request: args[0] instanceof Request ? extractRequestData(args[0]) : String(args[0]),
-    };
-    // Use the existing reportHTTPError function if available, otherwise just log
-    if (typeof window.reportHTTPError === 'function') {
-      window.reportHTTPError(errorDetails);
-    } else {
-      console.error('HTTP Error:', errorDetails);
-    }
     throw error;
   }
 };

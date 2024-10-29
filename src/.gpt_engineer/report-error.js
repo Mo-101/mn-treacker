@@ -2,28 +2,10 @@
 function extractRequestData(request) {
   if (request instanceof Request) {
     // Create a simple serializable object with only necessary request info
-    const safeRequest = {
+    return {
       url: request.url || '',
-      method: request.method || 'GET',
-      headers: {}
+      method: request.method || 'GET'
     };
-
-    // Safely extract headers without accessing the Headers object directly
-    try {
-      if (request.headers) {
-        // Convert headers to a plain object
-        request.headers.forEach((value, key) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          if (safeHeaders.includes(key.toLowerCase())) {
-            safeRequest.headers[key] = value;
-          }
-        });
-      }
-    } catch (e) {
-      console.warn('Could not extract headers from request:', e);
-    }
-
-    return safeRequest;
   }
   return String(request);
 }

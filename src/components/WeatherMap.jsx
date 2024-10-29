@@ -14,14 +14,14 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
-import { initializeMap, addWeatherLayers } from '../utils/mapInitialization';
+import { addCustomLayers } from '../utils/mapLayers';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
   const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
@@ -46,48 +46,56 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return;
     
+    const customStyle = {
+      version: 8,
+      sources: {
+        'google-satellite': {
+          type: 'raster',
+          tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
+          tileSize: 256
+        },
+        'google-hybrid': {
+          type: 'raster',
+          tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
+          tileSize: 256
+        }
+      },
+      layers: [
+        {
+          id: 'satellite-base',
+          type: 'raster',
+          source: 'google-satellite',
+          minzoom: 0,
+          maxzoom: 22
+        },
+        {
+          id: 'hybrid-overlay',
+          type: 'raster',
+          source: 'google-hybrid',
+          minzoom: 0,
+          maxzoom: 22
+        }
+      ]
+    };
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: customStyle,
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
-      projection: 'mercator',
-      renderWorldCopies: true
+      bearing: 360.0,
+      pitch: 0,
+      attributionControl: false
     });
 
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+    map.current.addControl(new mapboxgl.AttributionControl({
+      customAttribution: 'Imagery © Google',
+      compact: false
+    }));
+
     map.current.on('load', async () => {
-      // Add terrain and enhanced satellite layers
-      map.current.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-      });
-
-      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-      // Enhance satellite imagery
-      map.current.addSource('satellite', {
-        'type': 'raster',
-        'url': 'mapbox://mapbox.satellite',
-        'tileSize': 512,
-        'maxzoom': 22
-      });
-
-      map.current.addLayer({
-        'id': 'enhanced-satellite',
-        'type': 'raster',
-        'source': 'satellite',
-        'paint': {
-          'raster-saturation': 0.5,
-          'raster-contrast': 0.2,
-          'raster-brightness-min': 0.2,
-          'raster-brightness-max': 1
-        }
-      });
-
-      // Add weather layers
-      await addWeatherLayers(map.current);
+      await addCustomLayers(map.current);
     });
 
     return () => map.current && map.current.remove();

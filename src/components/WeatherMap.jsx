@@ -81,8 +81,8 @@ const WeatherMap = () => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: customStyle,
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
+      center: [27.12657, 3.46732],  // Center on Africa
+      zoom: 2,
       bearing: 360.0,
       pitch: 0,
       attributionControl: false

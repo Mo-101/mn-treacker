@@ -11,7 +11,6 @@ import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import PathTrackingLayer from './PathTrackingLayer';
-import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import { fetchLassaFeverCases } from '../utils/api';
@@ -41,18 +40,111 @@ const WeatherMap = () => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12', // Changed to satellite hybrid style
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
+      zoom: mapState.zoom,
+      projection: 'mercator',
+      renderWorldCopies: true
     });
 
     map.current.on('load', async () => {
-      addWeatherLayers(map.current);
+      // Add temperature layer
+      map.current.addSource('temperature', {
+        type: 'raster',
+        tiles: [
+          `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
+        ],
+        tileSize: 256,
+        maxzoom: 12
+      });
+
+      map.current.addLayer({
+        id: 'temperature',
+        type: 'raster',
+        source: 'temperature',
+        paint: {
+          'raster-opacity': 0.8,
+          'raster-hue-rotate': 0,
+          'raster-saturation': 1,
+          'raster-contrast': 1
+        },
+        layout: { visibility: 'none' }
+      });
+
+      // Add vegetation layer
+      map.current.addSource('vegetation', {
+        type: 'raster',
+        tiles: ['mapbox://mapbox.satellite'],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'vegetation',
+        type: 'raster',
+        source: 'vegetation',
+        paint: {
+          'raster-opacity': 0.7,
+          'raster-saturation': 0.5,
+          'raster-hue-rotate': 90,
+          'raster-brightness-min': 0.2
+        },
+        layout: { visibility: 'none' }
+      });
+
+      // Add precipitation layer
+      map.current.addSource('precipitation', {
+        type: 'raster',
+        tiles: [
+          `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'precipitation',
+        type: 'raster',
+        source: 'precipitation',
+        paint: { 'raster-opacity': 0.7 },
+        layout: { visibility: 'none' }
+      });
+
+      // Add wind layer
+      map.current.addSource('wind', {
+        type: 'raster',
+        tiles: [
+          `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'wind',
+        type: 'raster',
+        source: 'wind',
+        paint: { 'raster-opacity': 0.7 },
+        layout: { visibility: 'none' }
+      });
+
+      // Add clouds layer
+      map.current.addSource('clouds', {
+        type: 'raster',
+        tiles: [
+          `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'clouds',
+        type: 'raster',
+        source: 'clouds',
+        paint: { 'raster-opacity': 0.7 },
+        layout: { visibility: 'none' }
+      });
+
       try {
         const cases = await fetchLassaFeverCases();
         console.log('Fetched Lassa fever cases:', cases);
-        
-        // Mock path tracking data - replace with real data in production
         setPathTrackingData([
           {
             coordinates: [
@@ -74,32 +166,26 @@ const WeatherMap = () => {
           variant: "destructive",
         });
       }
-      addOpenWeatherLayer(map.current);
-      console.log('Map loaded and layers added');
     });
 
     return () => map.current && map.current.remove();
   }, []);
 
-  const toggleOpenWeatherLayer = () => {
-    if (map.current) {
-      const visibility = showOpenWeather ? 'none' : 'visible';
-      map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
-      map.current.setLayoutProperty('weather-temperature', 'visibility', visibility);
-      setShowOpenWeather(!showOpenWeather);
-    }
-  };
-
   const handleLayerToggle = (layerId) => {
     if (map.current) {
       const visibility = map.current.getLayoutProperty(layerId, 'visibility');
-      map.current.setLayoutProperty(layerId, 'visibility', visibility === 'visible' ? 'none' : 'visible');
+      const newVisibility = visibility === 'visible' ? 'none' : 'visible';
+      
+      map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
       
       setActiveLayers(prev => 
-        visibility === 'visible'
-          ? prev.filter(id => id !== layerId)
-          : [...prev, layerId]
+        newVisibility === 'visible'
+          ? [...prev, layerId]
+          : prev.filter(id => id !== layerId)
       );
+
+      // Log layer toggle for debugging
+      console.log(`Toggled ${layerId} to ${newVisibility}`);
     }
   };
 

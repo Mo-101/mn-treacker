@@ -14,33 +14,40 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
 
   const weatherLayers = [
     { 
+      id: 'temperature', 
+      name: 'Temperature', 
+      icon: Thermometer,
+      description: 'High-resolution temperature data',
+      color: 'text-red-500'
+    },
+    { 
       id: 'precipitation', 
       name: 'Precipitation', 
       icon: Droplet,
-      description: 'Shows rainfall intensity and distribution',
+      description: 'Shows rainfall intensity',
       color: 'text-blue-500'
-    },
-    { 
-      id: 'temp', 
-      name: 'Temperature', 
-      icon: Thermometer,
-      description: 'Displays temperature variations',
-      color: 'text-red-500'
     },
     { 
       id: 'vegetation', 
       name: 'Vegetation', 
       icon: Leaf,
-      description: 'Shows vegetation density',
+      description: 'Vegetation density',
       color: 'text-green-500'
     },
     { 
       id: 'wind', 
       name: 'Wind Speed', 
       icon: Wind,
-      description: 'Shows wind patterns',
+      description: 'Wind patterns and speed',
       color: 'text-cyan-500'
     },
+    { 
+      id: 'clouds', 
+      name: 'Cloud Cover', 
+      icon: Cloud,
+      description: 'Cloud coverage data',
+      color: 'text-gray-500'
+    }
   ];
 
   const handleSearch = (e) => {

@@ -1,27 +1,16 @@
 // Function to safely extract data from a Request object
 const extractRequestData = (request) => {
   if (request instanceof Request) {
-    // Create a simple serializable object with only necessary request info
-    const safeRequest = {
+    // Only extract string properties that can be safely serialized
+    return {
       url: request.url || '',
-      method: request.method || 'GET',
-      headers: {}
+      method: request.method || 'GET'
     };
-
-    // Safely extract headers without accessing the Headers object directly
-    if (request.headers && typeof request.headers.get === 'function') {
-      const safeHeaders = ['content-type', 'accept', 'content-length'];
-      safeHeaders.forEach(header => {
-        const value = request.headers.get(header);
-        if (value) {
-          safeRequest.headers[header] = value;
-        }
-      });
-    }
-
-    return safeRequest;
   }
-  return String(request);
+  if (typeof request === 'string') {
+    return { url: request };
+  }
+  return null;
 };
 
 // Function to extract safe error information
@@ -35,16 +24,18 @@ const extractErrorInfo = (error) => ({
 // Safe postMessage function
 const postMessage = (message) => {
   try {
-    // Create a serializable message object
+    // Create a basic serializable message
     const safeMessage = {
       type: 'error',
       timestamp: new Date().toISOString()
     };
 
+    // Only add error info if it exists
     if (message.error) {
       safeMessage.error = extractErrorInfo(message.error);
     }
 
+    // Only add request info if it exists and can be serialized
     if (message.request) {
       const safeRequest = extractRequestData(message.request);
       if (safeRequest) {
@@ -52,22 +43,17 @@ const postMessage = (message) => {
       }
     }
 
-    // Send the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
-    // Send a simplified error message if the main one fails
-    try {
-      window.parent.postMessage({
-        type: 'error',
-        error: {
-          message: 'Failed to send error report',
-          timestamp: new Date().toISOString()
-        }
-      }, '*');
-    } catch (e) {
-      console.error('Failed to send fallback error message:', e);
-    }
+    // Fallback to a simple error message
+    window.parent.postMessage({
+      type: 'error',
+      error: {
+        message: 'Failed to send error report',
+        timestamp: new Date().toISOString()
+      }
+    }, '*');
   }
 };
 

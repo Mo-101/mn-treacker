@@ -1,17 +1,25 @@
 // Function to safely extract data from a Request object
 const extractRequestData = (request) => {
   if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      // Only include safe headers
-      headers: Object.fromEntries(
-        Array.from(request.headers.entries()).filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        })
-      )
+    // Create a simple serializable object with only necessary request info
+    const safeRequest = {
+      url: request.url || '',
+      method: request.method || 'GET',
+      headers: {}
     };
+
+    // Safely extract headers without accessing the Headers object directly
+    if (request.headers && typeof request.headers.get === 'function') {
+      const safeHeaders = ['content-type', 'accept', 'content-length'];
+      safeHeaders.forEach(header => {
+        const value = request.headers.get(header);
+        if (value) {
+          safeRequest.headers[header] = value;
+        }
+      });
+    }
+
+    return safeRequest;
   }
   return String(request);
 };
@@ -27,16 +35,39 @@ const extractErrorInfo = (error) => ({
 // Safe postMessage function
 const postMessage = (message) => {
   try {
+    // Create a serializable message object
     const safeMessage = {
       type: 'error',
-      timestamp: new Date().toISOString(),
-      ...(message.error && { error: extractErrorInfo(message.error) }),
-      ...(message.request && { request: extractRequestData(message.request) })
+      timestamp: new Date().toISOString()
     };
-    
+
+    if (message.error) {
+      safeMessage.error = extractErrorInfo(message.error);
+    }
+
+    if (message.request) {
+      const safeRequest = extractRequestData(message.request);
+      if (safeRequest) {
+        safeMessage.request = safeRequest;
+      }
+    }
+
+    // Send the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
+    // Send a simplified error message if the main one fails
+    try {
+      window.parent.postMessage({
+        type: 'error',
+        error: {
+          message: 'Failed to send error report',
+          timestamp: new Date().toISOString()
+        }
+      }, '*');
+    } catch (e) {
+      console.error('Failed to send fallback error message:', e);
+    }
   }
 };
 
@@ -47,11 +78,14 @@ const reportHTTPError = (error) => {
     error: extractErrorInfo(error),
     timestamp: new Date().toISOString()
   };
-  
+
   if (error.request) {
-    errorDetails.request = extractRequestData(error.request);
+    const safeRequest = extractRequestData(error.request);
+    if (safeRequest) {
+      errorDetails.request = safeRequest;
+    }
   }
-  
+
   postMessage(errorDetails);
 };
 
@@ -62,8 +96,10 @@ window.fetch = async function(...args) {
     const response = await originalFetch.apply(this, args);
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
-      error.request = args[0];
-      reportHTTPError(error);
+      if (args[0] instanceof Request || typeof args[0] === 'string') {
+        error.request = args[0];
+        reportHTTPError(error);
+      }
       throw error;
     }
     return response;

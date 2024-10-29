@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { useToast } from './ui/use-toast';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
 import DataUploadSection from './AITrainingComponents/DataUploadSection';
 import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
@@ -22,7 +21,13 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
-  const { toast } = useToast();
+
+  const navItems = [
+    { icon: Upload, label: 'Upload', section: 'upload' },
+    { icon: BarChart2, label: 'Performance', section: 'performance' },
+    { icon: Map, label: 'Visualization', section: 'visualization' },
+    { icon: Settings, label: 'Settings', section: 'settings' },
+  ];
 
   useEffect(() => {
     let interval;
@@ -31,81 +36,43 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         try {
           const response = await fetch('/api/training-progress');
           const data = await response.json();
-          
-          if (data.progress !== undefined) {
-            setTrainingProgress(data.progress);
-            setKnowledgeLevel(data.progress);
-            
-            if (data.activities && data.activities.length > 0) {
-              setTrainingActivities(prev => [...prev, ...data.activities]);
-            }
-            
-            if (!data.is_training) {
-              setIsTraining(false);
-              clearInterval(interval);
-              toast({
-                title: "Training Complete",
-                description: "AI model training has finished successfully!",
-              });
-              addToConsoleLog('Training completed successfully');
-            }
+          setTrainingProgress(data.progress);
+          setIsTraining(data.is_training);
+          if (!data.is_training) {
+            clearInterval(interval);
+            addToConsoleLog('Training completed');
           }
         } catch (error) {
           console.error('Error fetching training progress:', error);
-          toast({
-            title: "Error",
-            description: "Failed to fetch training progress",
-            variant: "destructive",
-          });
-          setIsTraining(false);
-          clearInterval(interval);
         }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTraining, addToConsoleLog, toast]);
+  }, [isTraining, addToConsoleLog]);
 
   const handleStartTraining = async () => {
     try {
-      const response = await fetch('/api/start-training', { 
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
+      const response = await fetch('/api/start-training', { method: 'POST' });
       if (response.ok) {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
-        setTimeLeft(100);
+        setTimeLeft(100); // Assuming 100 seconds for training
         setTrainingActivities([]);
         setKnowledgeLevel(0);
-        toast({
-          title: "Training Started",
-          description: "AI model training has begun",
-        });
         addToConsoleLog('Training started');
       } else {
-        throw new Error('Failed to start training');
+        addToConsoleLog('Failed to start training');
       }
     } catch (error) {
       console.error('Error starting training:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start training",
-        variant: "destructive",
-      });
+      addToConsoleLog('Error starting training');
     }
   };
 
   const handleDataUpload = () => {
     setDataUploaded(true);
     addToConsoleLog('Data uploaded successfully');
-    toast({
-      title: "Success",
-      description: "Data uploaded successfully",
-    });
   };
 
   return (
@@ -117,14 +84,9 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       className="fixed inset-0 bg-gray-900 text-white overflow-hidden z-50 flex flex-col"
     >
       <TopNavigationBar 
-        navItems={[
-          { icon: Upload, label: 'Upload', section: 'upload' },
-          { icon: BarChart2, label: 'Performance', section: 'performance' },
-          { icon: Map, label: 'Visualization', section: 'visualization' },
-          { icon: Settings, label: 'Settings', section: 'settings' },
-        ]}
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
+        navItems={navItems} 
+        activeSection={activeSection} 
+        setActiveSection={setActiveSection} 
         onClose={onClose}
       />
 
@@ -165,6 +127,18 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 <DataVisualizationPanel />
               </motion.div>
             )}
+
+            {activeSection === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <h2 className="text-xl font-bold mb-4">Settings</h2>
+                {/* Add settings controls here */}
+              </motion.div>
+            )}
           </AnimatePresence>
 
           <BrainModel knowledgeLevel={knowledgeLevel} />
@@ -197,6 +171,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
+
 };
 
 export default AITrainingInterface;

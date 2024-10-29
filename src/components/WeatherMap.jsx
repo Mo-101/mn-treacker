@@ -41,7 +41,7 @@ const WeatherMap = () => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12', // Changed to satellite hybrid style
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });

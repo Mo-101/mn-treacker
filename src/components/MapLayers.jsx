@@ -16,7 +16,6 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
 };
 
 export const addCustomLayers = (map) => {
-  addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
   addCloudsLayer(map);
@@ -24,63 +23,17 @@ export const addCustomLayers = (map) => {
   addAdminBoundariesLayer(map);
 };
 
-const addTemperatureLayer = (map) => {
-  // Using OpenWeatherMap temperature layer
-  const temperatureSource = {
-    type: 'raster',
-    tiles: [
-      `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
-    ],
-    tileSize: 256,
-    attribution: '© OpenWeatherMap'
-  };
-
-  map.addSource('temperature', temperatureSource);
-  map.addLayer({
-    id: 'temperature',
-    type: 'raster',
-    source: 'temperature',
-    paint: { 
-      'raster-opacity': 0.7,
-      'raster-fade-duration': 0
-    },
-    layout: { visibility: 'none' }
-  });
-
-  // Add temperature legend
-  const legend = document.createElement('div');
-  legend.className = 'temperature-legend hidden';
-  legend.innerHTML = `
-    <div class="bg-black/70 p-2 rounded-lg text-white text-sm">
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-red-500"></div>
-        <span>Hot (>30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-yellow-500"></div>
-        <span>Warm (20-30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-blue-500"></div>
-        <span>Cool (<20°C)</span>
-      </div>
-    </div>
-  `;
-  map.getContainer().appendChild(legend);
-
-  // Show/hide legend based on layer visibility
-  map.on('layout', (e) => {
-    if (e.layer.id === 'temperature') {
-      legend.classList.toggle('hidden', e.layout.visibility === 'none');
-    }
-  });
-};
-
 const addVegetationLayer = (map) => {
   addLayer(map, 'vegetation', {
     type: 'raster',
-    url: 'mapbox://mapbox.terrain-rgb'
-  }, 'raster', { 'raster-opacity': 0.7 });
+    url: 'mapbox://mapbox.satellite',
+    tileSize: 256
+  }, 'raster', { 
+    'raster-opacity': 0.7,
+    'raster-saturation': 0.5,
+    'raster-hue-rotate': 90, // Adjust hue to emphasize vegetation
+    'raster-brightness-min': 0.2
+  });
 };
 
 const addPrecipitationLayer = (map) => {

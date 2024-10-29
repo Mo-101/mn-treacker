@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Slider } from '../ui/slider';
 import { Card, CardContent } from '../ui/card';
 import { Progress } from '../ui/progress';
+import { useToast } from '../ui/use-toast';
 
 const TrainingControlsPanel = ({ 
   onStartTraining, 
@@ -13,6 +14,17 @@ const TrainingControlsPanel = ({
   timeLeft,
   elapsedTime
 }) => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (isTraining) {
+      toast({
+        title: "AI Training Status",
+        description: `Training in progress: ${trainingProgress}% complete`,
+      });
+    }
+  }, [trainingProgress, isTraining, toast]);
+
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
       <CardContent className="p-6">
@@ -31,16 +43,11 @@ const TrainingControlsPanel = ({
             onClick={onStartTraining}
             disabled={isTraining || !dataUploaded}
           >
-            {isTraining ? 'Training...' : 'Start Training'}
+            {isTraining ? 'Training in Progress...' : 'Start Training'}
           </Button>
           {isTraining && (
             <div>
-              <div className="h-4 w-full bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-                  style={{ width: `${trainingProgress}%`, transition: 'width 0.5s ease-in-out' }}
-                />
-              </div>
+              <Progress value={trainingProgress} className="h-2 mb-2" />
               <p className="text-sm text-gray-300 mt-2">Training Progress: {trainingProgress}%</p>
               <p className="text-sm text-gray-300">Time Left: {timeLeft}s</p>
               <p className="text-sm text-gray-300">Elapsed Time: {elapsedTime}s</p>

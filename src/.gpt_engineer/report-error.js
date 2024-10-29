@@ -1,16 +1,24 @@
 // Function to safely extract data from a Request object
 const extractRequestData = (request) => {
-  if (request instanceof Request) {
-    // Only extract string properties that can be safely serialized
-    return {
-      url: request.url || '',
-      method: request.method || 'GET'
-    };
+  try {
+    if (request instanceof Request) {
+      return {
+        url: request.url || '',
+        method: request.method || 'GET',
+        headers: Array.from(request.headers.entries()).reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {})
+      };
+    }
+    if (typeof request === 'string') {
+      return { url: request };
+    }
+    return null;
+  } catch (err) {
+    console.warn('Error extracting request data:', err);
+    return null;
   }
-  if (typeof request === 'string') {
-    return { url: request };
-  }
-  return null;
 };
 
 // Function to extract safe error information
@@ -43,7 +51,9 @@ const postMessage = (message) => {
       }
     }
 
-    window.parent.postMessage(safeMessage, '*');
+    // Ensure the message is cloneable
+    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
+    window.parent.postMessage(cloneableMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message
@@ -59,20 +69,24 @@ const postMessage = (message) => {
 
 // Function to report HTTP errors
 const reportHTTPError = (error) => {
-  const errorDetails = {
-    type: 'http_error',
-    error: extractErrorInfo(error),
-    timestamp: new Date().toISOString()
-  };
+  try {
+    const errorDetails = {
+      type: 'http_error',
+      error: extractErrorInfo(error),
+      timestamp: new Date().toISOString()
+    };
 
-  if (error.request) {
-    const safeRequest = extractRequestData(error.request);
-    if (safeRequest) {
-      errorDetails.request = safeRequest;
+    if (error.request) {
+      const safeRequest = extractRequestData(error.request);
+      if (safeRequest) {
+        errorDetails.request = safeRequest;
+      }
     }
-  }
 
-  postMessage(errorDetails);
+    postMessage(errorDetails);
+  } catch (err) {
+    console.warn('Error reporting HTTP error:', err);
+  }
 };
 
 // Wrap fetch to handle errors
@@ -82,15 +96,13 @@ window.fetch = async function(...args) {
     const response = await originalFetch.apply(this, args);
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
-      if (args[0] instanceof Request || typeof args[0] === 'string') {
-        error.request = args[0];
-        reportHTTPError(error);
-      }
+      error.request = args[0];
+      reportHTTPError(error);
       throw error;
     }
     return response;
   } catch (error) {
-    if (args[0] instanceof Request || typeof args[0] === 'string') {
+    if (args[0]) {
       error.request = args[0];
       reportHTTPError(error);
     }

@@ -42,3 +42,9 @@ export const addAdminBoundariesLayer = (map) => {
     }
   });
 };
+
+// Main function that adds all custom layers
+export const addCustomLayers = (map) => {
+  addWeatherLayers(map);
+  addAdminBoundariesLayer(map);
+};

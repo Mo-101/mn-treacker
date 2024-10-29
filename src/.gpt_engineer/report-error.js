@@ -1,29 +1,45 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
-  if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      // Only include safe headers
-      headers: Object.fromEntries(
-        Array.from(request.headers.entries()).filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        })
-      )
-    };
+  try {
+    if (request instanceof Request) {
+      // Create a simple serializable object with basic request info
+      return {
+        url: request.url || 'unknown',
+        method: request.method || 'unknown',
+        // Convert headers to a simple object with only safe headers
+        headers: Array.from(request.headers || [])
+          .filter(([key]) => {
+            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            return safeHeaders.includes(key.toLowerCase());
+          })
+          .reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          }, {})
+      };
+    }
+    return String(request);
+  } catch (err) {
+    // Fallback if request cannot be processed
+    return 'Unable to process request details';
   }
-  return String(request);
 }
 
 // Function to extract relevant error information
 function extractErrorInfo(error) {
-  return {
-    message: error?.message || String(error),
-    stack: error?.stack,
-    type: error?.name || 'Error',
-    timestamp: new Date().toISOString()
-  };
+  try {
+    return {
+      message: error?.message || String(error),
+      stack: error?.stack,
+      type: error?.name || 'Error',
+      timestamp: new Date().toISOString()
+    };
+  } catch (err) {
+    return {
+      message: 'Error information could not be extracted',
+      timestamp: new Date().toISOString()
+    };
+  }
 }
 
 // Safe postMessage function
@@ -48,7 +64,6 @@ function postMessage(message) {
     // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    console.error('Error in postMessage:', error);
     // Fallback error message
     window.parent.postMessage({
       type: 'error',

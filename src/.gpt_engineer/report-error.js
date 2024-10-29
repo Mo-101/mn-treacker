@@ -3,11 +3,15 @@ const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
       // Only extract safe, serializable properties
+      const headers = {};
+      request.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+      
       return {
-        url: request.url || '',
-        method: request.method || 'GET',
-        // Convert headers to a plain object
-        headers: Object.fromEntries(request.headers || [])
+        url: request.url,
+        method: request.method,
+        headers
       };
     }
     // If it's a string URL
@@ -46,17 +50,17 @@ const postMessage = (message) => {
 
     // Only add request info if it exists and can be serialized
     if (message.request) {
-      const safeRequest = extractRequestData(message.request);
-      if (safeRequest) {
-        safeMessage.request = safeRequest;
+      const requestData = extractRequestData(message.request);
+      if (requestData) {
+        safeMessage.request = requestData;
       }
     }
 
-    // Test if message is cloneable before sending
-    JSON.parse(JSON.stringify(safeMessage));
+    // Verify message is cloneable before sending
+    const cloneTest = JSON.parse(JSON.stringify(safeMessage));
     
     // Send the message
-    window.parent.postMessage(safeMessage, '*');
+    window.parent.postMessage(cloneTest, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message
@@ -75,14 +79,13 @@ const reportHTTPError = (error) => {
   try {
     const errorDetails = {
       type: 'http_error',
-      error: extractErrorInfo(error),
-      timestamp: new Date().toISOString()
+      error: extractErrorInfo(error)
     };
 
     if (error.request) {
-      const safeRequest = extractRequestData(error.request);
-      if (safeRequest) {
-        errorDetails.request = safeRequest;
+      const requestData = extractRequestData(error.request);
+      if (requestData) {
+        errorDetails.request = requestData;
       }
     }
 

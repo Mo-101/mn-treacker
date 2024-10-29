@@ -1,4 +1,6 @@
-const API_BASE_URL = '/api';
+import { fetchWithErrorHandling } from './apiHelpers';
+
+const API_BASE_URL = '/api'; // Changed from 'http://localhost:5000/api'
 
 export const fetchRatLocations = () => fetchWithErrorHandling(`${API_BASE_URL}/rat-locations`);
 

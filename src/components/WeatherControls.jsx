@@ -4,12 +4,12 @@ import { Slider } from './ui/slider';
 
 const WeatherControls = ({ activeLayers, onLayerToggle, layerOpacity, onOpacityChange }) => {
   const layers = [
-    { id: 'radar', name: 'Radar' },
-    { id: 'satellite', name: 'Satellite' },
-    { id: 'temperatures', name: 'Temperature' },
-    { id: 'wind-particles', name: 'Wind' },
-    { id: 'precipitation', name: 'Precipitation' },
-    { id: 'clouds', name: 'Clouds' },
+    { id: 'weather-radar', name: 'Radar' },
+    { id: 'weather-satellite', name: 'Satellite' },
+    { id: 'weather-temperature', name: 'Temperature' },
+    { id: 'weather-wind', name: 'Wind' },
+    { id: 'weather-precipitation', name: 'Precipitation' },
+    { id: 'weather-clouds', name: 'Clouds' },
   ];
 
   return (

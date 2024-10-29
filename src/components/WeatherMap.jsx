@@ -12,7 +12,7 @@ import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
 import PathTrackingLayer from './PathTrackingLayer';
 import { initializeMap, addWeatherLayers, addOpenWeatherLayer } from '../utils/mapInitialization';
-import WeatherLayerControls from './WeatherLayerControls';
+import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import { fetchLassaFeverCases } from '../utils/api';
 import MapLegend from './MapLegend';
@@ -32,6 +32,7 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [showOpenWeather, setShowOpenWeather] = useState(false);
+  const [layerOpacity, setLayerOpacity] = useState(80);
 
   const [pathTrackingData, setPathTrackingData] = useState([]);
 
@@ -84,39 +85,31 @@ const WeatherMap = () => {
     if (map.current) {
       const visibility = showOpenWeather ? 'none' : 'visible';
       map.current.setLayoutProperty('openWeatherTemperatureLayer', 'visibility', visibility);
-      map.current.setLayoutProperty('temperature', 'visibility', visibility);
+      map.current.setLayoutProperty('weather-temperature', 'visibility', visibility);
       setShowOpenWeather(!showOpenWeather);
     }
   };
 
   const handleLayerToggle = (layerId) => {
-    if (activeLayers.includes(layerId)) {
-      map.current.setLayoutProperty(layerId, 'visibility', 'none');
-      setActiveLayers(activeLayers.filter(id => id !== layerId));
-    } else {
-      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
-      setActiveLayers([...activeLayers, layerId]);
+    if (map.current) {
+      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
+      map.current.setLayoutProperty(layerId, 'visibility', visibility === 'visible' ? 'none' : 'visible');
+      
+      setActiveLayers(prev => 
+        visibility === 'visible'
+          ? prev.filter(id => id !== layerId)
+          : [...prev, layerId]
+      );
     }
   };
 
-  const handleSelectAllLayers = () => {
-    const newSelectAllState = !selectAll;
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
+  const handleOpacityChange = (opacity) => {
+    setLayerOpacity(opacity);
+    activeLayers.forEach(layerId => {
+      if (map.current.getLayer(layerId)) {
+        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
       }
     });
-
-    setSelectAll(newSelectAllState);
-    setActiveLayer(null);
-    setActiveLayers(newSelectAllState ? layers : []);
-  };
-
-  const handleOpacityChange = (layerId, opacity) => {
-    if (map.current && map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
   };
 
   const handleDetailView = () => {
@@ -149,7 +142,6 @@ const WeatherMap = () => {
           activeLayers={activeLayers}
           handleLayerToggle={handleLayerToggle}
           handleOpacityChange={handleOpacityChange}
-          handleSelectAllLayers={handleSelectAllLayers}
           selectedPoint={selectedPoint}
         />
         <AnimatePresence>
@@ -178,9 +170,11 @@ const WeatherMap = () => {
           )}
         </AnimatePresence>
         <div className="pointer-events-auto absolute bottom-4 left-4">
-          <WeatherLayerControls
-            showOpenWeather={showOpenWeather}
-            toggleOpenWeatherLayer={toggleOpenWeatherLayer}
+          <WeatherControls
+            activeLayers={activeLayers}
+            onLayerToggle={handleLayerToggle}
+            layerOpacity={layerOpacity}
+            onOpacityChange={handleOpacityChange}
           />
         </div>
         <MapLegend activeLayers={activeLayers} />

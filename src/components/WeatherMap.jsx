@@ -46,50 +46,55 @@ const WeatherMap = () => {
   useEffect(() => {
     if (map.current) return;
     
+    const customStyle = {
+      version: 8,
+      sources: {
+        'google-satellite': {
+          type: 'raster',
+          tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
+          tileSize: 256
+        },
+        'google-hybrid': {
+          type: 'raster',
+          tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
+          tileSize: 256
+        }
+      },
+      layers: [
+        {
+          id: 'satellite-base',
+          type: 'raster',
+          source: 'google-satellite',
+          minzoom: 0,
+          maxzoom: 22
+        },
+        {
+          id: 'hybrid-overlay',
+          type: 'raster',
+          source: 'google-hybrid',
+          minzoom: 0,
+          maxzoom: 22
+        }
+      ]
+    };
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: customStyle,
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom,
       bearing: 360.0,
-      pitch: 45,
-      maxZoom: 20,
-      minZoom: 1.5,
-      attributionControl: true,
-      terrain: {
-        source: 'mapbox-dem',
-        exaggeration: 1.5
-      }
+      pitch: 0,
+      attributionControl: false
     });
 
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+    map.current.addControl(new mapboxgl.AttributionControl({
+      customAttribution: 'Imagery © Google',
+      compact: false
+    }));
+
     map.current.on('load', async () => {
-      // Add terrain source
-      map.current.addSource('mapbox-dem', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        tileSize: 512,
-        maxzoom: 14
-      });
-
-      // Add high-quality satellite imagery
-      map.current.addSource('satellite', {
-        type: 'raster',
-        url: 'mapbox://mapbox.satellite',
-        tileSize: 512,
-        maxzoom: 22
-      });
-
-      map.current.addLayer({
-        id: 'satellite-layer',
-        type: 'raster',
-        source: 'satellite',
-        paint: {
-          'raster-saturation': 0.2,
-          'raster-contrast': 0.1,
-          'raster-brightness-max': 0.9
-        }
-      });
-
       // Add GeoJSON source for points
       map.current.addSource('points', {
         type: 'geojson',
@@ -143,10 +148,6 @@ const WeatherMap = () => {
 
       await addCustomLayers(map.current);
     });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
-    map.current.addControl(new mapboxgl.FullscreenControl());
-    map.current.addControl(new mapboxgl.ScaleControl());
 
     return () => map.current && map.current.remove();
   }, []);

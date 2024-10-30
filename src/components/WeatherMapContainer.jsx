@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
 import DetectionSpotLayer from './DetectionSpotLayer';
 import LassaFeverCasesLayer from './LassaFeverCasesLayer';
@@ -11,60 +12,55 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!import.meta.env.VITE_MAPBOX_TOKEN) {
+      toast({
+        title: "Configuration Error",
+        description: "Mapbox token is missing. Please check your environment variables.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (map.current) return;
+
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
     
     try {
-      const customStyle = {
-        version: 8,
-        sources: {
-          'google-satellite': {
-            type: 'raster',
-            tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
-            tileSize: 256
-          },
-          'google-hybrid': {
-            type: 'raster',
-            tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
-            tileSize: 256
-          }
-        },
-        layers: [
-          {
-            id: 'satellite-base',
-            type: 'raster',
-            source: 'google-satellite',
-            minzoom: 0,
-            maxzoom: 22
-          },
-          {
-            id: 'hybrid-overlay',
-            type: 'raster',
-            source: 'google-hybrid',
-            minzoom: 0,
-            maxzoom: 22
-          }
-        ]
-      };
-
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: customStyle,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        bearing: 360.0,
-        pitch: 0,
-        attributionControl: false
+        pitch: 45,
+        bearing: 0,
+        antialias: true
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
-      map.current.addControl(new mapboxgl.AttributionControl({
-        customAttribution: 'Imagery © Google',
-        compact: false
-      }));
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.current.on('load', async () => {
+        map.current.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+        map.current.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 90.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
+        });
+
         await addCustomLayers(map.current);
       });
+
     } catch (error) {
       console.error('Error initializing map:', error);
       toast({
@@ -75,7 +71,7 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
     }
 
     return () => map.current?.remove();
-  }, []);
+  }, [mapState.lat, mapState.lng, mapState.zoom, toast]);
 
   useEffect(() => {
     if (!map.current) return;

@@ -1,63 +1,29 @@
 import mapboxgl from 'mapbox-gl';
 
-export const initializeMap = (mapContainer, map, mapState, setMapState, addCustomLayers, updateMapState, toast) => {
-  try {
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-      pitch: 45,
-      bearing: 0,
-      antialias: true,
-      terrain: {
-        source: 'mapbox-dem',
-        exaggeration: 1.5
-      }
-    });
-
-    map.current.on('load', () => {
-      // Add terrain source
-      map.current.addSource('mapbox-dem', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        tileSize: 512,
-        maxzoom: 14
-      });
-
-      // Add sky layer for better 3D visualization
-      map.current.addLayer({
-        id: 'sky',
-        type: 'sky',
-        paint: {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 90.0],
-          'sky-atmosphere-sun-intensity': 15
-        }
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl());
-      addCustomLayers(map.current);
-      updateMapState();
-    });
-
-    map.current.on('move', updateMapState);
-
-    // Enable terrain
-    map.current.on('style.load', () => {
-      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-    });
-  } catch (error) {
-    console.error('Error initializing map:', error);
-    toast({
-      title: "Error",
-      description: "Failed to initialize map. Please try again later.",
-      variant: "destructive",
-    });
+export const initializeMap = (mapContainer, mapState) => {
+  if (!mapboxgl.accessToken) {
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
   }
+
+  if (!mapboxgl.accessToken) {
+    throw new Error('Mapbox token is required but not provided. Please check your environment variables.');
+  }
+
+  const map = new mapboxgl.Map({
+    container: mapContainer,
+    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+    center: [mapState.lng, mapState.lat],
+    zoom: mapState.zoom,
+    pitch: 45,
+    bearing: 0
+  });
+
+  return map;
 };
 
 export const updateMapState = (map, setMapState) => {
+  if (!map) return;
+  
   const center = map.getCenter();
   setMapState({
     lng: center.lng.toFixed(4),
@@ -67,76 +33,11 @@ export const updateMapState = (map, setMapState) => {
 };
 
 export const toggleLayer = (map, layerId, visible) => {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-  }
+  if (!map || !map.getLayer(layerId)) return;
+  map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
 };
 
-export const handleLayerToggle = (layerId, map, setActiveLayers, addToConsoleLog) => {
-  if (map) {
-    const visibility = map.getLayoutProperty(layerId, 'visibility');
-    toggleLayer(map, layerId, visibility !== 'visible');
-    setActiveLayers(prev => 
-      visibility === 'visible' 
-        ? prev.filter(id => id !== layerId)
-        : [...prev, layerId]
-    );
-    addToConsoleLog(`Layer ${layerId} ${visibility !== 'visible' ? 'enabled' : 'disabled'}`);
-  }
-};
-
-export const handleOpacityChange = (opacity, map, activeLayers, setLayerOpacity, addToConsoleLog) => {
-  setLayerOpacity(opacity);
-  activeLayers.forEach(layerId => {
-    if (map.getLayer(layerId)) {
-      map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-    }
-  });
-  addToConsoleLog(`Layer opacity set to ${opacity}%`);
-};
-
-export const fetchWeatherData = async (map, mapState, addToConsoleLog) => {
-  try {
-    addToConsoleLog('Fetching weather data...');
-    // Implement weather data fetching logic here
-    // For example:
-    // const response = await fetch(`/api/weather?lat=${mapState.lat}&lng=${mapState.lng}`);
-    // const data = await response.json();
-    // Process and use the weather data
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    addToConsoleLog('Failed to fetch weather data');
-  }
-};
-
-export const fetchMastomysData = async (setMastomysData, addToConsoleLog) => {
-  try {
-    addToConsoleLog('Fetching Mastomys data...');
-    // Implement Mastomys data fetching logic here
-    // For example:
-    // const response = await fetch('/api/mastomys-data');
-    // const data = await response.json();
-    // setMastomysData(data);
-  } catch (error) {
-    console.error('Error fetching Mastomys data:', error);
-    addToConsoleLog('Failed to fetch Mastomys data');
-  }
-};
-
-export const updatePredictionLayer = (map, predictionData) => {
-  if (map.getSource('prediction-hotspots')) {
-    map.getSource('prediction-hotspots').setData({
-      type: 'FeatureCollection',
-      features: predictionData.map(point => ({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [point.lng, point.lat]
-        },
-        properties: {
-          risk: point.risk
-        }
-      }))
-    });
-  }
+export const setLayerOpacity = (map, layerId, opacity) => {
+  if (!map || !map.getLayer(layerId)) return;
+  map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
 };

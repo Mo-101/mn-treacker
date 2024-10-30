@@ -5,11 +5,10 @@ const extractRequestData = (request) => {
   try {
     // If it's a Request object
     if (request instanceof Request) {
-      // Create a new plain object with only the necessary data
       return {
         url: request.url,
         method: request.method,
-        // Convert headers to a plain object
+        // Convert headers to a plain object, only including safe headers
         headers: Object.fromEntries(
           Array.from(request.headers.entries()).filter(([key]) => {
             const safeHeaders = ['content-type', 'accept', 'content-length'];
@@ -22,7 +21,6 @@ const extractRequestData = (request) => {
     if (typeof request === 'string') {
       return { url: request };
     }
-    // For other types, return null
     return null;
   } catch (err) {
     console.warn('Error extracting request data:', err);
@@ -38,21 +36,18 @@ const extractErrorInfo = (error) => ({
   timestamp: new Date().toISOString()
 });
 
-// Safe postMessage function using structured clone fallback
+// Safe postMessage function
 const postMessage = (message) => {
   try {
-    // Create a basic serializable message
     const safeMessage = {
       type: 'error',
       timestamp: new Date().toISOString()
     };
 
-    // Only add error info if it exists
     if (message.error) {
       safeMessage.error = extractErrorInfo(message.error);
     }
 
-    // Only add request info if it exists
     if (message.request) {
       const safeRequest = extractRequestData(message.request);
       if (safeRequest) {
@@ -60,12 +55,12 @@ const postMessage = (message) => {
       }
     }
 
-    // Use structured clone API with fallback
+    // Use JSON to ensure message is serializable
     const serializedMessage = JSON.parse(JSON.stringify(safeMessage));
     window.parent.postMessage(serializedMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
-    // Fallback to a simple error message
+    // Fallback to simple error message
     window.parent.postMessage({
       type: 'error',
       error: {

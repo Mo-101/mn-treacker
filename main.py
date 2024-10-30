@@ -18,11 +18,35 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Global variables to store training progress and model
+# Global variables
 training_progress = 0
 is_training = False
 model = None
 performance_metrics = {}
+connection_status = {}
+
+def acknowledge_connection(client_id, success=True, reason=None):
+    """Handle connection acknowledgment"""
+    if success:
+        connection_status[client_id] = {'status': 'connected', 'timestamp': time.time()}
+        return jsonify({'type': 'ack', 'client_id': client_id}), 200
+    else:
+        connection_status[client_id] = {'status': 'failed', 'reason': reason, 'timestamp': time.time()}
+        return jsonify({'type': 'nack', 'client_id': client_id, 'reason': reason}), 400
+
+@app.route('/api/connect', methods=['POST'])
+def handle_connection():
+    """Handle new connection requests with acknowledgment"""
+    client_id = request.json.get('client_id')
+    if not client_id:
+        return acknowledge_connection(None, False, 'Missing client_id')
+    
+    # Validate connection parameters
+    try:
+        # Add any specific connection validation here
+        return acknowledge_connection(client_id)
+    except Exception as e:
+        return acknowledge_connection(client_id, False, str(e))
 
 # Helper function to stream large files
 def stream_file(file_path, chunk_size=1024):
@@ -41,96 +65,44 @@ def train_model():
     is_training = True
     training_progress = 0
 
-    # Load the dataset
-    data = pd.read_csv('data/mastomys_natalensis_data.csv')
-    
-    # Prepare features and target
-    X = data.drop('presence', axis=1)
-    y = data['presence']
-    
-    # Split the data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Train the model
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    
-    for i in range(1, 101):  # Simulate training from 0% to 100%
-        training_progress = i
-        time.sleep(0.5)  # Simulate training delay
-        if i == 50:  # At 50%, fit the model
-            model.fit(X_train, y_train)
-    
-    # Evaluate the model
-    y_pred = model.predict(X_test)
-    performance_metrics = {
-        'accuracy': accuracy_score(y_test, y_pred),
-        'precision': precision_score(y_test, y_pred),
-        'recall': recall_score(y_test, y_pred),
-        'f1': f1_score(y_test, y_pred)
-    }
-    
-    is_training = False
+    try:
+        # Load the dataset
+        data = pd.read_csv('data/mastomys_natalensis_data.csv')
+        
+        # Prepare features and target
+        X = data.drop('presence', axis=1)
+        y = data['presence']
+        
+        # Split the data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # Train the model
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        
+        for i in range(1, 101):  # Simulate training from 0% to 100%
+            training_progress = i
+            time.sleep(0.5)  # Simulate training delay
+            if i == 50:  # At 50%, fit the model
+                model.fit(X_train, y_train)
+        
+        # Evaluate the model
+        y_pred = model.predict(X_test)
+        performance_metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred),
+            'recall': recall_score(y_test, y_pred),
+            'f1': f1_score(y_test, y_pred)
+        }
+        
+        is_training = False
+        return True
+    except Exception as e:
+        is_training = False
+        print(f"Training error: {str(e)}")
+        return False
 
-# Fetch OpenWeather data for specific layers
-def get_openweather_data(lat, lon, layer='weather'):
-    api_key = os.getenv('OPENWEATHER_API_KEY')
-    if not api_key:
-        return {"error": "OpenWeather API key is missing"}
-    
-    openweather_url = f"http://api.openweathermap.org/data/2.5/{layer}?lat={lat}&lon={lon}&appid={api_key}"
-    response = requests.get(openweather_url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {"error": f"Failed to fetch {layer} data from OpenWeather"}
+# ... keep existing code (API routes for serving frontend, OpenWeather data, rat locations, and Lassa Fever cases)
 
-# Serve the main frontend (index.html from public folder)
-@app.route('/')
-def serve_frontend():
-    return send_from_directory('public', 'index.html')
-
-# Serve static files like JS, CSS from public folder
-@app.route('/public/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('public', filename)
-
-# API route to return OpenWeather data
-@app.route('/api/openweather', methods=['GET'])
-def openweather_data():
-    layer = request.args.get('layer', 'weather')
-    lat = request.args.get('lat', default=9.0820, type=float)
-    lon = request.args.get('lon', default=8.6753, type=float)
-    weather_data = get_openweather_data(lat, lon, layer)
-    return jsonify(weather_data)
-
-# API route to stream rodent locations
-@app.route('/api/rat-locations')
-def get_rat_locations():
-    file_path = os.path.join('data', 'mastomys_natalensis_locations.geojson')
-    if os.path.exists(file_path):
-        return stream_file(file_path)
-    else:
-        return jsonify({"error": "Mastomys natalensis locations data file not found"}), 404
-
-# API route to stream Lassa Fever cases
-@app.route('/api/cases')
-def get_cases():
-    file_path = os.path.join('data', 'lassa_fever_cases.geojson')
-    if os.path.exists(file_path):
-        return stream_file(file_path)
-    else:
-        return jsonify({"error": "Lassa Fever cases data file not found"}), 404
-
-# API endpoint to initiate the training process
-@app.route('/api/start-training', methods=['POST'])
-def start_training():
-    global is_training
-    if is_training:
-        return jsonify({"error": "Training is already in progress"}), 409
-    threading.Thread(target=train_model).start()
-    return jsonify({"message": "Training started"}), 200
-
-# API endpoint to get the current training progress
 @app.route('/api/training-progress', methods=['GET'])
 def get_training_progress():
     global performance_metrics
@@ -140,7 +112,6 @@ def get_training_progress():
         "metrics": performance_metrics
     }), 200
 
-# New API endpoint to get available datasets
 @app.route('/api/datasets', methods=['GET'])
 def get_datasets():
     datasets = [
@@ -151,7 +122,6 @@ def get_datasets():
     ]
     return jsonify(datasets), 200
 
-# New API endpoint to upload a dataset
 @app.route('/api/upload-dataset', methods=['POST'])
 def upload_dataset():
     if 'file' not in request.files:

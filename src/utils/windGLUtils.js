@@ -1,3 +1,5 @@
+import { API_CONFIG } from '../config/apiConfig';
+
 export class WindGL {
   constructor(gl) {
     this.gl = gl;
@@ -33,38 +35,14 @@ export const initWindGL = (gl) => {
   return wind;
 };
 
-const windFiles = {
-  0: '2016112000',
-  6: '2016112006',
-  12: '2016112012',
-  18: '2016112018',
-  24: '2016112100',
-  30: '2016112106',
-  36: '2016112112',
-  42: '2016112118',
-  48: '2016112200'
-};
-
 export const updateWindData = async (wind, hour = 0) => {
   try {
-    const timestamp = windFiles[hour] || windFiles[0];
-    const jsonPath = `/wind/${timestamp}.json`;
-    const imagePath = `/wind/${timestamp}.png`;
+    const timestamp = Object.keys(API_CONFIG.ENDPOINTS.WIND_DATA)[Math.floor(hour / 6) % 9];
+    const { data, image } = await fetchWindData(timestamp);
     
-    const response = await fetch(jsonPath);
-    if (!response.ok) throw new Error('Failed to fetch wind data');
-    const windData = await response.json();
+    if (!data || !image) throw new Error('Failed to fetch wind data');
     
-    // Load wind image
-    const image = new Image();
-    image.src = imagePath;
-    await new Promise((resolve, reject) => {
-      image.onload = resolve;
-      image.onerror = reject;
-    });
-    
-    windData.image = image;
-    wind.setWind(windData);
+    wind.setWind({ ...data, image });
     return true;
   } catch (error) {
     console.error('Error updating wind data:', error);

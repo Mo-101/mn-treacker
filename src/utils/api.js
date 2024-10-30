@@ -1,45 +1,7 @@
-export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
-  try {
-    const response = await fetch(`/api/environmental-data?timeframe=${timeframe}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch environmental data');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching environmental data:', error);
-    // Return null to trigger the fallback data in the component
-    return null;
-  }
-};
+import { API_CONFIG } from '../config/apiConfig';
+import { toast } from '../components/ui/use-toast';
 
-export const fetchRatData = async (locationId) => {
-  try {
-    const response = await fetch(`/api/rat-locations${locationId ? `/${locationId}` : ''}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch rat data');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching rat data:', error);
-    // Return empty data structure to prevent UI errors
-    return { trends: [] };
-  }
-};
-
-export const fetchLassaFeverCases = async () => {
-  try {
-    const response = await fetch('/api/cases');
-    if (!response.ok) {
-      throw new Error('Failed to fetch Lassa Fever cases');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching Lassa Fever cases:', error);
-    return [];
-  }
-};
-
-export const fetchWithErrorHandling = async (url, options = {}) => {
+const fetchWithErrorHandling = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
@@ -48,6 +10,44 @@ export const fetchWithErrorHandling = async (url, options = {}) => {
     return await response.json();
   } catch (error) {
     console.error('Fetch error:', error);
+    toast({
+      title: "Error",
+      description: `Failed to fetch data: ${error.message}`,
+      variant: "destructive",
+    });
     throw error;
   }
+};
+
+export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
+  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}/api/environmental-data?timeframe=${timeframe}`);
+};
+
+export const fetchRatData = async (locationId) => {
+  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MN_DATA}${locationId ? `/${locationId}` : ''}`);
+};
+
+export const fetchLassaFeverCases = async () => {
+  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.HISTORICAL_CASES}`);
+};
+
+export const fetchWindData = async (timestamp) => {
+  const baseEndpoint = API_CONFIG.ENDPOINTS.WIND_DATA[timestamp];
+  if (!baseEndpoint) {
+    throw new Error(`Invalid timestamp: ${timestamp}`);
+  }
+  
+  const [jsonData, imageBlob] = await Promise.all([
+    fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${baseEndpoint}.json`),
+    fetch(`${API_CONFIG.BASE_URL}${baseEndpoint}.png`).then(res => res.blob())
+  ]);
+
+  return {
+    data: jsonData,
+    image: URL.createObjectURL(imageBlob)
+  };
+};
+
+export const fetchWeatherData = async (lat, lon) => {
+  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`);
 };

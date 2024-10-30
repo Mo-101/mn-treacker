@@ -6,13 +6,22 @@ import { Button } from './ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { fetchEnvironmentalData } from '../utils/api';
 import MiniMap from './MiniMap';
+import { useToast } from './ui/use-toast';
 
 const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
   const [timeframe, setTimeframe] = useState('weekly');
+  const { toast } = useToast();
   
-  const { data: environmentalData } = useQuery({
-    queryKey: ['environmental-data'],
-    queryFn: fetchEnvironmentalData
+  const { data: environmentalData, isError, isLoading } = useQuery({
+    queryKey: ['environmental-data', timeframe],
+    queryFn: () => fetchEnvironmentalData(timeframe),
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch environmental data. Using sample data instead.",
+        variant: "destructive",
+      });
+    }
   });
 
   const populationData = environmentalData?.populationTrend || [

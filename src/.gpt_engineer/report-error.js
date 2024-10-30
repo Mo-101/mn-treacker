@@ -3,20 +3,15 @@ const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
       // Only extract safe, serializable properties
-      const safeRequest = {
-        url: request.url || '',
-        method: request.method || 'GET',
-        headers: {}
+      return {
+        url: request.url,
+        method: request.method,
+        // Only include safe headers
+        headers: Object.fromEntries([...request.headers].filter(([key]) => {
+          const safeHeaders = ['content-type', 'accept', 'content-length'];
+          return safeHeaders.includes(key.toLowerCase());
+        }))
       };
-      
-      // Safely extract headers
-      if (request.headers && typeof request.headers.forEach === 'function') {
-        request.headers.forEach((value, key) => {
-          safeRequest.headers[key] = value;
-        });
-      }
-      
-      return safeRequest;
     }
     // If it's a string URL
     if (typeof request === 'string') {

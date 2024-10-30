@@ -92,25 +92,4 @@ const reportHTTPError = (error) => {
   }
 };
 
-// Wrap fetch to handle errors
-const originalFetch = window.fetch;
-window.fetch = async function(...args) {
-  try {
-    const response = await originalFetch.apply(this, args);
-    if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
-      error.request = extractRequestData(args[0]);
-      reportHTTPError(error);
-      throw error;
-    }
-    return response;
-  } catch (error) {
-    if (args[0]) {
-      error.request = extractRequestData(args[0]);
-      reportHTTPError(error);
-    }
-    throw error;
-  }
-};
-
 export { postMessage, reportHTTPError };

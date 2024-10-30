@@ -1,7 +1,12 @@
 import React, { useEffect } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { hybridMapStyle } from '../config/mapStyle';
-import { addCustomLayers } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
+
+// Set mapbox token globally
+if (!mapboxgl.accessToken) {
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+}
 
 const MapInitializer = ({ map, mapContainer, mapState }) => {
   const { toast } = useToast();
@@ -52,8 +57,6 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           }
         });
 
-        addCustomLayers(map.current);
-        
         toast({
           title: "Map Initialized",
           description: "Hybrid satellite imagery and weather layers loaded successfully",

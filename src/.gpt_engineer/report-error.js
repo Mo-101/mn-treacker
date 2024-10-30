@@ -8,7 +8,7 @@ const extractRequestData = (request) => {
       return {
         url: request.url,
         method: request.method,
-        // Convert headers to a plain object, only including safe headers
+        // Only include safe headers
         headers: Object.fromEntries(
           Array.from(request.headers.entries()).filter(([key]) => {
             const safeHeaders = ['content-type', 'accept', 'content-length'];

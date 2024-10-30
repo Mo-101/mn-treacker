@@ -4,11 +4,6 @@ import mapboxgl from 'mapbox-gl';
 import { useToast } from '../ui/use-toast';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Ensure token is set globally
-if (!mapboxgl.accessToken) {
-  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-}
-
 const DataVisualizationPanel = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -19,15 +14,59 @@ const DataVisualizationPanel = () => {
 
     try {
       if (!mapboxgl.accessToken) {
-        throw new Error('Mapbox token is required but not provided');
+        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
       }
 
       map.current = new mapboxgl.Map({
-        container: 'map',
+        container: mapContainer.current,
         style: 'mapbox://styles/mapbox/dark-v10',
         center: [0, 0],
-        zoom: 2
+        zoom: 1.5,
+        projection: 'globe'
       });
+
+      map.current.on('load', () => {
+        // Add navigation controls
+        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+        // Add example data points
+        map.current.addSource('sample-points', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [0, 0]
+                },
+                properties: {
+                  title: 'Sample Point 1',
+                  value: 75
+                }
+              }
+            ]
+          }
+        });
+
+        map.current.addLayer({
+          id: 'data-points',
+          type: 'circle',
+          source: 'sample-points',
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#facc15',
+            'circle-opacity': 0.8
+          }
+        });
+
+        toast({
+          title: "Map Initialized",
+          description: "Data visualization map loaded successfully",
+        });
+      });
+
     } catch (error) {
       console.error('Error initializing map:', error);
       toast({
@@ -38,13 +77,16 @@ const DataVisualizationPanel = () => {
     }
 
     return () => map.current?.remove();
-  }, []);
+  }, [toast]);
 
   return (
     <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
       <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Data Visualization</h2>
-        <div id="map" style={{ width: '100%', height: '400px' }} />
+        <h2 className="text-2xl font-bold mb-4 text-yellow-400">Data Visualization</h2>
+        <div 
+          ref={mapContainer} 
+          className="w-full h-[400px] rounded-lg overflow-hidden border border-yellow-400/20"
+        />
       </CardContent>
     </Card>
   );

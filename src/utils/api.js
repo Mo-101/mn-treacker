@@ -1,4 +1,3 @@
-import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
 /**
@@ -132,5 +131,23 @@ export const fetchTrainingProgress = async () => {
     return await response.json();
   } catch (error) {
     return handleApiError(error, 'fetch training progress', error.response);
+  }
+};
+
+export const fetchEnvironmentalData = async () => {
+  try {
+    const response = await fetch('/api/environmental-data');
+    if (!response.ok) {
+      throw new Error('Failed to fetch environmental data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching environmental data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch environmental data. Please try again later.",
+      variant: "destructive",
+    });
+    return null;
   }
 };

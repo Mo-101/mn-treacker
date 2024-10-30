@@ -25,25 +25,29 @@ export const addWeatherLayers = (map) => {
   ];
   
   layers.forEach(layer => {
-    if (!map.getSource(`weather-${layer.id}`)) {
-      map.addSource(`weather-${layer.id}`, {
-        type: 'raster',
-        tiles: [layer.url],
-        tileSize: 256,
-        maxzoom: layer.maxzoom
-      });
+    try {
+      if (!map.getSource(layer.id)) {
+        map.addSource(layer.id, {
+          type: 'raster',
+          tiles: [layer.url],
+          tileSize: 256,
+          maxzoom: layer.maxzoom
+        });
 
-      map.addLayer({
-        id: `weather-${layer.id}`,
-        type: 'raster',
-        source: `weather-${layer.id}`,
-        layout: {
-          visibility: 'none'
-        },
-        paint: {
-          'raster-opacity': 0.8
-        }
-      });
+        map.addLayer({
+          id: layer.id,
+          type: 'raster',
+          source: layer.id,
+          layout: {
+            visibility: 'none'
+          },
+          paint: {
+            'raster-opacity': 0.8
+          }
+        });
+      }
+    } catch (error) {
+      console.error(`Error adding layer ${layer.id}:`, error);
     }
   });
 };
@@ -51,31 +55,37 @@ export const addWeatherLayers = (map) => {
 export const addAdminBoundariesLayer = (map) => {
   if (!map) return;
 
-  if (!map.getSource('admin-boundaries')) {
-    map.addSource('admin-boundaries', {
-      type: 'vector',
-      url: 'mapbox://mapbox.boundaries-adm2-v3'
-    });
+  try {
+    if (!map.getSource('admin-boundaries')) {
+      map.addSource('admin-boundaries', {
+        type: 'vector',
+        url: 'mapbox://mapbox.boundaries-adm2-v3'
+      });
 
-    map.addLayer({
-      id: 'admin-boundaries-layer',
-      type: 'line',
-      source: 'admin-boundaries',
-      'source-layer': 'boundaries_admin_2',
-      paint: {
-        'line-color': 'rgba(255, 255, 255, 0.5)',
-        'line-width': 1
-      },
-      layout: {
-        visibility: 'visible'
-      }
-    });
+      map.addLayer({
+        id: 'admin-boundaries-layer',
+        type: 'line',
+        source: 'admin-boundaries',
+        'source-layer': 'boundaries_admin_2',
+        paint: {
+          'line-color': 'rgba(255, 255, 255, 0.5)',
+          'line-width': 1
+        },
+        layout: {
+          visibility: 'visible'
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error adding admin boundaries layer:', error);
   }
 };
 
 export const addCustomLayers = (map) => {
   if (!map) return;
   
-  addWeatherLayers(map);
-  addAdminBoundariesLayer(map);
+  map.on('style.load', () => {
+    addWeatherLayers(map);
+    addAdminBoundariesLayer(map);
+  });
 };

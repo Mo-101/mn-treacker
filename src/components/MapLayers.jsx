@@ -1,4 +1,5 @@
 import mapboxgl from 'mapbox-gl';
+import { processWeatherData } from '../utils/weatherDataUtils';
 
 const addLayer = (map, id, source, type, paint, layout = {}) => {
   if (!map.getSource(id)) {
@@ -10,7 +11,7 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
       type,
       source: id,
       paint,
-      layout: { visibility: 'visible', ...layout }  // Changed default visibility to 'visible'
+      layout: { visibility: 'visible', ...layout }
     });
   }
 };
@@ -20,7 +21,8 @@ export const addCustomLayers = (map) => {
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
-  addAdminBoundariesLayer(map);  // Ensure this is called
+  addHistoricalWeatherLayer(map);
+  addAdminBoundariesLayer(map);
 };
 
 const addVegetationLayer = (map) => {
@@ -55,6 +57,71 @@ const addRadarLayer = (map) => {
     type: 'raster',
     url: 'mapbox://mapbox.radar'
   }, 'raster', { 'raster-opacity': 0.7 });
+};
+
+const addHistoricalWeatherLayer = async (map) => {
+  try {
+    const response = await fetch('/data/weather_data.geojson');
+    const weatherData = await response.json();
+    const processedData = processWeatherData(weatherData);
+
+    addLayer(map, 'historical-weather', {
+      type: 'geojson',
+      data: processedData
+    }, 'circle', {
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['get', 'temperature'],
+        0, 4,
+        30, 12
+      ],
+      'circle-color': [
+        'interpolate',
+        ['linear'],
+        ['get', 'temperature'],
+        0, '#0000FF',  // Cold (blue)
+        15, '#FFFF00', // Moderate (yellow)
+        30, '#FF0000'  // Hot (red)
+      ],
+      'circle-opacity': 0.7,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#FFFFFF'
+    });
+
+    // Add popup for weather data points
+    map.on('click', 'historical-weather', (e) => {
+      const coordinates = e.features[0].geometry.coordinates.slice();
+      const properties = e.features[0].properties;
+      const date = new Date(properties.timestamp).toLocaleDateString();
+
+      const description = `
+        <div class="p-2">
+          <h3 class="font-bold mb-2">Weather Data (${date})</h3>
+          <p>Temperature: ${properties.temperature}°C</p>
+          <p>Precipitation: ${properties.precipitation}mm</p>
+          <p>Humidity: ${properties.humidity}%</p>
+          <p>Wind Speed: ${properties.windSpeed}m/s</p>
+        </div>
+      `;
+
+      new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
+    });
+
+    // Change cursor on hover
+    map.on('mouseenter', 'historical-weather', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', 'historical-weather', () => {
+      map.getCanvas().style.cursor = '';
+    });
+
+  } catch (error) {
+    console.error('Error loading historical weather data:', error);
+  }
 };
 
 const addAdminBoundariesLayer = (map) => {

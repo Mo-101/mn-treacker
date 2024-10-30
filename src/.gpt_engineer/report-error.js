@@ -28,14 +28,6 @@ const extractRequestData = (request) => {
   }
 };
 
-// Function to extract safe error information
-const extractErrorInfo = (error) => ({
-  message: error?.message || String(error),
-  stack: error?.stack,
-  type: error?.name || 'Error',
-  timestamp: new Date().toISOString()
-});
-
 // Safe postMessage function
 const postMessage = (message) => {
   try {
@@ -45,7 +37,11 @@ const postMessage = (message) => {
     };
 
     if (message.error) {
-      safeMessage.error = extractErrorInfo(message.error);
+      safeMessage.error = {
+        message: message.error?.message || String(message.error),
+        stack: message.error?.stack,
+        type: message.error?.name || 'Error'
+      };
     }
 
     if (message.request) {
@@ -55,12 +51,9 @@ const postMessage = (message) => {
       }
     }
 
-    // Use JSON to ensure message is serializable
-    const serializedMessage = JSON.parse(JSON.stringify(safeMessage));
-    window.parent.postMessage(serializedMessage, '*');
+    window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
-    // Fallback to simple error message
     window.parent.postMessage({
       type: 'error',
       error: {
@@ -76,15 +69,13 @@ const reportHTTPError = (error) => {
   try {
     const errorDetails = {
       type: 'http_error',
-      error: extractErrorInfo(error)
-    };
-
-    if (error.request) {
-      const safeRequest = extractRequestData(error.request);
-      if (safeRequest) {
-        errorDetails.request = safeRequest;
+      error: {
+        message: error?.message || String(error),
+        stack: error?.stack,
+        type: error?.name || 'Error',
+        timestamp: new Date().toISOString()
       }
-    }
+    };
 
     postMessage(errorDetails);
   } catch (err) {

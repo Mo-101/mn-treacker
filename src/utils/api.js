@@ -23,19 +23,35 @@ const MOCK_DATA = {
 
 const fetchWithErrorHandling = async (url, options = {}) => {
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+    
     if (!response.ok) {
+      // Return mock data for development if the endpoint is not available
+      if (url.includes('historicalCases') || url.includes('csvPaths')) {
+        toast({
+          title: "Using Mock Data",
+          description: "Live data unavailable. Using sample data for demonstration.",
+          variant: "warning",
+        });
+        return MOCK_DATA.historicalCases;
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
     return await response.json();
   } catch (error) {
-    console.warn('Fetch error:', error);
-    // Return mock data if the API is not available
-    if (url.includes('historicalCases')) {
+    console.warn('API Error:', error);
+    // Return mock data for specific endpoints
+    if (url.includes('historicalCases') || url.includes('csvPaths')) {
       toast({
-        title: "Warning",
-        description: "Using fallback data due to API unavailability",
-        variant: "warning",
+        title: "Using Mock Data",
+        description: "Live data unavailable. Using sample data for demonstration.",
       });
       return MOCK_DATA.historicalCases;
     }

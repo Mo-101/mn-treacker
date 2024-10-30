@@ -17,7 +17,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
     if (!token) {
       toast({
-        title: "Error",
+        title: "Configuration Error",
         description: "Mapbox token is missing. Please check your environment variables.",
         variant: "destructive",
       });
@@ -30,7 +30,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [20, 0], // Centered on Africa
         zoom: 3.5,
-        pitch: 0, // Removed pitch for better visibility
+        pitch: 0,
         bearing: 0,
         antialias: true,
         maxZoom: 20,
@@ -42,85 +42,6 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         pixelRatio: 2
       });
 
-      map.current.on('load', () => {
-        // Add HD terrain source
-        map.current.addSource('mapbox-dem', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.terrain-rgb',  // Changed to HD terrain source
-          tileSize: 512,
-          maxzoom: 14
-        });
-
-        map.current.setTerrain({ 
-          source: 'mapbox-dem', 
-          exaggeration: 3.1,
-          quality: 'high'
-        });
-
-        // Add hillshade layer for enhanced terrain visualization
-        map.current.addSource('hillshade', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.terrain-rgb',
-          tileSize: 512,
-          maxzoom: 14
-        });
-
-        map.current.addLayer({
-          id: 'hillshading',
-          type: 'hillshade',
-          source: 'hillshade',
-          layout: { visibility: 'visible' },
-          paint: {
-            'hillshade-shadow-color': '#000000',
-            'hillshade-highlight-color': '#FFFFFF',
-            'hillshade-accent-color': '#000000',
-            'hillshade-illumination-anchor': 'viewport'
-          }
-        }, 'satellite');  // Add hillshade under satellite layer
-
-        // Enhanced sky layer
-        map.current.addLayer({
-          id: 'sky',
-          type: 'sky',
-          paint: {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 90.0],
-            'sky-atmosphere-sun-intensity': 15,
-            'sky-atmosphere-halo-color': 'rgba(255, 255, 255, 0.5)',
-            'sky-atmosphere-color': 'rgba(186, 210, 235, 1)',
-            'sky-gradient-center': [0, 0],
-            'sky-gradient-radius': 90,
-            'sky-gradient': [
-              'interpolate',
-              ['linear'],
-              ['sky-radial-progress'],
-              0.8,
-              'rgba(135, 206, 235, 1)',
-              1,
-              'rgba(255, 255, 255, 0.1)'
-            ],
-            'sky-opacity': [
-              'interpolate',
-              ['exponential', 0.1],
-              ['zoom'],
-              5,
-              0,
-              22,
-              1
-            ]
-          }
-        });
-
-        // Initialize all other layers
-        initializeLayers(map.current);
-
-        toast({
-          title: "Map Initialized",
-          description: "HD terrain and layers initialized successfully",
-        });
-      });
-
-      // Enhanced navigation controls
       map.current.addControl(
         new mapboxgl.NavigationControl({
           showCompass: true,
@@ -129,14 +50,23 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         }), 
         'top-right'
       );
-      
-      map.current.addControl(
-        new mapboxgl.ScaleControl({
-          maxWidth: 150,
-          unit: 'metric'
-        }), 
-        'bottom-left'
-      );
+
+      map.current.on('load', () => {
+        try {
+          initializeLayers(map.current);
+          toast({
+            title: "Map Initialized",
+            description: "Map and layers loaded successfully",
+          });
+        } catch (error) {
+          console.error('Error initializing layers:', error);
+          toast({
+            title: "Layer Initialization Error",
+            description: "Some layers failed to load. Basic map functionality is still available.",
+            variant: "warning",
+          });
+        }
+      });
 
     } catch (error) {
       console.error('Error initializing map:', error);

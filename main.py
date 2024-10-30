@@ -16,7 +16,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+# Update CORS configuration to allow all origins and methods
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Global variables
 training_progress = 0
@@ -51,9 +58,20 @@ def acknowledge_connection(client_id, success=True, reason=None):
         connection_status[client_id] = {'status': 'failed', 'reason': reason, 'timestamp': time.time()}
         return jsonify({'type': 'nack', 'client_id': client_id, 'reason': reason}), 400
 
-@app.route('/api/connect', methods=['POST'])
+@app.after_request
+def after_request(response):
+    """Ensure CORS headers are set for all responses"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
+@app.route('/api/connect', methods=['POST', 'OPTIONS'])
 def handle_connection():
     """Handle new connection requests with acknowledgment"""
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
+        
     client_id = request.json.get('client_id')
     if not client_id:
         return acknowledge_connection(None, False, 'Missing client_id')
@@ -165,9 +183,12 @@ def get_datasets():
         })
     return jsonify(datasets), 200
 
-@app.route('/api/upload-dataset', methods=['POST'])
+@app.route('/api/upload-dataset', methods=['POST', 'OPTIONS'])
 def upload_dataset():
     """Handle dataset upload with validation"""
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"}), 200
+        
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     

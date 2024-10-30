@@ -1,4 +1,5 @@
 import { toast } from '../components/ui/use-toast';
+import { API_CONFIG } from '../config/apiConfig';
 
 /**
  * Handles API errors and displays user notifications

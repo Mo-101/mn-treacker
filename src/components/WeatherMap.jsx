@@ -14,6 +14,7 @@ import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
+import WindGLLayer from './WindGLLayer';
 import { toggleLayer, setLayerOpacity, updateDetectionData, updatePredictionData } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
@@ -82,6 +83,8 @@ const WeatherMap = () => {
         mapContainer={mapContainer}
         mapState={mapState}
       />
+
+      {map.current && <WindGLLayer map={map.current} />}
 
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}

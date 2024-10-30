@@ -30,7 +30,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        pitch: 75, // Increased pitch for better terrain visibility
+        pitch: 85, // Increased pitch for a more elevated view
         bearing: 0,
         antialias: true,
         maxZoom: 20,

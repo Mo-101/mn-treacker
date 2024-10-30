@@ -5,54 +5,39 @@ const handleApiError = (error, context) => {
   console.error(`Error in ${context}:`, error);
   toast({
     title: "Error",
-    description: `Failed to ${context}. Using fallback data.`,
+    description: `Failed to ${context}. Please try again later.`,
     variant: "destructive",
   });
-  return null;
+  throw error;
 };
 
 export const fetchRatLocations = async () => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RODENT_DATA}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch rat data');
-    }
+    if (!response.ok) throw new Error('Failed to fetch rat data');
     return await response.json();
   } catch (error) {
-    handleApiError(error, 'fetch rat locations');
-    // Return fallback data
-    return {
-      type: 'FeatureCollection',
-      features: []
-    };
+    return handleApiError(error, 'fetch rat locations');
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.POINTS}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch Lassa Fever cases');
-    }
+    if (!response.ok) throw new Error('Failed to fetch Lassa Fever cases');
     return await response.json();
   } catch (error) {
-    handleApiError(error, 'fetch Lassa Fever cases');
-    // Return fallback data
-    return [];
+    return handleApiError(error, 'fetch Lassa Fever cases');
   }
 };
 
 export const fetchWeatherData = async (lat, lon) => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather data');
-    }
+    if (!response.ok) throw new Error('Failed to fetch weather data');
     return await response.json();
   } catch (error) {
-    handleApiError(error, 'fetch weather data');
-    // Return fallback data
-    return {};
+    return handleApiError(error, 'fetch weather data');
   }
 };
 
@@ -60,10 +45,8 @@ export const trainModel = async (data) => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAIN_MODEL}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
     if (!response.ok) throw new Error('Failed to train model');
     return await response.json();
@@ -72,34 +55,35 @@ export const trainModel = async (data) => {
   }
 };
 
-export const detectAnomalies = async (data) => {
+export const fetchDatasets = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANOMALY_DETECTION}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to detect anomalies');
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DATASETS}`);
+    if (!response.ok) throw new Error('Failed to fetch datasets');
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'detect anomalies');
+    return handleApiError(error, 'fetch datasets');
   }
 };
 
-export const enrichData = async (data) => {
+export const uploadDataset = async (formData) => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DATA_ENRICHMENT}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD_DATASET}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      body: formData
     });
-    if (!response.ok) throw new Error('Failed to enrich data');
+    if (!response.ok) throw new Error('Failed to upload dataset');
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'enrich data');
+    return handleApiError(error, 'upload dataset');
+  }
+};
+
+export const fetchTrainingProgress = async () => {
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
+    if (!response.ok) throw new Error('Failed to fetch training progress');
+    return await response.json();
+  } catch (error) {
+    return handleApiError(error, 'fetch training progress');
   }
 };

@@ -1,12 +1,15 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000', // Using the local development server
+  BASE_URL: 'http://localhost:3000',
   ENDPOINTS: {
     POINTS: '/data/points',
     WEATHER: '/data/weather',
     RODENT_DATA: '/data/mn',
     TRAIN_MODEL: '/api/train-model',
     ANOMALY_DETECTION: '/api/anomaly-detection',
-    DATA_ENRICHMENT: '/api/data-enrichment'
+    DATA_ENRICHMENT: '/api/data-enrichment',
+    DATASETS: '/api/datasets',
+    TRAINING_PROGRESS: '/api/training-progress',
+    UPLOAD_DATASET: '/api/upload-dataset'
   }
 };
 

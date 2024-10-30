@@ -15,10 +15,11 @@ import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import { addCustomLayers } from '../utils/mapLayers';
-import { initializeMapboxToken } from '../utils/mapTokenManager';
-import { WeatherMapContainer } from './WeatherMapContainer';
+import { initializeMap, updateMapState } from '../utils/mapUtils';
 
 const WeatherMap = () => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
   const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
@@ -27,25 +28,31 @@ const WeatherMap = () => {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [showOpenWeather, setShowOpenWeather] = useState(false);
   const [layerOpacity, setLayerOpacity] = useState(80);
-  const [detections, setDetections] = useState([
-    {
-      coordinates: [8, 10],
-      species: 'Mastomys natalensis',
-      confidence: 95,
-      timestamp: new Date().toISOString(),
-      details: 'Adult specimen detected',
-      habitat: 'Urban environment',
-      behavior: 'Foraging activity'
-    }
-  ]);
 
   useEffect(() => {
+    if (!mapContainer.current) return;
+
     try {
-      initializeMapboxToken();
+      map.current = initializeMap(mapContainer.current, mapState);
+
+      map.current.on('load', () => {
+        addCustomLayers(map.current);
+        toast({
+          title: "Map Initialized",
+          description: "Weather map layers loaded successfully",
+        });
+      });
+
+      map.current.on('move', () => {
+        updateMapState(map.current, setMapState);
+      });
+
+      return () => {
+        map.current?.remove();
+      };
     } catch (error) {
-      console.error('Failed to initialize Mapbox token:', error);
+      console.error('Error initializing map:', error);
       toast({
         title: "Error",
         description: "Failed to initialize map. Please check your configuration.",
@@ -55,25 +62,31 @@ const WeatherMap = () => {
   }, []);
 
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => 
-      prev.includes(layerId)
-        ? prev.filter(id => id !== layerId)
-        : [...prev, layerId]
-    );
+    if (!map.current) return;
+    
+    const isActive = activeLayers.includes(layerId);
+    if (isActive) {
+      setActiveLayers(prev => prev.filter(id => id !== layerId));
+      map.current.setLayoutProperty(layerId, 'visibility', 'none');
+    } else {
+      setActiveLayers(prev => [...prev, layerId]);
+      map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+    }
   };
 
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
+    activeLayers.forEach(layerId => {
+      if (map.current) {
+        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+      }
+    });
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <WeatherMapContainer
-        mapState={mapState}
-        activeLayers={activeLayers}
-        layerOpacity={layerOpacity}
-        detections={detections}
-      />
+      <div ref={mapContainer} className="absolute inset-0" />
+      
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">
           <TopNavigationBar 
@@ -82,6 +95,7 @@ const WeatherMap = () => {
             onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
           />
         </div>
+
         <SidePanels
           leftPanelOpen={leftPanelOpen}
           rightPanelOpen={rightPanelOpen}
@@ -92,6 +106,7 @@ const WeatherMap = () => {
           handleOpacityChange={handleOpacityChange}
           selectedPoint={selectedPoint}
         />
+
         <AnimatePresence>
           {predictionPanelOpen && (
             <div className="pointer-events-auto">
@@ -102,20 +117,22 @@ const WeatherMap = () => {
             </div>
           )}
         </AnimatePresence>
+
         <div className="pointer-events-auto">
           <FloatingInsightsBar />
         </div>
+
         <AnimatePresence>
           {aiTrainingOpen && (
             <div className="pointer-events-auto">
               <AITrainingInterface
                 isOpen={aiTrainingOpen}
                 onClose={() => setAiTrainingOpen(false)}
-                addToConsoleLog={(log) => console.log(log)}
               />
             </div>
           )}
         </AnimatePresence>
+
         <div className="pointer-events-auto absolute bottom-4 left-4">
           <WeatherControls
             activeLayers={activeLayers}
@@ -124,8 +141,16 @@ const WeatherMap = () => {
             onOpacityChange={handleOpacityChange}
           />
         </div>
+
         <MapLegend activeLayers={activeLayers} />
       </div>
+
+      {map.current && (
+        <>
+          <DetectionSpotLayer map={map.current} />
+          <LassaFeverCasesLayer map={map.current} />
+        </>
+      )}
     </div>
   );
 };

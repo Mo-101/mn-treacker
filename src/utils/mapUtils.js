@@ -15,8 +15,11 @@ export const initializeMap = (mapContainer, mapState) => {
     center: [mapState.lng, mapState.lat],
     zoom: mapState.zoom,
     pitch: 45,
-    bearing: 0
+    bearing: 0,
+    antialias: true
   });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
   return map;
 };

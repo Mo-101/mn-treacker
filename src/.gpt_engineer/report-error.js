@@ -3,10 +3,16 @@ const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
       // Only extract safe, serializable properties
+      const headers = {};
+      if (request.headers) {
+        for (const [key, value] of request.headers.entries()) {
+          headers[key] = value;
+        }
+      }
       return {
         url: request.url || '',
         method: request.method || 'GET',
-        headers: Object.fromEntries(request.headers || [])
+        headers
       };
     }
     // If it's a string URL

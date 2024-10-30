@@ -28,9 +28,9 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: hybridMapStyle,
-        center: [mapState.lng, mapState.lat],
-        zoom: mapState.zoom,
-        pitch: 85, // Increased pitch for a more elevated view
+        center: [20, 0], // Centered on Africa
+        zoom: 3.5,
+        pitch: 0, // Removed pitch for better visibility
         bearing: 0,
         antialias: true,
         maxZoom: 20,

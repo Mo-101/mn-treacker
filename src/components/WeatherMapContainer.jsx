@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useToast } from './ui/use-toast';
 import DetectionSpotLayer from './DetectionSpotLayer';
@@ -8,6 +8,7 @@ import { addCustomLayers } from '../utils/mapLayers';
 export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, detections }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
 
       map.current.on('load', async () => {
         await addCustomLayers(map.current);
+        setMapLoaded(true);
       });
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -78,18 +80,18 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
   }, []);
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded) return;
     
     activeLayers.forEach(layerId => {
       if (map.current.getLayer(layerId)) {
         map.current.setPaintProperty(layerId, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayers, layerOpacity]);
+  }, [activeLayers, layerOpacity, mapLoaded]);
 
   return (
     <div ref={mapContainer} className="absolute inset-0">
-      {map.current && (
+      {map.current && mapLoaded && (
         <>
           <DetectionSpotLayer map={map.current} detections={detections} />
           <LassaFeverCasesLayer map={map.current} />

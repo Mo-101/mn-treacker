@@ -32,13 +32,13 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     console.warn('Fetch error:', error);
     // Return mock data if the API is not available
     if (url.includes('historicalCases')) {
+      toast({
+        title: "Warning",
+        description: "Using fallback data due to API unavailability",
+        variant: "warning",
+      });
       return MOCK_DATA.historicalCases;
     }
-    toast({
-      title: "Warning",
-      description: "Using fallback data due to API unavailability",
-      variant: "warning",
-    });
     throw error;
   }
 };

@@ -1,16 +1,20 @@
 // Function to safely extract data from a Request object
 const extractRequestData = (request) => {
+  if (!request) return null;
+  
   try {
+    // If it's a Request object
     if (request instanceof Request) {
-      // Only extract safe, serializable properties
       return {
         url: request.url,
         method: request.method,
         // Only include safe headers
-        headers: Object.fromEntries([...request.headers].filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        }))
+        headers: Object.fromEntries(
+          Array.from(request.headers.entries()).filter(([key]) => {
+            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            return safeHeaders.includes(key.toLowerCase());
+          })
+        )
       };
     }
     // If it's a string URL
@@ -55,11 +59,8 @@ const postMessage = (message) => {
       }
     }
 
-    // Test if message is cloneable before sending
-    const cloneTest = structuredClone(safeMessage);
-    
     // Send the message
-    window.parent.postMessage(cloneTest, '*');
+    window.parent.postMessage(safeMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message
@@ -101,14 +102,14 @@ window.fetch = async function(...args) {
     const response = await originalFetch.apply(this, args);
     if (!response.ok) {
       const error = new Error(`HTTP error! status: ${response.status}`);
-      error.request = args[0];
+      error.request = extractRequestData(args[0]);
       reportHTTPError(error);
       throw error;
     }
     return response;
   } catch (error) {
     if (args[0]) {
-      error.request = args[0];
+      error.request = extractRequestData(args[0]);
       reportHTTPError(error);
     }
     throw error;

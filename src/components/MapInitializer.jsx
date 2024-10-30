@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { hybridMapStyle } from '../config/mapStyle';
+import { initializeLayers } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
 // Set mapbox token globally
@@ -38,6 +39,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
       });
 
       map.current.on('load', () => {
+        // Initialize terrain and sky layers
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -57,9 +59,12 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           }
         });
 
+        // Initialize all other layers
+        initializeLayers(map.current);
+
         toast({
           title: "Map Initialized",
-          description: "Hybrid satellite imagery and weather layers loaded successfully",
+          description: "All map layers initialized successfully",
         });
       });
 

@@ -1,8 +1,13 @@
 export const API_CONFIG = {
-  RAT_LOCATIONS_API: process.env.VITE_RAT_LOCATIONS_API || '/api/rat-locations',
-  LASSA_CASES_API: process.env.VITE_LASSA_CASES_API || '/api/cases',
-  WEATHER_API: process.env.VITE_WEATHER_API || '/api/openweather',
-  TRAINING_API: process.env.VITE_TRAINING_API || '/api/training-progress'
+  BASE_URL: 'http://localhost:3000',
+  ENDPOINTS: {
+    POINTS: '/data/points',
+    WEATHER: '/data/weather',
+    RODENT_DATA: '/data/mn',
+    TRAIN_MODEL: '/api/train-model',
+    ANOMALY_DETECTION: '/api/anomaly-detection',
+    DATA_ENRICHMENT: '/api/data-enrichment'
+  }
 };
 
 export const API_KEYS = {

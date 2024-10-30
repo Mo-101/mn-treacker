@@ -26,6 +26,19 @@ export const fetchRatData = async (locationId) => {
   }
 };
 
+export const fetchLassaFeverCases = async () => {
+  try {
+    const response = await fetch('/api/cases');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Lassa Fever cases');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Lassa Fever cases:', error);
+    return [];
+  }
+};
+
 export const fetchWithErrorHandling = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);

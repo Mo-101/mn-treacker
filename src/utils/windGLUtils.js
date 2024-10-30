@@ -21,8 +21,7 @@ export class WindGL {
   }
 
   draw() {
-    // Implement WebGL drawing logic here
-    // This is a placeholder for the actual WebGL implementation
+    if (!this.windData) return;
     const gl = this.gl;
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
@@ -34,15 +33,31 @@ export const initWindGL = (gl) => {
   return wind;
 };
 
-export const updateWindData = async (wind, timestamp) => {
+const windFiles = {
+  0: '2016112000',
+  6: '2016112006',
+  12: '2016112012',
+  18: '2016112018',
+  24: '2016112100',
+  30: '2016112106',
+  36: '2016112112',
+  42: '2016112118',
+  48: '2016112200'
+};
+
+export const updateWindData = async (wind, hour = 0) => {
   try {
-    const response = await fetch(`/api/wind-data?timestamp=${timestamp}`);
+    const timestamp = windFiles[hour] || windFiles[0];
+    const jsonPath = `/wind/${timestamp}.json`;
+    const imagePath = `/wind/${timestamp}.png`;
+    
+    const response = await fetch(jsonPath);
     if (!response.ok) throw new Error('Failed to fetch wind data');
     const windData = await response.json();
     
     // Load wind image
     const image = new Image();
-    image.src = windData.imageUrl;
+    image.src = imagePath;
     await new Promise((resolve, reject) => {
       image.onload = resolve;
       image.onerror = reject;

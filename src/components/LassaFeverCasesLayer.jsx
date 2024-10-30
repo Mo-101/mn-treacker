@@ -4,8 +4,8 @@ import { User } from 'lucide-react';
 import { fetchLassaFeverCases } from '../utils/api';
 import { useToast } from './ui/use-toast';
 
-const LassaFeverCasesLayer = ({ map }) => {
-  const [cases, setCases] = useState([]);
+const LassaFeverCasesLayer = ({ map, initialCases = [] }) => {
+  const [cases, setCases] = useState(initialCases);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -13,36 +13,28 @@ const LassaFeverCasesLayer = ({ map }) => {
 
     const loadCases = async () => {
       try {
-        // Use mock data if API fails
-        let data;
-        try {
-          data = await fetchLassaFeverCases();
-        } catch (error) {
-          console.warn('Failed to fetch real data, using mock data');
-          data = [
-            {
-              id: 1,
-              latitude: 9.0820,
-              longitude: 8.6753,
-              severity: 'high',
-              date: new Date().toISOString(),
-              location: 'Nigeria'
-            }
-          ];
+        const data = await fetchLassaFeverCases();
+        if (data && data.length > 0) {
+          setCases(data);
+        } else {
+          console.warn('Using initial cases data');
+          setCases(initialCases);
         }
-        setCases(data);
       } catch (error) {
-        console.error('Error in loadCases:', error);
+        console.warn('Failed to fetch cases data, using initial data');
+        setCases(initialCases);
         toast({
-          title: "Warning",
-          description: "Using mock data due to API unavailability",
+          title: "Notice",
+          description: "Using demo data for Lassa fever cases",
           variant: "warning",
         });
       }
     };
 
-    loadCases();
-  }, [map, toast]);
+    if (initialCases.length === 0) {
+      loadCases();
+    }
+  }, [map, initialCases, toast]);
 
   useEffect(() => {
     if (!map || !cases.length) return;

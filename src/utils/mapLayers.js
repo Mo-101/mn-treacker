@@ -39,7 +39,7 @@ export const addWeatherLayers = (map) => {
           type: 'raster',
           source: layer.id,
           layout: {
-            visibility: 'visible'
+            visibility: 'none'
           },
           paint: {
             'raster-opacity': 0.8

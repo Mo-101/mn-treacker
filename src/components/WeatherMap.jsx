@@ -32,10 +32,18 @@ const WeatherMap = () => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    const token = import.meta.env.VITE_MAPBOX_TOKEN;
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Mapbox token is missing. Please check your environment variables.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      if (!mapboxgl.accessToken) {
-        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-      }
+      mapboxgl.accessToken = token;
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -48,8 +56,26 @@ const WeatherMap = () => {
       });
 
       map.current.on('load', () => {
+        map.current.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+        map.current.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 90.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
+        });
+
         addCustomLayers(map.current);
-        // Initialize all layers as visible
         activeLayers.forEach(layer => {
           toggleLayer(map.current, layer, true);
           setLayerOpacity(map.current, layer, layerOpacity);
@@ -70,9 +96,7 @@ const WeatherMap = () => {
         });
       });
 
-      // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      // Add scale control
       map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
 
     } catch (error) {
@@ -116,8 +140,8 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" />
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
@@ -156,7 +180,7 @@ const WeatherMap = () => {
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-4 left-4">
+      <div className="absolute bottom-4 left-4 z-10">
         <WeatherControls
           activeLayers={activeLayers}
           onLayerToggle={handleLayerToggle}

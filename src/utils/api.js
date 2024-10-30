@@ -16,6 +16,18 @@ const MOCK_DATA = {
           date: '2023-01-15',
           location: 'Lagos, Nigeria'
         }
+      },
+      {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [7.4898, 9.0579] // Abuja coordinates
+        },
+        properties: {
+          severity: 'medium',
+          date: '2023-02-01',
+          location: 'Abuja, Nigeria'
+        }
       }
     ]
   }
@@ -32,15 +44,6 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     });
     
     if (!response.ok) {
-      // Return mock data for development if the endpoint is not available
-      if (url.includes('historicalCases') || url.includes('csvPaths')) {
-        toast({
-          title: "Using Mock Data",
-          description: "Live data unavailable. Using sample data for demonstration.",
-          variant: "warning",
-        });
-        return MOCK_DATA.historicalCases;
-      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
@@ -50,8 +53,9 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     // Return mock data for specific endpoints
     if (url.includes('historicalCases') || url.includes('csvPaths')) {
       toast({
-        title: "Using Mock Data",
+        title: "Using Demo Data",
         description: "Live data unavailable. Using sample data for demonstration.",
+        variant: "warning",
       });
       return MOCK_DATA.historicalCases;
     }

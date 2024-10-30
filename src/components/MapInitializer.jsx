@@ -55,7 +55,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
 
         map.current.setTerrain({ 
           source: 'mapbox-dem', 
-          exaggeration: 2.5, // Increased exaggeration for more prominent terrain
+          exaggeration: 3.1, // Updated exaggeration for even more prominent terrain
           quality: 'high'
         });
 

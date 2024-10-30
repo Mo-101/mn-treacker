@@ -31,7 +31,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        pitch: 45,
+        pitch: 60, // Increased pitch to better show terrain
         bearing: 0,
         antialias: true,
         maxZoom: 20,
@@ -40,11 +40,11 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', sans-serif",
         fadeDuration: 0,
         crossSourceCollisions: true,
-        pixelRatio: 2, // Enhanced pixel ratio for sharper rendering
+        pixelRatio: 2 // Enhanced pixel ratio for sharper rendering
       });
 
       map.current.on('load', () => {
-        // Initialize terrain with enhanced quality
+        // Initialize terrain with enhanced height
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -55,7 +55,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
 
         map.current.setTerrain({ 
           source: 'mapbox-dem', 
-          exaggeration: 1.5,
+          exaggeration: 2.5, // Increased exaggeration for more prominent terrain
           quality: 'high'
         });
 
@@ -101,7 +101,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         });
       });
 
-      // Add enhanced navigation controls
+      // Enhanced navigation controls
       map.current.addControl(
         new mapboxgl.NavigationControl({
           showCompass: true,

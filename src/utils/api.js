@@ -47,7 +47,7 @@ const handleApiError = (error, context, response) => {
  * @returns {string} The complete URL
  */
 const getFullUrl = (endpoint, params = {}) => {
-  const url = new URL(`${API_CONFIG.BASE_URL}${endpoint}`);
+  const url = new URL(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       url.searchParams.append(key, value);
@@ -56,13 +56,22 @@ const getFullUrl = (endpoint, params = {}) => {
   return url.toString();
 };
 
-export const fetchRatLocations = async () => {
+export const fetchRatData = async (locationId) => {
   try {
-    const response = await fetch(getFullUrl(API_CONFIG.ENDPOINTS.RODENT_DATA));
-    if (!response.ok) throw new Error('Failed to fetch rat data');
-    return await response.json();
+    const response = await fetch(`/api/rat-locations${locationId ? `/${locationId}` : ''}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch rat data');
+    }
+    const data = await response.json();
+    return data;
   } catch (error) {
-    return handleApiError(error, 'fetch rat locations', error.response);
+    console.error('Error fetching rat data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch rat data. Please try again later.",
+      variant: "destructive",
+    });
+    return { trends: [] };
   }
 };
 

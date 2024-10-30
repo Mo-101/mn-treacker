@@ -4,7 +4,6 @@ import { hybridMapStyle } from '../config/mapStyle';
 import { initializeLayers } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
-// Set mapbox token globally
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 }
@@ -31,7 +30,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        pitch: 60, // Increased pitch to better show terrain
+        pitch: 75, // Increased pitch for better terrain visibility
         bearing: 0,
         antialias: true,
         maxZoom: 20,
@@ -40,24 +39,44 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', sans-serif",
         fadeDuration: 0,
         crossSourceCollisions: true,
-        pixelRatio: 2 // Enhanced pixel ratio for sharper rendering
+        pixelRatio: 2
       });
 
       map.current.on('load', () => {
-        // Initialize terrain with enhanced height
+        // Add HD terrain source
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
-          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          url: 'mapbox://mapbox.terrain-rgb',  // Changed to HD terrain source
           tileSize: 512,
-          maxzoom: 14,
-          encoding: 'mapbox'
+          maxzoom: 14
         });
 
         map.current.setTerrain({ 
           source: 'mapbox-dem', 
-          exaggeration: 3.1, // Updated exaggeration for even more prominent terrain
+          exaggeration: 3.1,
           quality: 'high'
         });
+
+        // Add hillshade layer for enhanced terrain visualization
+        map.current.addSource('hillshade', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.terrain-rgb',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.addLayer({
+          id: 'hillshading',
+          type: 'hillshade',
+          source: 'hillshade',
+          layout: { visibility: 'visible' },
+          paint: {
+            'hillshade-shadow-color': '#000000',
+            'hillshade-highlight-color': '#FFFFFF',
+            'hillshade-accent-color': '#000000',
+            'hillshade-illumination-anchor': 'viewport'
+          }
+        }, 'satellite');  // Add hillshade under satellite layer
 
         // Enhanced sky layer
         map.current.addLayer({
@@ -97,7 +116,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
 
         toast({
           title: "Map Initialized",
-          description: "All map layers initialized successfully",
+          description: "HD terrain and layers initialized successfully",
         });
       });
 

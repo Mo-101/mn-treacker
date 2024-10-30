@@ -22,14 +22,15 @@ const DataVisualizationPanel = () => {
         style: 'mapbox://styles/mapbox/dark-v10',
         center: [0, 0],
         zoom: 1.5,
-        projection: 'globe'
+        projection: 'globe',
+        preserveDrawingBuffer: true // This helps with map rendering
       });
 
       map.current.on('load', () => {
-        // Add navigation controls
-        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.current.addControl(new mapboxgl.NavigationControl({
+          visualizePitch: true
+        }), 'top-right');
 
-        // Add example data points
         map.current.addSource('sample-points', {
           type: 'geojson',
           data: {
@@ -57,13 +58,18 @@ const DataVisualizationPanel = () => {
           paint: {
             'circle-radius': 8,
             'circle-color': '#facc15',
-            'circle-opacity': 0.8
+            'circle-opacity': 0.8,
+            'circle-blur': 0.5,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#facc15',
+            'circle-stroke-opacity': 0.3
           }
         });
 
         toast({
           title: "Map Initialized",
           description: "Data visualization map loaded successfully",
+          variant: "default",
         });
       });
 
@@ -80,12 +86,12 @@ const DataVisualizationPanel = () => {
   }, [toast]);
 
   return (
-    <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md">
+    <Card className="bg-gray-800/50 backdrop-blur-md border-yellow-400/20">
       <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-4 text-yellow-400">Data Visualization</h2>
+        <h2 className="text-2xl font-bold mb-4 text-yellow-400 tracking-tight">Data Visualization</h2>
         <div 
           ref={mapContainer} 
-          className="w-full h-[400px] rounded-lg overflow-hidden border border-yellow-400/20"
+          className="w-full h-[400px] rounded-lg overflow-hidden border border-yellow-400/20 shadow-lg"
         />
       </CardContent>
     </Card>

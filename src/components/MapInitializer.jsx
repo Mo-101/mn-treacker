@@ -35,27 +35,60 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         bearing: 0,
         antialias: true,
         maxZoom: 20,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: true,
+        renderWorldCopies: true,
+        localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', sans-serif",
+        fadeDuration: 0,
+        crossSourceCollisions: true,
+        pixelRatio: 2, // Enhanced pixel ratio for sharper rendering
       });
 
       map.current.on('load', () => {
-        // Initialize terrain and sky layers
+        // Initialize terrain with enhanced quality
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
           tileSize: 512,
-          maxzoom: 14
+          maxzoom: 14,
+          encoding: 'mapbox'
         });
 
-        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+        map.current.setTerrain({ 
+          source: 'mapbox-dem', 
+          exaggeration: 1.5,
+          quality: 'high'
+        });
 
+        // Enhanced sky layer
         map.current.addLayer({
           id: 'sky',
           type: 'sky',
           paint: {
             'sky-type': 'atmosphere',
             'sky-atmosphere-sun': [0.0, 90.0],
-            'sky-atmosphere-sun-intensity': 15
+            'sky-atmosphere-sun-intensity': 15,
+            'sky-atmosphere-halo-color': 'rgba(255, 255, 255, 0.5)',
+            'sky-atmosphere-color': 'rgba(186, 210, 235, 1)',
+            'sky-gradient-center': [0, 0],
+            'sky-gradient-radius': 90,
+            'sky-gradient': [
+              'interpolate',
+              ['linear'],
+              ['sky-radial-progress'],
+              0.8,
+              'rgba(135, 206, 235, 1)',
+              1,
+              'rgba(255, 255, 255, 0.1)'
+            ],
+            'sky-opacity': [
+              'interpolate',
+              ['exponential', 0.1],
+              ['zoom'],
+              5,
+              0,
+              22,
+              1
+            ]
           }
         });
 
@@ -68,8 +101,23 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         });
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+      // Add enhanced navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          showCompass: true,
+          showZoom: true,
+          visualizePitch: true
+        }), 
+        'top-right'
+      );
+      
+      map.current.addControl(
+        new mapboxgl.ScaleControl({
+          maxWidth: 150,
+          unit: 'metric'
+        }), 
+        'bottom-left'
+      );
 
     } catch (error) {
       console.error('Error initializing map:', error);

@@ -1,42 +1,63 @@
 export const hybridMapStyle = {
     "version": 8,
-    "name": "qgis2web export",
+    "name": "Enhanced Hybrid Style",
     "pitch": 0,
     "light": {
-        "intensity": 0.2
+        "intensity": 0.35,
+        "color": "#fff",
+        "anchor": "viewport",
+        "position": [1.5, 90, 80]
     },
     "sources": {
         "GoogleSatellite_0": {
             "type": "raster",
             "tiles": ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
-            "tileSize": 256
+            "tileSize": 256,
+            "maxzoom": 20,
+            "attribution": "Imagery © Google"
         },
         "GoogleHybrid_1": {
             "type": "raster",
             "tiles": ["https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"],
-            "tileSize": 256
+            "tileSize": 256,
+            "maxzoom": 20,
+            "attribution": "Imagery © Google"
         }
     },
-    "sprite": "",
-    "glyphs": "https://glfonts.lukasmartinelli.ch/fonts/{fontstack}/{range}.pbf",
+    "sprite": "mapbox://sprites/mapbox/satellite-streets-v12",
+    "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "background",
             "type": "background",
-            "layout": {},
             "paint": {
-                "background-color": "#ffffff"
+                "background-color": "#000000"
             }
         },
         {
-            "id": "lyr_GoogleSatellite_0_0",
+            "id": "satellite",
             "type": "raster",
-            "source": "GoogleSatellite_0"
+            "source": "GoogleSatellite_0",
+            "paint": {
+                "raster-opacity": 1,
+                "raster-contrast": 0.1,
+                "raster-brightness-min": 0.2,
+                "raster-brightness-max": 1,
+                "raster-saturation": 0.2,
+                "raster-hue-rotate": 0
+            }
         },
         {
-            "id": "lyr_GoogleHybrid_1_1",
+            "id": "hybrid",
             "type": "raster",
-            "source": "GoogleHybrid_1"
+            "source": "GoogleHybrid_1",
+            "paint": {
+                "raster-opacity": 0.9,
+                "raster-contrast": 0.2,
+                "raster-brightness-min": 0.1,
+                "raster-brightness-max": 1,
+                "raster-saturation": 0.3
+            }
         }
     ]
 };

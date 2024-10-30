@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000',
+  BASE_URL: 'http://localhost:3000', // Using the local development server
   ENDPOINTS: {
     POINTS: '/data/points',
     WEATHER: '/data/weather',

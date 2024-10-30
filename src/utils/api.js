@@ -5,39 +5,54 @@ const handleApiError = (error, context) => {
   console.error(`Error in ${context}:`, error);
   toast({
     title: "Error",
-    description: `Failed to ${context}. Please try again later.`,
+    description: `Failed to ${context}. Using fallback data.`,
     variant: "destructive",
   });
-  throw error;
+  return null;
 };
 
 export const fetchRatLocations = async () => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RODENT_DATA}`);
-    if (!response.ok) throw new Error('Failed to fetch rat data');
+    if (!response.ok) {
+      throw new Error('Failed to fetch rat data');
+    }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'fetch rat locations');
+    handleApiError(error, 'fetch rat locations');
+    // Return fallback data
+    return {
+      type: 'FeatureCollection',
+      features: []
+    };
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.POINTS}`);
-    if (!response.ok) throw new Error('Failed to fetch Lassa Fever cases');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Lassa Fever cases');
+    }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'fetch Lassa Fever cases');
+    handleApiError(error, 'fetch Lassa Fever cases');
+    // Return fallback data
+    return [];
   }
 };
 
 export const fetchWeatherData = async (lat, lon) => {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`);
-    if (!response.ok) throw new Error('Failed to fetch weather data');
+    if (!response.ok) {
+      throw new Error('Failed to fetch weather data');
+    }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'fetch weather data');
+    handleApiError(error, 'fetch weather data');
+    // Return fallback data
+    return {};
   }
 };
 

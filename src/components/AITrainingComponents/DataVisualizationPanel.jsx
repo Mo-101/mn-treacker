@@ -1,20 +1,43 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent } from '../ui/card';
 import mapboxgl from 'mapbox-gl';
+import { useToast } from '../ui/use-toast';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
+// Ensure token is set globally
+if (!mapboxgl.accessToken) {
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+}
 
 const DataVisualizationPanel = () => {
-  React.useEffect(() => {
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/dark-v10',
-      center: [0, 0],
-      zoom: 2
-    });
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const { toast } = useToast();
 
-    return () => map.remove();
+  useEffect(() => {
+    if (map.current) return;
+
+    try {
+      if (!mapboxgl.accessToken) {
+        throw new Error('Mapbox token is required but not provided');
+      }
+
+      map.current = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v10',
+        center: [0, 0],
+        zoom: 2
+      });
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map visualization. Please check your configuration.",
+        variant: "destructive",
+      });
+    }
+
+    return () => map.current?.remove();
   }, []);
 
   return (

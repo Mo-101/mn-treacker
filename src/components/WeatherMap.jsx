@@ -15,12 +15,10 @@ import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import { addCustomLayers } from '../utils/mapLayers';
-
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+import { initializeMapboxToken } from '../utils/mapTokenManager';
+import { WeatherMapContainer } from './WeatherMapContainer';
 
 const WeatherMap = () => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
   const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
@@ -44,147 +42,38 @@ const WeatherMap = () => {
   ]);
 
   useEffect(() => {
-    if (map.current) return;
-    
-    const customStyle = {
-      version: 8,
-      sources: {
-        'google-satellite': {
-          type: 'raster',
-          tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
-          tileSize: 256
-        },
-        'google-hybrid': {
-          type: 'raster',
-          tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
-          tileSize: 256
-        }
-      },
-      layers: [
-        {
-          id: 'satellite-base',
-          type: 'raster',
-          source: 'google-satellite',
-          minzoom: 0,
-          maxzoom: 22
-        },
-        {
-          id: 'hybrid-overlay',
-          type: 'raster',
-          source: 'google-hybrid',
-          minzoom: 0,
-          maxzoom: 22
-        }
-      ]
-    };
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: customStyle,
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom,
-      bearing: 360.0,
-      pitch: 0,
-      attributionControl: false
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
-    map.current.addControl(new mapboxgl.AttributionControl({
-      customAttribution: 'Imagery © Google',
-      compact: false
-    }));
-
-    map.current.on('load', async () => {
-      // Add GeoJSON source for points
-      map.current.addSource('points', {
-        type: 'geojson',
-        data: '/points.geojson',
-        cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50
+    try {
+      initializeMapboxToken();
+    } catch (error) {
+      console.error('Failed to initialize Mapbox token:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your configuration.",
+        variant: "destructive",
       });
-
-      // Add clustered points layer
-      map.current.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'points',
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#51bbd6',
-            100,
-            '#f1f075',
-            750,
-            '#f28cb1'
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            20,
-            100,
-            30,
-            750,
-            40
-          ]
-        }
-      });
-
-      // Add individual points layer
-      map.current.addLayer({
-        id: 'unclustered-point',
-        type: 'circle',
-        source: 'points',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': '#11b4da',
-          'circle-radius': 8,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff'
-        }
-      });
-
-      await addCustomLayers(map.current);
-    });
-
-    return () => map.current && map.current.remove();
+    }
   }, []);
 
   const handleLayerToggle = (layerId) => {
-    if (map.current) {
-      const visibility = map.current.getLayoutProperty(layerId, 'visibility');
-      const newVisibility = visibility === 'visible' ? 'none' : 'visible';
-      
-      map.current.setLayoutProperty(layerId, 'visibility', newVisibility);
-      
-      setActiveLayers(prev => 
-        newVisibility === 'visible'
-          ? [...prev, layerId]
-          : prev.filter(id => id !== layerId)
-      );
-    }
+    setActiveLayers(prev => 
+      prev.includes(layerId)
+        ? prev.filter(id => id !== layerId)
+        : [...prev, layerId]
+    );
   };
 
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
-    activeLayers.forEach(layerId => {
-      if (map.current.getLayer(layerId)) {
-        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-      }
-    });
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" />
-      {map.current && (
-        <>
-          <DetectionSpotLayer map={map.current} detections={detections} />
-          <LassaFeverCasesLayer map={map.current} />
-        </>
-      )}
+      <WeatherMapContainer
+        mapState={mapState}
+        activeLayers={activeLayers}
+        layerOpacity={layerOpacity}
+        detections={detections}
+      />
       <div className="absolute inset-0 pointer-events-none">
         <div className="pointer-events-auto">
           <TopNavigationBar 

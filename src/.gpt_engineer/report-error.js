@@ -5,10 +5,11 @@ const extractRequestData = (request) => {
   try {
     // If it's a Request object
     if (request instanceof Request) {
+      // Create a new plain object with only the necessary data
       return {
         url: request.url,
         method: request.method,
-        // Only include safe headers
+        // Convert headers to a plain object
         headers: Object.fromEntries(
           Array.from(request.headers.entries()).filter(([key]) => {
             const safeHeaders = ['content-type', 'accept', 'content-length'];
@@ -37,7 +38,7 @@ const extractErrorInfo = (error) => ({
   timestamp: new Date().toISOString()
 });
 
-// Safe postMessage function
+// Safe postMessage function using structured clone fallback
 const postMessage = (message) => {
   try {
     // Create a basic serializable message
@@ -51,7 +52,7 @@ const postMessage = (message) => {
       safeMessage.error = extractErrorInfo(message.error);
     }
 
-    // Only add request info if it exists and can be serialized
+    // Only add request info if it exists
     if (message.request) {
       const safeRequest = extractRequestData(message.request);
       if (safeRequest) {
@@ -59,8 +60,9 @@ const postMessage = (message) => {
       }
     }
 
-    // Send the message
-    window.parent.postMessage(safeMessage, '*');
+    // Use structured clone API with fallback
+    const serializedMessage = JSON.parse(JSON.stringify(safeMessage));
+    window.parent.postMessage(serializedMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     // Fallback to a simple error message

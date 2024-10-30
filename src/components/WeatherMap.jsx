@@ -14,14 +14,13 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
-import { addCustomLayers } from '../utils/mapLayers';
-import { initializeMap, updateMapState } from '../utils/mapUtils';
+import { addCustomLayers, toggleLayer, setLayerOpacity } from '../utils/mapLayers';
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temp', 'clouds', 'wind']);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
@@ -50,6 +49,12 @@ const WeatherMap = () => {
 
       map.current.on('load', () => {
         addCustomLayers(map.current);
+        // Initialize all layers as visible
+        activeLayers.forEach(layer => {
+          toggleLayer(map.current, layer, true);
+          setLayerOpacity(map.current, layer, layerOpacity);
+        });
+        
         toast({
           title: "Map Initialized",
           description: "Weather map layers loaded successfully",
@@ -67,6 +72,8 @@ const WeatherMap = () => {
 
       // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      // Add scale control
+      map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
 
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -94,14 +101,7 @@ const WeatherMap = () => {
         ? prev.filter(id => id !== layerId)
         : [...prev, layerId];
       
-      if (map.current.getLayer(layerId)) {
-        map.current.setLayoutProperty(
-          layerId,
-          'visibility',
-          isActive ? 'none' : 'visible'
-        );
-      }
-      
+      toggleLayer(map.current, layerId, !isActive);
       return newLayers;
     });
   };
@@ -109,8 +109,8 @@ const WeatherMap = () => {
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
     activeLayers.forEach(layerId => {
-      if (map.current && map.current.getLayer(layerId)) {
-        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+      if (map.current) {
+        setLayerOpacity(map.current, layerId, opacity);
       }
     });
   };
@@ -125,27 +125,16 @@ const WeatherMap = () => {
         onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
       />
 
-      <AnimatePresence>
-        {leftPanelOpen && (
-          <LeftSidePanel
-            isOpen={leftPanelOpen}
-            onClose={() => setLeftPanelOpen(false)}
-            activeLayers={activeLayers}
-            onLayerToggle={handleLayerToggle}
-            onOpacityChange={handleOpacityChange}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {rightPanelOpen && (
-          <RightSidePanel
-            isOpen={rightPanelOpen}
-            onClose={() => setRightPanelOpen(false)}
-            selectedPoint={selectedPoint}
-          />
-        )}
-      </AnimatePresence>
+      <SidePanels
+        leftPanelOpen={leftPanelOpen}
+        rightPanelOpen={rightPanelOpen}
+        setLeftPanelOpen={setLeftPanelOpen}
+        setRightPanelOpen={setRightPanelOpen}
+        activeLayers={activeLayers}
+        handleLayerToggle={handleLayerToggle}
+        handleOpacityChange={handleOpacityChange}
+        selectedPoint={selectedPoint}
+      />
 
       <AnimatePresence>
         {predictionPanelOpen && (

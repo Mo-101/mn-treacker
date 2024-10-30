@@ -3,13 +3,13 @@ export const addWeatherLayers = (map) => {
 
   const layers = [
     {
-      id: 'temperature',
-      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      id: 'precipitation',
+      url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
       maxzoom: 20
     },
     {
-      id: 'precipitation',
-      url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      id: 'temp',
+      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
       maxzoom: 20
     },
     {
@@ -39,7 +39,7 @@ export const addWeatherLayers = (map) => {
           type: 'raster',
           source: layer.id,
           layout: {
-            visibility: 'none'
+            visibility: 'visible'
           },
           paint: {
             'raster-opacity': 0.8
@@ -84,8 +84,16 @@ export const addAdminBoundariesLayer = (map) => {
 export const addCustomLayers = (map) => {
   if (!map) return;
   
-  map.on('style.load', () => {
-    addWeatherLayers(map);
-    addAdminBoundariesLayer(map);
-  });
+  addWeatherLayers(map);
+  addAdminBoundariesLayer(map);
+};
+
+export const toggleLayer = (map, layerId, visible) => {
+  if (!map || !map.getLayer(layerId)) return;
+  map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+};
+
+export const setLayerOpacity = (map, layerId, opacity) => {
+  if (!map || !map.getLayer(layerId)) return;
+  map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
 };

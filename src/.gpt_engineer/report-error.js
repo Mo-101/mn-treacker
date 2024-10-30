@@ -2,16 +2,28 @@
 const extractRequestData = (request) => {
   try {
     if (request instanceof Request) {
-      return {
-        url: request.url,
-        method: request.method,
-        headers: Array.from(request.headers.entries()).reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {})
+      // Only extract safe, serializable properties
+      const safeRequest = {
+        url: request.url || '',
+        method: request.method || 'GET',
+        headers: {}
       };
+      
+      // Safely extract headers
+      if (request.headers && typeof request.headers.forEach === 'function') {
+        request.headers.forEach((value, key) => {
+          safeRequest.headers[key] = value;
+        });
+      }
+      
+      return safeRequest;
     }
-    return typeof request === 'string' ? { url: request } : null;
+    // If it's a string URL
+    if (typeof request === 'string') {
+      return { url: request };
+    }
+    // For other types, return null
+    return null;
   } catch (err) {
     console.warn('Error extracting request data:', err);
     return null;
@@ -29,25 +41,33 @@ const extractErrorInfo = (error) => ({
 // Safe postMessage function
 const postMessage = (message) => {
   try {
+    // Create a basic serializable message
     const safeMessage = {
       type: 'error',
       timestamp: new Date().toISOString()
     };
 
+    // Only add error info if it exists
     if (message.error) {
       safeMessage.error = extractErrorInfo(message.error);
     }
 
+    // Only add request info if it exists and can be serialized
     if (message.request) {
-      const requestData = extractRequestData(message.request);
-      if (requestData) {
-        safeMessage.request = requestData;
+      const safeRequest = extractRequestData(message.request);
+      if (safeRequest) {
+        safeMessage.request = safeRequest;
       }
     }
 
-    window.parent.postMessage(safeMessage, '*');
+    // Test if message is cloneable before sending
+    const cloneTest = structuredClone(safeMessage);
+    
+    // Send the message
+    window.parent.postMessage(cloneTest, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
+    // Fallback to a simple error message
     window.parent.postMessage({
       type: 'error',
       error: {
@@ -67,9 +87,9 @@ const reportHTTPError = (error) => {
     };
 
     if (error.request) {
-      const requestData = extractRequestData(error.request);
-      if (requestData) {
-        errorDetails.request = requestData;
+      const safeRequest = extractRequestData(error.request);
+      if (safeRequest) {
+        errorDetails.request = safeRequest;
       }
     }
 

@@ -1,50 +1,70 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useToast } from './ui/use-toast';
 import DetectionSpotLayer from './DetectionSpotLayer';
 import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import { addCustomLayers } from '../utils/mapLayers';
-import { MOCK_DATA } from '../config/apiConfig';
 
-export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity }) => {
+export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, detections }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (map.current) return;
     
     try {
-      if (!mapboxgl.accessToken) {
-        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-      }
+      const customStyle = {
+        version: 8,
+        sources: {
+          'google-satellite': {
+            type: 'raster',
+            tiles: ['https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'],
+            tileSize: 256
+          },
+          'google-hybrid': {
+            type: 'raster',
+            tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
+            tileSize: 256
+          }
+        },
+        layers: [
+          {
+            id: 'satellite-base',
+            type: 'raster',
+            source: 'google-satellite',
+            minzoom: 0,
+            maxzoom: 22
+          },
+          {
+            id: 'hybrid-overlay',
+            type: 'raster',
+            source: 'google-hybrid',
+            minzoom: 0,
+            maxzoom: 22
+          }
+        ]
+      };
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: customStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        pitch: 45,
-        bearing: 0
+        bearing: 360.0,
+        pitch: 0,
+        attributionControl: false
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
+      map.current.addControl(new mapboxgl.AttributionControl({
+        customAttribution: 'Imagery © Google',
+        compact: false
+      }));
 
       map.current.on('load', async () => {
-        try {
-          await addCustomLayers(map.current);
-          setMapLoaded(true);
-        } catch (error) {
-          console.error('Error adding custom layers:', error);
-          toast({
-            title: "Warning",
-            description: "Some map layers could not be loaded",
-            variant: "warning",
-          });
-        }
+        await addCustomLayers(map.current);
       });
-
     } catch (error) {
       console.error('Error initializing map:', error);
       toast({
@@ -58,27 +78,21 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity }) =>
   }, []);
 
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current) return;
     
     activeLayers.forEach(layerId => {
       if (map.current.getLayer(layerId)) {
         map.current.setPaintProperty(layerId, 'raster-opacity', layerOpacity / 100);
       }
     });
-  }, [activeLayers, layerOpacity, mapLoaded]);
+  }, [activeLayers, layerOpacity]);
 
   return (
     <div ref={mapContainer} className="absolute inset-0">
-      {map.current && mapLoaded && (
+      {map.current && (
         <>
-          <DetectionSpotLayer 
-            map={map.current} 
-            detections={MOCK_DATA.DETECTIONS} 
-          />
-          <LassaFeverCasesLayer 
-            map={map.current} 
-            initialCases={MOCK_DATA.LASSA_CASES}
-          />
+          <DetectionSpotLayer map={map.current} detections={detections} />
+          <LassaFeverCasesLayer map={map.current} />
         </>
       )}
     </div>

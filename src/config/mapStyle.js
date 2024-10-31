@@ -1,3 +1,5 @@
+import mapboxgl from 'mapbox-gl';
+
 export const hybridMapStyle = {
     "version": 8,
     "name": "Enhanced 4K Hybrid Style",

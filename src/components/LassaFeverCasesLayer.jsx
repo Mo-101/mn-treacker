@@ -1,115 +1,78 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useQuery } from '@tanstack/react-query';
-import { fetchLassaFeverCases, fetchRatData } from '../utils/api';
+import { fetchLassaFeverCases } from '../utils/api';
 import { useToast } from './ui/use-toast';
 
 const LassaFeverCasesLayer = ({ map }) => {
   const { toast } = useToast();
-  const { data: cases } = useQuery({
-    queryKey: ['lassaFeverCases'],
+  const { data: points } = useQuery({
+    queryKey: ['points'],
     queryFn: fetchLassaFeverCases,
     staleTime: 300000,
     retry: 1
   });
 
-  const { data: ratLocations } = useQuery({
-    queryKey: ['ratLocations'],
-    queryFn: () => fetchRatData(),
-    staleTime: 300000,
-    retry: 1
-  });
-
   useEffect(() => {
-    if (!map) return;
+    if (!map || !points?.features) return;
 
-    // Remove existing layers and sources
-    ['lassa-cases', 'rat-locations'].forEach(layerId => {
-      if (map.getLayer(layerId)) map.removeLayer(layerId);
-      if (map.getSource(layerId)) map.removeSource(layerId);
+    // Remove existing layer and source
+    if (map.getLayer('points')) map.removeLayer('points');
+    if (map.getSource('points')) map.removeSource('points');
+
+    // Add points source
+    map.addSource('points', {
+      type: 'geojson',
+      data: points
     });
 
-    // Add Lassa fever cases
-    if (cases?.features) {
-      map.addSource('lassa-cases', {
-        type: 'geojson',
-        data: cases
-      });
+    // Add points layer
+    map.addLayer({
+      id: 'points',
+      type: 'circle',
+      source: 'points',
+      paint: {
+        'circle-radius': 6,
+        'circle-color': '#FF3B3B',
+        'circle-opacity': 0.9,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#FFFFFF'
+      }
+    });
 
-      map.addLayer({
-        id: 'lassa-cases',
-        type: 'circle',
-        source: 'lassa-cases',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#FF3B3B',
-          'circle-opacity': 0.9,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#FFFFFF'
-        }
-      });
-    }
-
-    // Add rat locations
-    if (ratLocations?.features) {
-      map.addSource('rat-locations', {
-        type: 'geojson',
-        data: ratLocations
-      });
-
-      map.addLayer({
-        id: 'rat-locations',
-        type: 'circle',
-        source: 'rat-locations',
-        paint: {
-          'circle-radius': 6,
-          'circle-color': '#FFD700',
-          'circle-opacity': 0.9,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#FFFFFF'
-        }
-      });
-    }
-
-    // Add popups for both layers
-    ['lassa-cases', 'rat-locations'].forEach(layerId => {
-      map.on('click', layerId, (e) => {
-        const coordinates = e.features[0].geometry.coordinates.slice();
-        const properties = e.features[0].properties;
-        
-        new mapboxgl.Popup()
-          .setLngLat(coordinates)
-          .setHTML(`
-            <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
-              <h3 class="text-amber-400 font-bold mb-2">
-                ${layerId === 'lassa-cases' ? 'Lassa Fever Case' : 'Rat Sighting'}
-              </h3>
-              <div class="space-y-1 text-white">
-                ${Object.entries(properties)
-                  .map(([key, value]) => `<p><span class="text-amber-400">${key}:</span> ${value}</p>`)
-                  .join('')}
-              </div>
+    // Add popup on click
+    map.on('click', 'points', (e) => {
+      const coordinates = e.features[0].geometry.coordinates.slice();
+      const properties = e.features[0].properties;
+      
+      new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
+            <h3 class="text-amber-400 font-bold mb-2">Point Details</h3>
+            <div class="space-y-1 text-white">
+              ${Object.entries(properties)
+                .map(([key, value]) => `<p><span class="text-amber-400">${key}:</span> ${value}</p>`)
+                .join('')}
             </div>
-          `)
-          .addTo(map);
-      });
+          </div>
+        `)
+        .addTo(map);
+    });
 
-      map.on('mouseenter', layerId, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
+    map.on('mouseenter', 'points', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
 
-      map.on('mouseleave', layerId, () => {
-        map.getCanvas().style.cursor = '';
-      });
+    map.on('mouseleave', 'points', () => {
+      map.getCanvas().style.cursor = '';
     });
 
     return () => {
-      ['lassa-cases', 'rat-locations'].forEach(layerId => {
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-        if (map.getSource(layerId)) map.removeSource(layerId);
-      });
+      if (map.getLayer('points')) map.removeLayer('points');
+      if (map.getSource('points')) map.removeSource('points');
     };
-  }, [map, cases, ratLocations]);
+  }, [map, points]);
 
   return null;
 };

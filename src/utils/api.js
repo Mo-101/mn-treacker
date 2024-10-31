@@ -1,68 +1,6 @@
 import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
-// Mock data for when API calls fail
-const MOCK_DATA = {
-  lassaFeverCases: {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [8.6753, 9.0820]
-        },
-        properties: {
-          severity: 'high',
-          date: '2023-01-15',
-          location: 'Lagos, Nigeria'
-        }
-      },
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [7.4898, 9.0579]
-        },
-        properties: {
-          severity: 'medium',
-          date: '2023-02-01',
-          location: 'Abuja, Nigeria'
-        }
-      }
-    ]
-  },
-  environmentalData: {
-    populationTrend: [
-      { name: 'Jan', value: 4000 },
-      { name: 'Feb', value: 3000 },
-      { name: 'Mar', value: 2000 }
-    ],
-    habitatSuitability: [
-      { area: 'Forest', suitability: 80 },
-      { area: 'Urban', suitability: 30 }
-    ]
-  },
-  ratData: {
-    trends: [
-      { name: 'Week 1', value: 30 },
-      { name: 'Week 2', value: 45 },
-      { name: 'Week 3', value: 35 },
-      { name: 'Week 4', value: 60 },
-      { name: 'Week 5', value: 40 }
-    ]
-  }
-};
-
-const handleApiError = (error, endpoint) => {
-  console.warn(`API Error (${endpoint}):`, error);
-  toast({
-    title: "Using Demo Data",
-    description: "Live data unavailable. Using sample data for demonstration.",
-    variant: "warning",
-  });
-};
-
 const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -90,19 +28,31 @@ export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
       `${API_CONFIG.BASE_URL}/api/environmental-data?timeframe=${timeframe}`
     );
   } catch (error) {
-    handleApiError(error, 'environmental-data');
-    return MOCK_DATA.environmentalData;
+    console.error('API Error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch environmental data",
+      variant: "destructive",
+    });
+    return null;
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.HISTORICAL_CASES}`
-    );
+    const response = await fetch('/api/files/geojsonPaths/points');
+    if (!response.ok) {
+      throw new Error('Failed to fetch points data');
+    }
+    return await response.json();
   } catch (error) {
-    handleApiError(error, 'lassa-fever-cases');
-    return MOCK_DATA.lassaFeverCases;
+    console.error('Error fetching points data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch points data",
+      variant: "destructive",
+    });
+    return { type: 'FeatureCollection', features: [] };
   }
 };
 
@@ -112,18 +62,30 @@ export const fetchWeatherData = async (lat, lon) => {
       `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
     );
   } catch (error) {
-    handleApiError(error, 'weather-data');
+    console.error('API Error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch weather data",
+      variant: "destructive",
+    });
     return null;
   }
 };
 
-export const fetchRatData = async (locationId) => {
+export const fetchRatData = async () => {
   try {
-    return await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MN_DATA}${locationId ? `/${locationId}` : ''}`
-    );
+    const response = await fetch('/api/files/geojsonPaths/points');
+    if (!response.ok) {
+      throw new Error('Failed to fetch points data');
+    }
+    return await response.json();
   } catch (error) {
-    handleApiError(error, 'rat-data');
-    return MOCK_DATA.ratData;
+    console.error('Error fetching points data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch points data",
+      variant: "destructive",
+    });
+    return { type: 'FeatureCollection', features: [] };
   }
 };

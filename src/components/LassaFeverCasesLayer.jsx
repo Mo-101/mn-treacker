@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useQuery } from '@tanstack/react-query';
-import { fetchLassaFeverCases } from '../utils/api';
+import { fetchLassaFeverCases, fetchRatData } from '../utils/api';
 import { useToast } from './ui/use-toast';
 
 const LassaFeverCasesLayer = ({ map }) => {
@@ -9,67 +9,107 @@ const LassaFeverCasesLayer = ({ map }) => {
   const { data: cases } = useQuery({
     queryKey: ['lassaFeverCases'],
     queryFn: fetchLassaFeverCases,
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 300000,
+    retry: 1
+  });
+
+  const { data: ratLocations } = useQuery({
+    queryKey: ['ratLocations'],
+    queryFn: () => fetchRatData(),
+    staleTime: 300000,
     retry: 1
   });
 
   useEffect(() => {
-    if (!map || !cases?.features) return;
+    if (!map) return;
 
-    // Create custom marker element
-    const createMarkerElement = (severity) => {
-      const el = document.createElement('div');
-      el.className = 'case-marker';
-      
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.setAttribute('width', severity === 'high' ? '32' : severity === 'medium' ? '24' : '20');
-      svg.setAttribute('height', severity === 'high' ? '32' : severity === 'medium' ? '24' : '20');
-      svg.setAttribute('fill', 'none');
-      svg.setAttribute('stroke', severity === 'high' ? '#FF3B3B' : severity === 'medium' ? '#FF8C3B' : '#FFB03B');
-      svg.setAttribute('stroke-width', '2');
-      svg.setAttribute('stroke-linecap', 'round');
-      svg.setAttribute('stroke-linejoin', 'round');
-      
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M12 2a2 2 0 0 0-2 2 2 2 0 0 0 2 2c1.1 0 2-.9 2-2s-.9-2-2-2zm-1.5 7.5c1.5 0 3.5.5 3.5 1.5v4.5h-2v6h-3v-6H7V11c0-1 2-1.5 3.5-1.5z');
-      svg.appendChild(path);
-      el.appendChild(svg);
-      
-      el.style.filter = 'drop-shadow(0 0 4px rgba(255, 59, 59, 0.5))';
-      
-      return el;
-    };
+    // Remove existing layers and sources
+    ['lassa-cases', 'rat-locations'].forEach(layerId => {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+      if (map.getSource(layerId)) map.removeSource(layerId);
+    });
 
-    // Add markers for each case
-    const markers = cases.features.map(caseData => {
-      const marker = new mapboxgl.Marker({
-        element: createMarkerElement(caseData.properties.severity),
-        anchor: 'bottom'
-      })
-        .setLngLat(caseData.geometry.coordinates)
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`
-              <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
-                <h3 class="text-red-400 font-bold mb-2">Confirmed Case</h3>
-                <div class="space-y-1 text-white">
-                  <p><span class="text-red-400">Severity:</span> ${caseData.properties.severity}</p>
-                  <p><span class="text-red-400">Date:</span> ${new Date(caseData.properties.date).toLocaleDateString()}</p>
-                  <p><span class="text-red-400">Location:</span> ${caseData.properties.location}</p>
-                </div>
+    // Add Lassa fever cases
+    if (cases?.features) {
+      map.addSource('lassa-cases', {
+        type: 'geojson',
+        data: cases
+      });
+
+      map.addLayer({
+        id: 'lassa-cases',
+        type: 'circle',
+        source: 'lassa-cases',
+        paint: {
+          'circle-radius': 8,
+          'circle-color': '#FF3B3B',
+          'circle-opacity': 0.9,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FFFFFF'
+        }
+      });
+    }
+
+    // Add rat locations
+    if (ratLocations?.features) {
+      map.addSource('rat-locations', {
+        type: 'geojson',
+        data: ratLocations
+      });
+
+      map.addLayer({
+        id: 'rat-locations',
+        type: 'circle',
+        source: 'rat-locations',
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#FFD700',
+          'circle-opacity': 0.9,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FFFFFF'
+        }
+      });
+    }
+
+    // Add popups for both layers
+    ['lassa-cases', 'rat-locations'].forEach(layerId => {
+      map.on('click', layerId, (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const properties = e.features[0].properties;
+        
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
+              <h3 class="text-amber-400 font-bold mb-2">
+                ${layerId === 'lassa-cases' ? 'Lassa Fever Case' : 'Rat Sighting'}
+              </h3>
+              <div class="space-y-1 text-white">
+                ${Object.entries(properties)
+                  .map(([key, value]) => `<p><span class="text-amber-400">${key}:</span> ${value}</p>`)
+                  .join('')}
               </div>
-            `)
-        )
-        .addTo(map);
+            </div>
+          `)
+          .addTo(map);
+      });
 
-      return marker;
+      map.on('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+      });
     });
 
     return () => {
-      markers.forEach(marker => marker.remove());
+      ['lassa-cases', 'rat-locations'].forEach(layerId => {
+        if (map.getLayer(layerId)) map.removeLayer(layerId);
+        if (map.getSource(layerId)) map.removeSource(layerId);
+      });
     };
-  }, [map, cases]);
+  }, [map, cases, ratLocations]);
 
   return null;
 };

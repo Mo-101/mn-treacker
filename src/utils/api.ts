@@ -1,19 +1,11 @@
 import axios from 'axios';
 import { toast } from '../components/ui/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 // API Base URL from environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
-// API Endpoints
-const ENDPOINTS = {
-  UPLOAD_DATASET: `${API_BASE_URL}/upload-dataset`,
-  TRAINING_PROGRESS: `${API_BASE_URL}/training-progress`,
-  RAT_LOCATIONS: `${API_BASE_URL}/rat-locations`,
-  CASES: `${API_BASE_URL}/cases`,
-  WEATHER_DATA: `${API_BASE_URL}/weather-data`,
-} as const;
-
-// Type definitions for API responses
+// Type definitions
 interface TrainingProgress {
   progress: number;
   is_training: boolean;
@@ -25,25 +17,27 @@ interface TrainingProgress {
   };
 }
 
-interface GeoJSONResponse {
-  type: 'FeatureCollection';
-  features: Array<{
-    type: 'Feature';
-    geometry: {
-      type: 'Point';
-      coordinates: [number, number];
-    };
-    properties: Record<string, any>;
-  }>;
+interface GeoJSONFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: Record<string, any>;
 }
 
-// API Functions
+interface GeoJSONResponse {
+  type: 'FeatureCollection';
+  features: GeoJSONFeature[];
+}
+
+// Upload dataset function
 export const uploadDataset = async (file: File): Promise<void> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await axios.post(ENDPOINTS.UPLOAD_DATASET, formData, {
+    const response = await axios.post(`${API_BASE_URL}/upload-dataset`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -66,82 +60,50 @@ export const uploadDataset = async (file: File): Promise<void> => {
   }
 };
 
-export const fetchTrainingProgress = async (): Promise<TrainingProgress> => {
-  try {
-    const response = await axios.get(ENDPOINTS.TRAINING_PROGRESS);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching training progress:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch training progress.",
-      variant: "destructive",
-    });
-    throw error;
-  }
-};
-
-export const fetchRatLocations = async (): Promise<GeoJSONResponse> => {
-  try {
-    const response = await axios.get(ENDPOINTS.RAT_LOCATIONS);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching rat locations:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch rat locations.",
-      variant: "destructive",
-    });
-    return { type: 'FeatureCollection', features: [] };
-  }
-};
-
-export const fetchLassaFeverCases = async (): Promise<GeoJSONResponse> => {
-  try {
-    const response = await axios.get(ENDPOINTS.CASES);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching Lassa fever cases:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch Lassa fever cases.",
-      variant: "destructive",
-    });
-    return { type: 'FeatureCollection', features: [] };
-  }
-};
-
-export const fetchWeatherData = async (lat: number, lon: number): Promise<any> => {
-  try {
-    const response = await axios.get(
-      `${ENDPOINTS.WEATHER_DATA}?lat=${lat}&lon=${lon}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch weather data.",
-      variant: "destructive",
-    });
-    throw error;
-  }
-};
-
-// Custom hook for polling training progress
+// Custom hooks for data fetching using React Query
 export const useTrainingProgress = () => {
-  const { data, error, isLoading } = useQuery({
+  return useQuery({
     queryKey: ['trainingProgress'],
-    queryFn: fetchTrainingProgress,
+    queryFn: async (): Promise<TrainingProgress> => {
+      const response = await axios.get(`${API_BASE_URL}/training-progress`);
+      return response.data;
+    },
     refetchInterval: 5000, // Poll every 5 seconds
     refetchIntervalInBackground: false,
   });
+};
 
-  return {
-    progress: data?.progress ?? 0,
-    isTraining: data?.is_training ?? false,
-    metrics: data?.metrics ?? {},
-    error,
-    isLoading,
-  };
+export const useRatLocations = () => {
+  return useQuery({
+    queryKey: ['ratLocations'],
+    queryFn: async (): Promise<GeoJSONResponse> => {
+      const response = await axios.get(`${API_BASE_URL}/rat-locations`);
+      return response.data;
+    },
+    staleTime: 60000, // Consider data fresh for 1 minute
+  });
+};
+
+export const useLassaFeverCases = () => {
+  return useQuery({
+    queryKey: ['lassaFeverCases'],
+    queryFn: async (): Promise<GeoJSONResponse> => {
+      const response = await axios.get(`${API_BASE_URL}/cases`);
+      return response.data;
+    },
+    staleTime: 300000, // Consider data fresh for 5 minutes
+  });
+};
+
+export const useWeatherData = (lat: number, lon: number) => {
+  return useQuery({
+    queryKey: ['weatherData', lat, lon],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${API_BASE_URL}/weather-data?lat=${lat}&lon=${lon}`
+      );
+      return response.data;
+    },
+    staleTime: 300000, // Consider data fresh for 5 minutes
+  });
 };

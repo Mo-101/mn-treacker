@@ -5,7 +5,8 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
 import { toast } from './ui/use-toast';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +18,6 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: "Success",

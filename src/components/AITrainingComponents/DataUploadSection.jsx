@@ -14,7 +14,9 @@ const DataUploadSection = ({ onUploadComplete }) => {
       setUploadProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          onUploadComplete();
+          if (onUploadComplete) {
+            onUploadComplete();
+          }
           return 100;
         }
         return prev + 10;

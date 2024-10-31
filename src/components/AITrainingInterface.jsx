@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
+import { useToast } from './ui/use-toast';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
 import DataUploadSection from './AITrainingComponents/DataUploadSection';
 import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
@@ -11,7 +12,7 @@ import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
 
-const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
+const AITrainingInterface = ({ isOpen, onClose }) => {
   const [activeSection, setActiveSection] = useState('upload');
   const [showHelp, setShowHelp] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
@@ -21,6 +22,8 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [knowledgeLevel, setKnowledgeLevel] = useState(0);
+  const [consoleLog, setConsoleLog] = useState([]);
+  const { toast } = useToast();
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -48,7 +51,11 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTraining, addToConsoleLog]);
+  }, [isTraining]);
+
+  const addToConsoleLog = (message) => {
+    setConsoleLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
 
   const handleStartTraining = async () => {
     try {
@@ -57,7 +64,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
         setIsTraining(true);
         setTrainingProgress(0);
         setElapsedTime(0);
-        setTimeLeft(100); // Assuming 100 seconds for training
+        setTimeLeft(100);
         setTrainingActivities([]);
         setKnowledgeLevel(0);
         addToConsoleLog('Training started');
@@ -73,6 +80,10 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const handleDataUpload = () => {
     setDataUploaded(true);
     addToConsoleLog('Data uploaded successfully');
+    toast({
+      title: "Success",
+      description: "Data uploaded successfully",
+    });
   };
 
   return (
@@ -136,7 +147,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
                 exit={{ opacity: 0 }}
               >
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
-                {/* Add settings controls here */}
               </motion.div>
             )}
           </AnimatePresence>
@@ -171,7 +181,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
 };
 
 export default AITrainingInterface;

@@ -11,13 +11,16 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID?.replace(',', '') || ''
 };
 
-// Initialize Firebase with error handling
+let app;
+let auth;
+
 try {
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  export { auth };
-  export default app;
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
 } catch (error) {
   console.error('Error initializing Firebase:', error);
   throw error;
 }
+
+export { auth };
+export default app;

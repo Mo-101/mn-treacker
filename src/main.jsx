@@ -1,10 +1,13 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
-import "./index.css";
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { setupConnectivityListeners } from './utils/errorHandling';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+// Setup connectivity listeners
+setupConnectivityListeners();
+
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>

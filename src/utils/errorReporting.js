@@ -2,16 +2,24 @@ const extractRequestInfo = (request) => {
   if (!request) return null;
   
   try {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: Object.fromEntries(
-        Array.from(request.headers.entries()).filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        })
-      )
-    };
+    if (request instanceof Request) {
+      return {
+        url: request.url,
+        method: request.method,
+        // Only include safe headers
+        headers: Object.fromEntries(
+          Array.from(request.headers.entries()).filter(([key]) => {
+            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            return safeHeaders.includes(key.toLowerCase());
+          })
+        )
+      };
+    }
+    // If it's a string URL
+    if (typeof request === 'string') {
+      return { url: request };
+    }
+    return null;
   } catch (err) {
     console.warn('Error extracting request info:', err);
     return null;

@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { hybridMapStyle } from '../../config/mapStyle';
 import { useToast } from '../ui/use-toast';
 
-// Ensure token is set globally
+// Initialize mapboxgl access token
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 }

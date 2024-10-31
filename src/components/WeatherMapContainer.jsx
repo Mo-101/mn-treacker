@@ -7,6 +7,11 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import { addCustomLayers } from '../utils/mapLayers';
 import { hybridMapStyle } from '../config/mapStyle';
 
+// Initialize mapboxgl access token
+if (!mapboxgl.accessToken) {
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+}
+
 export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, detections }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);

@@ -2,7 +2,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from '../components/ui/use-toast';
 
-// Set the access token globally for mapbox-gl
+// Initialize mapboxgl access token
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 }

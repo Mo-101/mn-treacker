@@ -2,36 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { toast } from '../components/ui/use-toast';
 
-// Validate required Firebase config variables
-const requiredConfig = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_STORAGE_BUCKET',
-  'VITE_FIREBASE_MESSAGING_SENDER_ID',
-  'VITE_FIREBASE_APP_ID'
-];
-
-const missingVars = requiredConfig.filter(key => !import.meta.env[key]);
-
-if (missingVars.length > 0) {
-  console.error('Missing Firebase configuration variables:', missingVars);
-  toast({
-    title: "Configuration Error",
-    description: "Firebase configuration is incomplete. Please check your environment variables.",
-    variant: "destructive",
-  });
-  throw new Error('Missing Firebase configuration');
-}
-
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyDOUulXTSBdX_2nlho7XPvEmfdLAAzEVFs",
+  authDomain: "mntrk-fcd2b.firebaseapp.com",
+  projectId: "mntrk-fcd2b",
+  storageBucket: "mntrk-fcd2b.firebasestorage.app",
+  messagingSenderId: "1085269350728",
+  appId: "1:1085269350728:web:b0d91829b50518348bfb7d",
+  measurementId: "G-CSTKQGTRZ1"
 };
 
 let app;

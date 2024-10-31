@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { fetchRatData, fetchLassaFeverCases } from '../utils/api';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -15,7 +17,7 @@ import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
-import { toggleLayer, setLayerOpacity, updateDetectionData, updatePredictionData } from '../utils/mapLayers';
+import { toggleLayer, setLayerOpacity } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -33,6 +35,19 @@ const WeatherMap = () => {
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
+
+  // Fetch data using React Query
+  const { data: ratData, isLoading: ratLoading } = useQuery({
+    queryKey: ['rat-data'],
+    queryFn: fetchRatData,
+    staleTime: 300000, // 5 minutes
+  });
+
+  const { data: lassaData, isLoading: lassaLoading } = useQuery({
+    queryKey: ['lassa-cases'],
+    queryFn: fetchLassaFeverCases,
+    staleTime: 300000, // 5 minutes
+  });
 
   const handleLayerToggle = (layerId) => {
     if (map.current) {
@@ -73,6 +88,14 @@ const WeatherMap = () => {
       }
     };
   }, []);
+
+  if (ratLoading || lassaLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-yellow-400 text-xl">Loading map data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
@@ -135,8 +158,8 @@ const WeatherMap = () => {
 
       {map.current && (
         <>
-          <DetectionSpotLayer map={map.current} />
-          <LassaFeverCasesLayer map={map.current} />
+          <DetectionSpotLayer map={map.current} detections={ratData?.features || []} />
+          <LassaFeverCasesLayer map={map.current} cases={lassaData?.features || []} />
         </>
       )}
     </div>

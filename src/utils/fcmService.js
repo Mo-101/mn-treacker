@@ -1,10 +1,12 @@
 import { getMessaging, getToken } from 'firebase/messaging';
 import { app } from '../config/firebase';
 import { toast } from '../components/ui/use-toast';
+import axios from 'axios';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 const FCM_ENDPOINT = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+const MAX_RETRIES = 3;
 
 export const initializeFCM = async () => {
   try {
@@ -15,7 +17,11 @@ export const initializeFCM = async () => {
       console.log('FCM token:', currentToken);
       return currentToken;
     } else {
-      console.log('No registration token available');
+      toast({
+        title: "FCM Warning",
+        description: "No registration token available. Push notifications may not work.",
+        variant: "warning",
+      });
       return null;
     }
   } catch (error) {
@@ -29,56 +35,61 @@ export const initializeFCM = async () => {
   }
 };
 
-export const sendFCMMessage = async (message) => {
+export const sendFCMMessage = async (message, retryCount = 0) => {
   try {
     const accessToken = await getAccessToken();
     
-    const response = await fetch(FCM_ENDPOINT, {
-      method: 'POST',
+    const response = await axios.post(FCM_ENDPOINT, {
+      message: {
+        notification: {
+          title: message.title,
+          body: message.body,
+        },
+        data: message.data,
+        token: message.token,
+        android: {
+          notification: {
+            clickAction: 'OPEN_ACTIVITY',
+          }
+        },
+        apns: {
+          payload: {
+            aps: {
+              category: 'NEW_MESSAGE_CATEGORY',
+            }
+          }
+        },
+        webpush: {
+          notification: {
+            icon: '/favicon.ico',
+          }
+        }
+      }
+    }, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: {
-          notification: {
-            title: message.title,
-            body: message.body,
-          },
-          data: message.data,
-          token: message.token, // for single device
-          // topic: message.topic, // for topic messaging
-          android: {
-            notification: {
-              clickAction: 'OPEN_ACTIVITY',
-            }
-          },
-          apns: {
-            payload: {
-              aps: {
-                category: 'NEW_MESSAGE_CATEGORY',
-              }
-            }
-          },
-          webpush: {
-            notification: {
-              icon: '/favicon.ico',
-            }
-          }
-        }
-      })
+      }
     });
 
-    if (!response.ok) {
-      throw new Error(`FCM send failed: ${response.statusText}`);
-    }
+    toast({
+      title: "Success",
+      description: "Push notification sent successfully",
+    });
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Error sending FCM message:', error);
+    
+    if (retryCount < MAX_RETRIES && error.response?.status >= 500) {
+      // Retry on server errors
+      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+      return sendFCMMessage(message, retryCount + 1);
+    }
+
     toast({
       title: "Message Error",
-      description: "Failed to send push notification",
+      description: error.response?.data?.error || "Failed to send push notification",
       variant: "destructive",
     });
     throw error;
@@ -87,21 +98,15 @@ export const sendFCMMessage = async (message) => {
 
 const getAccessToken = async () => {
   try {
-    const response = await fetch('/api/fcm-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to get FCM access token');
-    }
-    
-    const { accessToken } = await response.json();
-    return accessToken;
+    const response = await axios.post('/api/fcm-token');
+    return response.data.accessToken;
   } catch (error) {
     console.error('Error getting access token:', error);
+    toast({
+      title: "Authentication Error",
+      description: "Failed to get access token for FCM",
+      variant: "destructive",
+    });
     throw error;
   }
 };

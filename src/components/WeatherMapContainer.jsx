@@ -5,6 +5,7 @@ import { useToast } from './ui/use-toast';
 import DetectionSpotLayer from './DetectionSpotLayer';
 import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import { addCustomLayers } from '../utils/mapLayers';
+import { hybridMapStyle } from '../config/mapStyle';
 
 export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, detections }) => {
   const mapContainer = useRef(null);
@@ -28,17 +29,20 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
         pitch: 45,
         bearing: 0,
-        antialias: true
+        antialias: true,
+        maxZoom: 20,
+        preserveDrawingBuffer: true
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.current.on('load', async () => {
+        // Add terrain source
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -46,8 +50,10 @@ export const WeatherMapContainer = ({ mapState, activeLayers, layerOpacity, dete
           maxzoom: 14
         });
 
+        // Add 3D terrain
         map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
 
+        // Add atmospheric sky layer
         map.current.addLayer({
           id: 'sky',
           type: 'sky',

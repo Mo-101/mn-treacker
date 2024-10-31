@@ -1,27 +1,25 @@
 export const hybridMapStyle = {
     "version": 8,
     "name": "Enhanced Hybrid Style",
-    "pitch": 0,
+    "pitch": 45,
     "light": {
-        "intensity": 0.35,
+        "intensity": 0.5,
         "color": "#fff",
         "anchor": "viewport",
         "position": [1.5, 90, 80]
     },
     "sources": {
-        "GoogleSatellite_0": {
+        "satellite": {
             "type": "raster",
-            "tiles": ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
+            "tiles": ["https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=" + mapboxgl.accessToken],
             "tileSize": 256,
-            "maxzoom": 20,
-            "attribution": "Imagery © Google"
+            "maxzoom": 22
         },
-        "GoogleHybrid_1": {
-            "type": "raster",
-            "tiles": ["https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"],
-            "tileSize": 256,
-            "maxzoom": 20,
-            "attribution": "Imagery © Google"
+        "terrain": {
+            "type": "raster-dem",
+            "url": "mapbox://mapbox.mapbox-terrain-dem-v1",
+            "tileSize": 512,
+            "maxzoom": 14
         }
     },
     "sprite": "mapbox://sprites/mapbox/satellite-streets-v12",
@@ -37,27 +35,19 @@ export const hybridMapStyle = {
         {
             "id": "satellite",
             "type": "raster",
-            "source": "GoogleSatellite_0",
+            "source": "satellite",
             "paint": {
                 "raster-opacity": 1,
-                "raster-contrast": 0.1,
+                "raster-contrast": 0.2,
                 "raster-brightness-min": 0.2,
                 "raster-brightness-max": 1,
-                "raster-saturation": 0.2,
+                "raster-saturation": 0.4,
                 "raster-hue-rotate": 0
             }
-        },
-        {
-            "id": "hybrid",
-            "type": "raster",
-            "source": "GoogleHybrid_1",
-            "paint": {
-                "raster-opacity": 0.9,
-                "raster-contrast": 0.2,
-                "raster-brightness-min": 0.1,
-                "raster-brightness-max": 1,
-                "raster-saturation": 0.3
-            }
         }
-    ]
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1.5
+    }
 };

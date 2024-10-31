@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request, Response
-from ..utils.validators import validate_data_file, acknowledge_connection
-from ..services.data_service import stream_file, handle_upload
-from ..services.training_service import train_model, get_training_status
+from flask import Blueprint, jsonify, request
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+import os
 
 api = Blueprint('api', __name__)
 
@@ -48,3 +48,19 @@ def upload_dataset():
     if request.method == 'OPTIONS':
         return jsonify({"status": "ok"}), 200
     return handle_upload(request)
+
+@api.route('/fcm-token', methods=['POST'])
+def get_fcm_token():
+    try:
+        credentials = service_account.Credentials.from_service_account_file(
+            'service-account.json',
+            scopes=['https://www.googleapis.com/auth/firebase.messaging']
+        )
+        
+        credentials.refresh(Request())
+        return jsonify({
+            'accessToken': credentials.token,
+            'expiry': credentials.expiry.isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

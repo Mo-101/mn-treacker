@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aerisweather/javascript-sdk": "^1.8.6",
+    "@firebase/messaging": "^0.12.13",
     "@floating-ui/react": "^0.26.9",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -52,6 +53,7 @@
     "embla-carousel-react": "^8.1.5",
     "firebase": "^11.0.1",
     "framer-motion": "^11.3.9",
+    "google-auth-library": "^9.14.2",
     "html-to-image": "^1.11.11",
     "input-otp": "^1.2.4",
     "leaflet": "^1.9.4",

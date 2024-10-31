@@ -42,6 +42,15 @@ const MOCK_DATA = {
       { area: 'Forest', suitability: 80 },
       { area: 'Urban', suitability: 30 }
     ]
+  },
+  ratData: {
+    trends: [
+      { name: 'Week 1', value: 30 },
+      { name: 'Week 2', value: 45 },
+      { name: 'Week 3', value: 35 },
+      { name: 'Week 4', value: 60 },
+      { name: 'Week 5', value: 40 }
+    ]
   }
 };
 
@@ -105,5 +114,16 @@ export const fetchWeatherData = async (lat, lon) => {
   } catch (error) {
     handleApiError(error, 'weather-data');
     return null;
+  }
+};
+
+export const fetchRatData = async (locationId) => {
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MN_DATA}${locationId ? `/${locationId}` : ''}`
+    );
+  } catch (error) {
+    handleApiError(error, 'rat-data');
+    return MOCK_DATA.ratData;
   }
 };

@@ -37,7 +37,6 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
-  // Fetch data using React Query
   const { data: ratData, isLoading: ratLoading } = useQuery({
     queryKey: ['rat-data'],
     queryFn: fetchRatData,
@@ -100,26 +99,10 @@ const WeatherMap = () => {
     };
   }, []);
 
-  if (ratLoading || lassaLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-yellow-400 text-xl">Loading map data...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
-      <MapInitializer 
-        map={map}
-        mapContainer={mapContainer}
-        mapState={mapState}
-      />
-
-      {map.current && <WindGLLayer map={map.current} />}
-
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
@@ -171,6 +154,7 @@ const WeatherMap = () => {
         <>
           <DetectionSpotLayer map={map.current} detections={ratData?.features || []} />
           <LassaFeverCasesLayer map={map.current} cases={lassaData?.features || []} />
+          <WindGLLayer map={map.current} />
         </>
       )}
     </div>

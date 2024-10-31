@@ -42,7 +42,7 @@ export const reportError = (error, context = {}) => {
     }
 
     // Only send safe, cloneable data
-    window.parent.postMessage(errorReport, '*');
+    window.parent.postMessage(JSON.parse(JSON.stringify(errorReport)), '*');
   } catch (err) {
     console.warn('Error reporting failed:', err);
   }

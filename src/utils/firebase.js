@@ -1,15 +1,25 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { toast } from '../components/ui/use-toast';
-import app from '../config/firebase';
 
 let db;
 
 try {
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'demo-key',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'demo-project',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'demo.appspot.com',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef',
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  };
+
+  const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   
-  // Enable offline persistence
-  enableIndexedDbPersistence(db).catch((err) => {
+  // Enable offline persistence with forceOwnership to prevent reader lock
+  enableIndexedDbPersistence(db, { forceOwnership: true }).catch((err) => {
     if (err.code === 'failed-precondition') {
       toast({
         title: "Offline mode unavailable",

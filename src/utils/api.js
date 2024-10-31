@@ -1,15 +1,16 @@
 import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
+// Mock data for when API calls fail
 const MOCK_DATA = {
-  historicalCases: {
+  lassaFeverCases: {
     type: 'FeatureCollection',
     features: [
       {
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [8.6753, 9.0820] // Nigeria coordinates
+          coordinates: [8.6753, 9.0820]
         },
         properties: {
           severity: 'high',
@@ -21,7 +22,7 @@ const MOCK_DATA = {
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [7.4898, 9.0579] // Abuja coordinates
+          coordinates: [7.4898, 9.0579]
         },
         properties: {
           severity: 'medium',
@@ -30,68 +31,79 @@ const MOCK_DATA = {
         }
       }
     ]
+  },
+  environmentalData: {
+    populationTrend: [
+      { name: 'Jan', value: 4000 },
+      { name: 'Feb', value: 3000 },
+      { name: 'Mar', value: 2000 }
+    ],
+    habitatSuitability: [
+      { area: 'Forest', suitability: 80 },
+      { area: 'Urban', suitability: 30 }
+    ]
   }
 };
 
-const fetchWithErrorHandling = async (url, options = {}) => {
+const handleApiError = (error, endpoint) => {
+  console.warn(`API Error (${endpoint}):`, error);
+  toast({
+    title: "Using Demo Data",
+    description: "Live data unavailable. Using sample data for demonstration.",
+    variant: "warning",
+  });
+};
+
+const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
+      signal: controller.signal,
     });
+    clearTimeout(id);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
     return await response.json();
   } catch (error) {
-    console.warn('API Error:', error);
-    // Return mock data for specific endpoints
-    if (url.includes('historicalCases') || url.includes('csvPaths')) {
-      toast({
-        title: "Using Demo Data",
-        description: "Live data unavailable. Using sample data for demonstration.",
-        variant: "warning",
-      });
-      return MOCK_DATA.historicalCases;
-    }
+    clearTimeout(id);
     throw error;
   }
 };
 
 export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
-  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}/api/environmental-data?timeframe=${timeframe}`);
-};
-
-export const fetchRatData = async (locationId) => {
-  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MN_DATA}${locationId ? `/${locationId}` : ''}`);
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}/api/environmental-data?timeframe=${timeframe}`
+    );
+  } catch (error) {
+    handleApiError(error, 'environmental-data');
+    return MOCK_DATA.environmentalData;
+  }
 };
 
 export const fetchLassaFeverCases = async () => {
-  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.HISTORICAL_CASES}`);
-};
-
-export const fetchWindData = async (timestamp) => {
-  const baseEndpoint = API_CONFIG.ENDPOINTS.WIND_DATA[timestamp];
-  if (!baseEndpoint) {
-    throw new Error(`Invalid timestamp: ${timestamp}`);
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.HISTORICAL_CASES}`
+    );
+  } catch (error) {
+    handleApiError(error, 'lassa-fever-cases');
+    return MOCK_DATA.lassaFeverCases;
   }
-  
-  const [jsonData, imageBlob] = await Promise.all([
-    fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${baseEndpoint}.json`),
-    fetch(`${API_CONFIG.BASE_URL}${baseEndpoint}.png`).then(res => res.blob())
-  ]);
-
-  return {
-    data: jsonData,
-    image: URL.createObjectURL(imageBlob)
-  };
 };
 
 export const fetchWeatherData = async (lat, lon) => {
-  return fetchWithErrorHandling(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`);
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
+    );
+  } catch (error) {
+    handleApiError(error, 'weather-data');
+    return null;
+  }
 };

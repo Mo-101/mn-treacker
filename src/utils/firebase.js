@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 import { toast } from '../components/ui/use-toast';
 
 let db;
@@ -18,8 +18,16 @@ try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   
-  // Enable offline persistence with forceOwnership to prevent reader lock
-  enableIndexedDbPersistence(db, { forceOwnership: true }).catch((err) => {
+  // Configure Firestore settings
+  db.settings({
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+  });
+  
+  // Enable offline persistence with custom settings
+  enableIndexedDbPersistence(db, {
+    synchronizeTabs: true,
+    experimentalForceOwningTab: true
+  }).catch((err) => {
     if (err.code === 'failed-precondition') {
       toast({
         title: "Offline mode unavailable",

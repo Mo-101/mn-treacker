@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { fetchRatData, fetchLassaFeverCases } from '../utils/api';
+import { initializeMap, addMapControls } from '../utils/mapInitialization';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -15,11 +16,11 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
-import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
 import { toggleLayer, setLayerOpacity } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
+// Initialize mapboxgl access token
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 }
@@ -69,22 +70,32 @@ const WeatherMap = () => {
   };
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!mapContainer.current || map.current) return;
 
-    const updateMapState = () => {
-      const center = map.current.getCenter();
-      setMapState({
-        lng: center.lng.toFixed(4),
-        lat: center.lat.toFixed(4),
-        zoom: map.current.getZoom().toFixed(2)
+    try {
+      map.current = initializeMap(mapContainer.current, mapState);
+      addMapControls(map.current);
+
+      map.current.on('load', () => {
+        toast({
+          title: "Map Initialized",
+          description: "Map loaded successfully",
+        });
       });
-    };
 
-    map.current.on('move', updateMapState);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your configuration.",
+        variant: "destructive",
+      });
+    }
 
     return () => {
       if (map.current) {
-        map.current.off('move', updateMapState);
+        map.current.remove();
+        map.current = null;
       }
     };
   }, []);

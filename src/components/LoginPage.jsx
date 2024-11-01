@@ -1,67 +1,117 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rat, Info } from 'lucide-react';
+import { Rat, PawPrint, Lock, Mail } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
-import { useAuth } from '../contexts/AuthContext';
-import { Alert, AlertDescription } from './ui/alert';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
+import { toast } from './ui/use-toast';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password123');
-  const { signIn, loading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    await signIn(email, password);
+    setIsLoading(true);
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: "Success",
+        description: "Welcome back!",
+        variant: "success"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center min-h-screen bg-gray-100"
-    >
-      <Card className="max-w-sm w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold flex items-center">
-            <Rat className="mr-2" /> Demo Login
-          </CardTitle>
-          <CardDescription className="text-sm">Sign in with demo credentials</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-          
-          <Alert className="mt-4">
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Demo credentials:<br />
-              Email: user@example.com<br />
-              Password: password123
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-black flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <Card className="w-[380px] bg-black/50 backdrop-blur-xl border-purple-500/20">
+          <CardHeader className="space-y-1 flex flex-col items-center">
+            <motion.div
+              animate={{
+                rotateY: [0, 360],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+              className="mb-4"
+            >
+              <Rat className="h-16 w-16 text-purple-400" />
+            </motion.div>
+            <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
+            <CardDescription className="text-purple-200">
+              Enter your credentials to access the system
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-5 w-5 text-purple-400" />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-black/30 border-purple-500/30 text-white placeholder:text-purple-300/50"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-5 w-5 text-purple-400" />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 bg-black/30 border-purple-500/30 text-white placeholder:text-purple-300/50"
+                    required
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <PawPrint className="h-5 w-5" />
+                  </motion.div>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

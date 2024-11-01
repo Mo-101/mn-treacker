@@ -9,17 +9,13 @@ const DetectionSpotLayer = ({ map, detections }) => {
     if (!map || !detections) return;
 
     const addLayers = () => {
-      try {
-        // Remove existing layers if they exist
-        ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
-          if (map.getStyle() && map.getLayer(layerId)) {
-            map.removeLayer(layerId);
-          }
-        });
-        if (map.getStyle() && map.getSource('detection-points')) {
-          map.removeSource('detection-points');
-        }
+      // Remove existing layers if they exist
+      ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
+        if (map.getLayer(layerId)) map.removeLayer(layerId);
+      });
+      if (map.getSource('detection-points')) map.removeSource('detection-points');
 
+      try {
         // Add the detection points source
         map.addSource('detection-points', {
           type: 'geojson',
@@ -79,26 +75,26 @@ const DetectionSpotLayer = ({ map, detections }) => {
           }
         });
       } catch (error) {
-        console.error('Error adding detection layers:', error);
+        toast({
+          title: "Layer Error",
+          description: "Failed to add detection layers. Will retry when map is ready.",
+          variant: "warning"
+        });
       }
     };
 
-    if (!map.loaded()) {
-      map.once('load', addLayers);
-    } else {
+    // Wait for style to load before adding layers
+    if (map.isStyleLoaded()) {
       addLayers();
+    } else {
+      map.once('style.load', addLayers);
     }
 
     return () => {
-      if (!map.getStyle()) return;
       ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
-        if (map.getLayer(layerId)) {
-          map.removeLayer(layerId);
-        }
+        if (map.getLayer(layerId)) map.removeLayer(layerId);
       });
-      if (map.getSource('detection-points')) {
-        map.removeSource('detection-points');
-      }
+      if (map.getSource('detection-points')) map.removeSource('detection-points');
     };
   }, [map, detections]);
 

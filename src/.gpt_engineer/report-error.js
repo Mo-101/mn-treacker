@@ -1,11 +1,14 @@
+// Function to safely extract data from a Request object
 const extractRequestData = (request) => {
   if (!request) return null;
   
   try {
+    // If it's a Request object
     if (request instanceof Request) {
       return {
         url: request.url,
         method: request.method,
+        // Only include safe headers
         headers: Object.fromEntries(
           Array.from(request.headers.entries()).filter(([key]) => {
             const safeHeaders = ['content-type', 'accept', 'content-length'];
@@ -14,6 +17,7 @@ const extractRequestData = (request) => {
         )
       };
     }
+    // If it's a string URL
     if (typeof request === 'string') {
       return { url: request };
     }
@@ -24,6 +28,7 @@ const extractRequestData = (request) => {
   }
 };
 
+// Safe postMessage function
 const postMessage = (message) => {
   try {
     const safeMessage = {
@@ -40,9 +45,9 @@ const postMessage = (message) => {
     }
 
     if (message.request) {
-      const requestData = extractRequestData(message.request);
-      if (requestData) {
-        safeMessage.request = JSON.parse(JSON.stringify(requestData));
+      const safeRequest = extractRequestData(message.request);
+      if (safeRequest) {
+        safeMessage.request = safeRequest;
       }
     }
 
@@ -59,6 +64,7 @@ const postMessage = (message) => {
   }
 };
 
+// Function to report HTTP errors
 const reportHTTPError = (error) => {
   try {
     const errorDetails = {

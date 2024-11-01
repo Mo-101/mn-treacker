@@ -37,32 +37,34 @@ const FirebaseTest = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Firebase Authentication Test</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center font-bold">Login</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <div className="flex space-x-2">
+          <div className="space-y-2">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
             <Button onClick={handleSignIn} disabled={loading}>
               Sign In
             </Button>
             <Button onClick={handleSignUp} disabled={loading} variant="outline">
-              Sign Up
+              Create Account
             </Button>
-            <Button onClick={handleLogOut} disabled={loading} variant="destructive">
+            <Button onClick={handleLogOut} disabled={loading} variant="ghost">
               Log Out
             </Button>
           </div>

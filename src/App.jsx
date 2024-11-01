@@ -1,34 +1,27 @@
-import React, { useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import WeatherMap from './components/WeatherMap';
-import { Toaster } from './components/ui/toaster';
-import { initializeMapboxToken } from './utils/mapTokenManager';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { navItems } from "./nav-items";
+import React from 'react';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const App = () => {
-  useEffect(() => {
-    try {
-      initializeMapboxToken();
-    } catch (error) {
-      console.error('Failed to initialize Mapbox:', error);
-    }
-  }, []);
-
-  return (
+const App = () => (
+  <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <WeatherMap />
-      <Toaster />
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            {navItems.map(({ to, page }) => (
+              <Route key={to} path={to} element={page} />
+            ))}
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
-  );
-};
+  </React.StrictMode>
+);
 
 export default App;

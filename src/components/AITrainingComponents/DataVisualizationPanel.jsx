@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { hybridMapStyle } from '../../config/mapStyle';
 import { useToast } from '../ui/use-toast';
 
-// Initialize mapboxgl access token
+// Ensure token is set globally
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 }

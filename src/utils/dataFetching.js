@@ -1,51 +1,52 @@
 import { toast } from '../components/ui/use-toast';
-import { mockRatLocations, mockLassaCases } from './mockData';
 
 export const fetchRatData = async () => {
   try {
-    // First try to fetch from local files if available
-    const response = await fetch('/data/mastomys_natalensis_locations.geojson');
-    if (response.ok) {
-      const data = await response.json();
-      return data;
+    const response = await fetch('/api/rat-locations');
+    if (!response.ok) {
+      throw new Error('Failed to fetch rat data');
     }
-    
-    // If local file not found, use mock data
-    console.log('Using mock rat location data');
-    return mockRatLocations;
+    const data = await response.json();
+    console.log('Fetched rat data:', data);
+    return data;
   } catch (error) {
-    console.log('Using mock rat location data');
-    return mockRatLocations;
+    console.error('Error fetching rat data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch rat data. Please try again later.",
+      variant: "destructive",
+    });
+    return { type: 'FeatureCollection', features: [] };
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    // First try to fetch from local files if available
-    const response = await fetch('/data/lassa_fever_cases.geojson');
-    if (response.ok) {
-      const data = await response.json();
-      return data;
+    const response = await fetch('/api/cases');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Lassa Fever cases');
     }
-    
-    // If local file not found, use mock data
-    console.log('Using mock Lassa fever cases data');
-    return mockLassaCases;
+    return await response.json();
   } catch (error) {
-    console.log('Using mock Lassa fever cases data');
-    return mockLassaCases;
+    console.error('Error fetching Lassa Fever cases:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch Lassa Fever cases. Please try again later.",
+      variant: "destructive",
+    });
+    return [];
   }
 };
 
 export const fetchTrainingProgress = async () => {
-  return { progress: 75, is_training: false };
-};
-
-export const fetchWeatherData = async (lat, lon) => {
-  return {
-    temperature: 25,
-    humidity: 65,
-    windSpeed: 10,
-    precipitation: 0
-  };
+  try {
+    const response = await fetch('/api/training-progress');
+    if (!response.ok) {
+      throw new Error('Failed to fetch training progress');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching training progress:', error);
+    return { progress: 0, is_training: false };
+  }
 };

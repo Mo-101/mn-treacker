@@ -2,8 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { fetchRatData, fetchLassaFeverCases } from '../utils/api';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -15,8 +13,9 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
+import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
-import { toggleLayer, setLayerOpacity } from '../utils/mapLayers';
+import { toggleLayer, setLayerOpacity, updateDetectionData, updatePredictionData } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -33,88 +32,10 @@ const WeatherMap = () => {
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [layerOpacity, setLayerOpacity] = useState(80);
-  const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
 
-  const { data: ratData, isLoading: ratLoading } = useQuery({
-    queryKey: ['rat-data'],
-    queryFn: fetchRatData,
-    staleTime: 300000,
-  });
-
-  const { data: lassaData, isLoading: lassaLoading } = useQuery({
-    queryKey: ['lassa-cases'],
-    queryFn: fetchLassaFeverCases,
-    staleTime: 300000,
-  });
-
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-hybrid-v9', // Changed to hybrid satellite style
-        center: [mapState.lng, mapState.lat],
-        zoom: mapState.zoom,
-        pitch: 45,
-        bearing: 0,
-        antialias: true,
-        preserveDrawingBuffer: true
-      });
-
-      map.current.on('style.load', () => {
-        setMapLoaded(true);
-        toast({
-          title: "Map Initialized",
-          description: "Map and style loaded successfully",
-        });
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
-
-      // Add terrain and sky layers after style loads
-      map.current.on('style.load', () => {
-        map.current.addSource('mapbox-dem', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          tileSize: 512,
-          maxzoom: 14
-        });
-
-        map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-        map.current.addLayer({
-          id: 'sky',
-          type: 'sky',
-          paint: {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 90.0],
-            'sky-atmosphere-sun-intensity': 15
-          }
-        });
-      });
-
-    } catch (error) {
-      console.error('Error initializing map:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize map. Please check your configuration.",
-        variant: "destructive",
-      });
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
   const handleLayerToggle = (layerId) => {
-    if (map.current && mapLoaded) {
+    if (map.current) {
       const isActive = activeLayers.includes(layerId);
       toggleLayer(map.current, layerId, !isActive);
       setActiveLayers(prev => 
@@ -124,7 +45,7 @@ const WeatherMap = () => {
   };
 
   const handleOpacityChange = (opacity) => {
-    if (map.current && mapLoaded) {
+    if (map.current) {
       setLayerOpacity(opacity);
       activeLayers.forEach(layerId => {
         setLayerOpacity(map.current, layerId, opacity);
@@ -132,66 +53,90 @@ const WeatherMap = () => {
     }
   };
 
+  useEffect(() => {
+    if (!map.current) return;
+
+    const updateMapState = () => {
+      const center = map.current.getCenter();
+      setMapState({
+        lng: center.lng.toFixed(4),
+        lat: center.lat.toFixed(4),
+        zoom: map.current.getZoom().toFixed(2)
+      });
+    };
+
+    map.current.on('move', updateMapState);
+
+    return () => {
+      if (map.current) {
+        map.current.off('move', updateMapState);
+      }
+    };
+  }, []);
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
+      <MapInitializer 
+        map={map}
+        mapContainer={mapContainer}
+        mapState={mapState}
+      />
+
+      {map.current && <WindGLLayer map={map.current} />}
+
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
         onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
       />
 
-      {mapLoaded && (
-        <>
-          <SidePanels
-            leftPanelOpen={leftPanelOpen}
-            rightPanelOpen={rightPanelOpen}
-            setLeftPanelOpen={setLeftPanelOpen}
-            setRightPanelOpen={setRightPanelOpen}
-            activeLayers={activeLayers}
-            handleLayerToggle={handleLayerToggle}
-            handleOpacityChange={handleOpacityChange}
+      <SidePanels
+        leftPanelOpen={leftPanelOpen}
+        rightPanelOpen={rightPanelOpen}
+        setLeftPanelOpen={setLeftPanelOpen}
+        setRightPanelOpen={setRightPanelOpen}
+        activeLayers={activeLayers}
+        handleLayerToggle={handleLayerToggle}
+        handleOpacityChange={handleOpacityChange}
+      />
+
+      <AnimatePresence>
+        {predictionPanelOpen && (
+          <PredictionPanel
+            isOpen={predictionPanelOpen}
+            onClose={() => setPredictionPanelOpen(false)}
           />
+        )}
+      </AnimatePresence>
 
-          <AnimatePresence>
-            {predictionPanelOpen && (
-              <PredictionPanel
-                isOpen={predictionPanelOpen}
-                onClose={() => setPredictionPanelOpen(false)}
-              />
-            )}
-          </AnimatePresence>
+      <FloatingInsightsBar />
 
-          <FloatingInsightsBar />
+      <AnimatePresence>
+        {aiTrainingOpen && (
+          <AITrainingInterface
+            isOpen={aiTrainingOpen}
+            onClose={() => setAiTrainingOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-          <AnimatePresence>
-            {aiTrainingOpen && (
-              <AITrainingInterface
-                isOpen={aiTrainingOpen}
-                onClose={() => setAiTrainingOpen(false)}
-              />
-            )}
-          </AnimatePresence>
+      <div className="absolute bottom-4 left-4 z-10">
+        <WeatherControls
+          activeLayers={activeLayers}
+          onLayerToggle={handleLayerToggle}
+          layerOpacity={layerOpacity}
+          onOpacityChange={handleOpacityChange}
+        />
+      </div>
 
-          <div className="absolute bottom-4 left-4 z-10">
-            <WeatherControls
-              activeLayers={activeLayers}
-              onLayerToggle={handleLayerToggle}
-              layerOpacity={layerOpacity}
-              onOpacityChange={handleOpacityChange}
-            />
-          </div>
+      <MapLegend activeLayers={activeLayers} />
 
-          <MapLegend activeLayers={activeLayers} />
-
-          {map.current && (
-            <>
-              <DetectionSpotLayer map={map.current} detections={ratData?.features || []} />
-              <LassaFeverCasesLayer map={map.current} cases={lassaData?.features || []} />
-              <WindGLLayer map={map.current} />
-            </>
-          )}
+      {map.current && (
+        <>
+          <DetectionSpotLayer map={map.current} />
+          <LassaFeverCasesLayer map={map.current} />
         </>
       )}
     </div>

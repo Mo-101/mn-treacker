@@ -1,24 +1,91 @@
+import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
-import { mockRatLocations, mockLassaCases } from './mockData';
 
-export const fetchEnvironmentalData = async () => {
-  return {
-    populationTrend: [
-      { month: 'Jan', actual: 4000, predicted: 4400 },
-      { month: 'Feb', actual: 3000, predicted: 3200 },
-      { month: 'Mar', actual: 2000, predicted: 2400 },
-      { month: 'Apr', actual: 2780, predicted: 2900 },
-      { month: 'May', actual: 1890, predicted: 2100 },
-      { month: 'Jun', actual: 2390, predicted: 2500 }
-    ],
-    habitatSuitability: [
-      { area: 'Forest', suitability: 80 },
-      { area: 'Grassland', suitability: 65 },
-      { area: 'Urban', suitability: 30 },
-      { area: 'Wetland', suitability: 75 }
-    ]
-  };
+const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
 };
 
-export const fetchRatData = () => Promise.resolve(mockRatLocations);
-export const fetchLassaFeverCases = () => Promise.resolve(mockLassaCases);
+export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}/api/environmental-data?timeframe=${timeframe}`
+    );
+  } catch (error) {
+    console.error('API Error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch environmental data",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
+export const fetchLassaFeverCases = async () => {
+  try {
+    const response = await fetch('/api/files/geojsonPaths/points');
+    if (!response.ok) {
+      throw new Error('Failed to fetch points data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching points data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch points data",
+      variant: "destructive",
+    });
+    return { type: 'FeatureCollection', features: [] };
+  }
+};
+
+export const fetchWeatherData = async (lat, lon) => {
+  try {
+    return await fetchWithTimeout(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
+    );
+  } catch (error) {
+    console.error('API Error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch weather data",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
+export const fetchRatData = async () => {
+  try {
+    const response = await fetch('/api/files/geojsonPaths/points');
+    if (!response.ok) {
+      throw new Error('Failed to fetch points data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching points data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch points data",
+      variant: "destructive",
+    });
+    return { type: 'FeatureCollection', features: [] };
+  }
+};

@@ -30,7 +30,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [20, 0], // Centered on Africa
         zoom: 3.5,
-        pitch: 45,
+        pitch: 0,
         bearing: 0,
         antialias: true,
         maxZoom: 20,

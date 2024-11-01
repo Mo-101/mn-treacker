@@ -83,28 +83,4 @@ const reportHTTPError = (error) => {
   }
 };
 
-// Wrap fetch to handle errors without cloning the Request object
-const safeFetch = async (...args) => {
-  try {
-    const response = await fetch(...args);
-    if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
-      // Extract safe request data before reporting
-      const requestData = extractRequestData(args[0]);
-      reportHTTPError({
-        message: error.message,
-        request: requestData
-      });
-      throw error;
-    }
-    return response;
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-};
-
-// Replace global fetch with our safe version
-window.fetch = safeFetch;
-
 export { postMessage, reportHTTPError };

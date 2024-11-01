@@ -3,16 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signOut
 } from 'firebase/auth';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  query, 
-  where,
-  orderBy,
-  limit 
-} from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth } from '../config/firebase';
 import { toast } from '../components/ui/use-toast';
 
 // Authentication Services
@@ -63,59 +54,6 @@ export const logOut = async () => {
     toast({
       title: "Sign out failed",
       description: error.message,
-      variant: "destructive",
-    });
-    throw error;
-  }
-};
-
-// Firestore Services
-export const addDocument = async (collectionName, data) => {
-  try {
-    const docRef = await addDoc(collection(db, collectionName), {
-      ...data,
-      createdAt: new Date(),
-    });
-    toast({
-      title: "Success",
-      description: "Document successfully added.",
-    });
-    return docRef.id;
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Failed to add document: " + error.message,
-      variant: "destructive",
-    });
-    throw error;
-  }
-};
-
-export const getDocuments = async (collectionName, options = {}) => {
-  try {
-    let q = collection(db, collectionName);
-    
-    if (options.where) {
-      q = query(q, where(options.where.field, options.where.operator, options.where.value));
-    }
-    
-    if (options.orderBy) {
-      q = query(q, orderBy(options.orderBy.field, options.orderBy.direction));
-    }
-    
-    if (options.limit) {
-      q = query(q, limit(options.limit));
-    }
-    
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Failed to fetch documents: " + error.message,
       variant: "destructive",
     });
     throw error;

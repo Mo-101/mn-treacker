@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rat, PawPrint, Lock, Mail } from 'lucide-react';
+import { Rat, PawPrint, Lock, Mail, Google } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
 import { toast } from './ui/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
 const LoginPage = () => {
@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -22,6 +22,28 @@ const LoginPage = () => {
       toast({
         title: "Success",
         description: "Welcome back!",
+        variant: "success"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const provider = new GoogleAuthProvider();
+    
+    try {
+      await signInWithPopup(auth, provider);
+      toast({
+        title: "Success",
+        description: "Successfully signed in with Google!",
         variant: "success"
       });
     } catch (error) {
@@ -60,11 +82,11 @@ const LoginPage = () => {
             </motion.div>
             <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
             <CardDescription className="text-purple-200">
-              Enter your credentials to access the system
+              Sign in to access the system
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-5 w-5 text-purple-400" />
@@ -108,6 +130,18 @@ const LoginPage = () => {
                 )}
               </Button>
             </form>
+            
+            <div className="mt-4">
+              <Button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full bg-white hover:bg-gray-100 text-gray-900"
+                disabled={isLoading}
+              >
+                <Google className="h-5 w-5 mr-2" />
+                Sign in with Google
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>

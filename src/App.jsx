@@ -5,6 +5,8 @@ import WeatherMap from './components/WeatherMap';
 import FirebaseTest from './components/FirebaseTest';
 import { Toaster } from './components/ui/toaster';
 import { initializeMapboxToken } from './utils/mapTokenManager';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const queryClient = new QueryClient({
@@ -16,7 +18,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
+const AppContent = () => {
+  const { user, loading } = useAuth();
+
   useEffect(() => {
     try {
       initializeMapboxToken();
@@ -25,14 +29,31 @@ const App = () => {
     }
   }, []);
 
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  return (
+    <div>
+      {!user ? (
+        <LoginPage />
+      ) : (
+        <>
+          <FirebaseTest />
+          <WeatherMap />
+        </>
+      )}
+      <Toaster />
+    </div>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <div>
-        <FirebaseTest />
-        <LoginPage />
-        <WeatherMap />
-        <Toaster />
-      </div>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

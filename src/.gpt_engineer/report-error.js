@@ -91,12 +91,10 @@ const safeFetch = async (...args) => {
       const error = new Error(`HTTP error! status: ${response.status}`);
       // Extract safe request data before reporting
       const requestData = extractRequestData(args[0]);
-      if (typeof window.reportHTTPError === 'function') {
-        window.reportHTTPError({
-          message: error.message,
-          request: requestData
-        });
-      }
+      reportHTTPError({
+        message: error.message,
+        request: requestData
+      });
       throw error;
     }
     return response;

@@ -1,5 +1,6 @@
 import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
+import { reportError } from './errorReporting';
 
 const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   const controller = new AbortController();
@@ -18,6 +19,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
     return await response.json();
   } catch (error) {
     clearTimeout(id);
+    reportError(error, { request: { url, ...options } });
     throw error;
   }
 };

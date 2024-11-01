@@ -2,16 +2,19 @@ const extractRequestInfo = (request) => {
   if (!request) return null;
   
   try {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: Object.fromEntries(
-        Array.from(request.headers.entries()).filter(([key]) => {
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        })
-      )
-    };
+    if (request instanceof Request) {
+      return {
+        url: request.url,
+        method: request.method,
+        headers: Object.fromEntries(
+          Array.from(request.headers.entries()).filter(([key]) => {
+            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            return safeHeaders.includes(key.toLowerCase());
+          })
+        )
+      };
+    }
+    return String(request);
   } catch (err) {
     console.warn('Error extracting request info:', err);
     return null;
@@ -25,8 +28,7 @@ export const reportError = (error, context = {}) => {
       timestamp: new Date().toISOString(),
       message: error?.message || String(error),
       stack: error?.stack,
-      errorType: error?.name || 'Error',
-      context: { ...context }
+      errorType: error?.name || 'Error'
     };
 
     if (context.request) {

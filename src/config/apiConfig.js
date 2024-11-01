@@ -4,10 +4,11 @@
 
 // Validate required environment variables
 const requiredEnvVars = [
-  'VITE_MAPBOX_TOKEN',
-  'VITE_OPENWEATHER_API_KEY',
-  'VITE_XWEATHER_ID',
-  'VITE_XWEATHER_SECRET'
+  'VITE_API_BASE_URL',
+  'VITE_API_KEY',
+  'VITE_POINTS_GEOJSON_PATH',
+  'VITE_WEATHER_GEOJSON_PATH',
+  'VITE_MN_GEOJSON_PATH'
 ];
 
 requiredEnvVars.forEach(varName => {
@@ -21,39 +22,40 @@ export const API_CONFIG = {
   
   ENDPOINTS: {
     // GeoJSON endpoints
-    POINTS: '/api/files/geojsonPaths/points',
-    WEATHER: '/api/files/geojsonPaths/weather',
-    MN_DATA: '/api/files/geojsonPaths/mnData',
-    SLAYER: '/api/files/geojsonPaths/slayer',
+    POINTS: import.meta.env.VITE_POINTS_GEOJSON_PATH,
+    WEATHER: import.meta.env.VITE_WEATHER_GEOJSON_PATH,
+    MN_DATA: import.meta.env.VITE_MN_GEOJSON_PATH,
+    SLAYER: import.meta.env.VITE_SLAYER_GEOJSON_PATH,
 
     // CSV data files
-    HISTORICAL_CASES: '/api/files/csvPaths/historicalCases',
-    CLIMATOLOGY: '/api/files/csvPaths/climatology',
-    ADDRESS_POINTS: '/api/files/csvPaths/addressPointsV2',
+    HISTORICAL_CASES: import.meta.env.VITE_HISTORICAL_CASES_CSV_PATH,
+    CLIMATOLOGY: import.meta.env.VITE_CLIMATOLOGY_CSV_PATH,
+    ADDRESS_POINTS: import.meta.env.VITE_ADDRESS_POINTS_PATH,
 
-    // Wind Data timestamps
-    WIND_DATA: {
-      '2016112000': '/api/files/windData/2016112000',
-      '2016112006': '/api/files/windData/2016112006',
-      '2016112012': '/api/files/windData/2016112012',
-      '2016112018': '/api/files/windData/2016112018',
-      '2016112100': '/api/files/windData/2016112100',
-      '2016112106': '/api/files/windData/2016112106',
-      '2016112112': '/api/files/windData/2016112112',
-      '2016112118': '/api/files/windData/2016112118',
-      '2016112200': '/api/files/windData/2016112200'
-    }
+    // Training and AI endpoints
+    TRAINING: import.meta.env.VITE_TRAINING_API_URL,
+    UPLOAD_DATASET: import.meta.env.VITE_UPLOAD_DATASET_URL,
+    RAT_LOCATIONS: import.meta.env.VITE_RAT_LOCATIONS_URL,
+    CASES: import.meta.env.VITE_CASES_DATA_URL,
+    WEATHER_DATA: import.meta.env.VITE_WEATHER_DATA_URL
   }
 };
 
-/**
- * API authentication keys from environment variables
- */
 export const API_KEYS = {
-  MAPBOX: import.meta.env.VITE_MAPBOX_TOKEN,
-  OPENWEATHER: import.meta.env.VITE_OPENWEATHER_API_KEY,
-  AERIS: {
-    ID: import.meta.env.VITE_XWEATHER_ID,
-    SECRET: import.meta.env.VITE_XWEATHER_SECRET
+  MAPBOX: import.meta.env.VITE_API_KEY,
+  FIREBASE: {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  },
+  AZURE: {
+    clientId: import.meta.env.VITE_AZURE_CLIENT_ID,
+    tenantId: import.meta.env.VITE_AZURE_TENANT_ID,
+    clientSecret: import.meta.env.VITE_AZURE_CLIENT_SECRET,
+    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI
   }
 };

@@ -9,13 +9,25 @@ const DetectionSpotLayer = ({ map, detections }) => {
     if (!map || !detections) return;
 
     const addLayers = () => {
-      // Remove existing layers if they exist
-      ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-      });
-      if (map.getSource('detection-points')) map.removeSource('detection-points');
-
       try {
+        // Wait for map style to be loaded
+        if (!map.isStyleLoaded()) {
+          map.once('style.load', addLayers);
+          return;
+        }
+
+        // Safely remove existing layers
+        ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
+          if (map.getStyle().layers.find(layer => layer.id === layerId)) {
+            map.removeLayer(layerId);
+          }
+        });
+
+        // Remove existing source if it exists
+        if (map.getSource('detection-points')) {
+          map.removeSource('detection-points');
+        }
+
         // Add the detection points source
         map.addSource('detection-points', {
           type: 'geojson',
@@ -30,10 +42,7 @@ const DetectionSpotLayer = ({ map, detections }) => {
               properties: {
                 species: detection.species || 'Mastomys natalensis',
                 confidence: detection.confidence || 95,
-                timestamp: detection.timestamp || new Date().toISOString(),
-                details: detection.details || 'Adult specimen detected',
-                habitat: detection.habitat || 'Urban environment',
-                behavior: detection.behavior || 'Foraging activity'
+                timestamp: detection.timestamp || new Date().toISOString()
               }
             }))
           }
@@ -75,26 +84,24 @@ const DetectionSpotLayer = ({ map, detections }) => {
           }
         });
       } catch (error) {
-        toast({
-          title: "Layer Error",
-          description: "Failed to add detection layers. Will retry when map is ready.",
-          variant: "warning"
-        });
+        console.error('Error adding detection layers:', error);
       }
     };
 
-    // Wait for style to load before adding layers
-    if (map.isStyleLoaded()) {
-      addLayers();
-    } else {
-      map.once('style.load', addLayers);
-    }
+    addLayers();
 
     return () => {
+      if (!map || !map.getStyle()) return;
+      
       ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
+        if (map.getStyle().layers.find(layer => layer.id === layerId)) {
+          map.removeLayer(layerId);
+        }
       });
-      if (map.getSource('detection-points')) map.removeSource('detection-points');
+      
+      if (map.getSource('detection-points')) {
+        map.removeSource('detection-points');
+      }
     };
   }, [map, detections]);
 

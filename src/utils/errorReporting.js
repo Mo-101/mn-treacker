@@ -33,16 +33,20 @@ export const reportError = (error, context = {}) => {
       timestamp: new Date().toISOString(),
       message: error?.message || String(error),
       stack: error?.stack,
-      errorType: error?.name || 'Error',
-      context: { ...context }
+      errorType: error?.name || 'Error'
     };
 
+    // Only include safe, cloneable context data
     if (context.request) {
-      errorReport.request = extractRequestInfo(context.request);
+      const safeRequest = extractRequestInfo(context.request);
+      if (safeRequest) {
+        errorReport.request = safeRequest;
+      }
     }
 
-    // Only send safe, cloneable data
-    window.parent.postMessage(JSON.parse(JSON.stringify(errorReport)), '*');
+    // Ensure the data is cloneable before sending
+    const safeReport = JSON.parse(JSON.stringify(errorReport));
+    window.parent.postMessage(safeReport, '*');
   } catch (err) {
     console.warn('Error reporting failed:', err);
   }

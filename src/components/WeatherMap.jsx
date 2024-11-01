@@ -4,7 +4,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { fetchRatData, fetchLassaFeverCases } from '../utils/api';
-import { hybridMapStyle } from '../config/mapStyle';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -55,7 +54,7 @@ const WeatherMap = () => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: hybridMapStyle,
+        style: 'mapbox://styles/mapbox/satellite-hybrid-v9', // Changed to hybrid satellite style
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
         pitch: 45,
@@ -134,7 +133,7 @@ const WeatherMap = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
+    <div className="relative w-screen h-screen overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
       <TopNavigationBar 

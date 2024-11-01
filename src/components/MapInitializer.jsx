@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { hybridMapStyle } from '../config/mapStyle';
 import { initializeLayers } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
@@ -30,7 +31,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         style: hybridMapStyle,
         center: [20, 0], // Centered on Africa
         zoom: 3.5,
-        pitch: 0,
+        pitch: 45,
         bearing: 0,
         antialias: true,
         maxZoom: 20,
@@ -39,24 +40,45 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', sans-serif",
         fadeDuration: 0,
         crossSourceCollisions: true,
-        pixelRatio: 2
+        pixelRatio: window.devicePixelRatio > 1 ? 2 : 1, // Enhanced for 4K displays
+        maxTileCacheSize: 100, // Increased tile cache for better quality
+        transformRequest: (url, resourceType) => {
+          if (resourceType === 'Tile' && url.includes('satellite')) {
+            // Request high-resolution satellite imagery
+            return {
+              url: url.replace('{ratio}', window.devicePixelRatio > 1 ? '@2x' : '')
+            };
+          }
+        }
       });
 
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          showCompass: true,
-          showZoom: true,
-          visualizePitch: true
-        }), 
-        'top-right'
-      );
-
+      // Add terrain with increased exaggeration
       map.current.on('load', () => {
+        map.current.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.setTerrain({ 
+          source: 'mapbox-dem', 
+          exaggeration: 4.0 // Increased terrain exaggeration
+        });
+
+        map.current.setFog({
+          'horizon-blend': 0.3,
+          'color': '#f8f8f8',
+          'high-color': '#add8e6',
+          'space-color': '#d8f2ff',
+          'star-intensity': 0.0
+        });
+
         try {
           initializeLayers(map.current);
           toast({
             title: "Map Initialized",
-            description: "Map and layers loaded successfully",
+            description: "High-resolution map and layers loaded successfully",
           });
         } catch (error) {
           console.error('Error initializing layers:', error);
@@ -67,6 +89,15 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           });
         }
       });
+
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          showCompass: true,
+          showZoom: true,
+          visualizePitch: true
+        }), 
+        'top-right'
+      );
 
     } catch (error) {
       console.error('Error initializing map:', error);

@@ -4,9 +4,10 @@ export const API_CONFIG = {
   ENDPOINTS: {
     RAT_LOCATIONS: '/api/rat-locations',
     CASES: '/api/cases',
-    ENVIRONMENTAL: '/api/environment/data',
+    ENVIRONMENTAL: '/api/environment',
+    UPLOAD: '/api/uploads',
     WEATHER: '/api/environment/weather',
-    UPLOAD: '/api/uploads/dataset'
+    TRAINING: '/api/uploads/training'
   }
 };
 

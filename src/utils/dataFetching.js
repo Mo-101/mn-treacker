@@ -1,9 +1,9 @@
 import { toast } from '../components/ui/use-toast';
 import { API_CONFIG } from '../config/apiConfig';
 
-export const fetchRatData = async () => {
+export const fetchRatLocations = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.RAT_LOCATIONS);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
     if (!response.ok) {
       throw new Error('Failed to fetch rat data');
     }
@@ -22,7 +22,7 @@ export const fetchRatData = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.CASES);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
     if (!response.ok) {
       throw new Error('Failed to fetch Lassa Fever cases');
     }
@@ -40,7 +40,7 @@ export const fetchLassaFeverCases = async () => {
 
 export const fetchWeatherData = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER_DATA);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}`);
     if (!response.ok) {
       throw new Error('Failed to fetch weather data');
     }
@@ -58,7 +58,7 @@ export const fetchWeatherData = async () => {
 
 export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.TRAINING);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINING}`);
     if (!response.ok) {
       throw new Error('Failed to fetch training progress');
     }

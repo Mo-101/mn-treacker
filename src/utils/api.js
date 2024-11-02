@@ -39,7 +39,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
 export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
   try {
     return await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}/api/environment/data?timeframe=${timeframe}`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}/data?timeframe=${timeframe}`
     );
   } catch (error) {
     return handleApiError(error, 'environmental data');
@@ -48,7 +48,7 @@ export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}/api/cases`);
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
     return response;
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
@@ -57,7 +57,7 @@ export const fetchLassaFeverCases = async () => {
 
 export const fetchRatLocations = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}/api/rat-locations`);
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
     return response;
   } catch (error) {
     return handleApiError(error, 'rat locations');
@@ -66,7 +66,7 @@ export const fetchRatLocations = async () => {
 
 export const uploadDataset = async (formData) => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/uploads/dataset`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}/dataset`, {
       method: 'POST',
       body: formData,
     });
@@ -84,7 +84,7 @@ export const uploadDataset = async (formData) => {
 export const fetchWeatherData = async (lat, lon) => {
   try {
     return await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}/api/environment/weather?lat=${lat}&lon=${lon}`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
     );
   } catch (error) {
     return handleApiError(error, 'weather data');

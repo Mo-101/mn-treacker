@@ -15,6 +15,7 @@ import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
+import MastomysTracker from './MastomysTracker';
 import { toggleLayer, setLayerOpacity, updateDetectionData, updatePredictionData } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
@@ -137,6 +138,7 @@ const WeatherMap = () => {
         <>
           <DetectionSpotLayer map={map.current} />
           <LassaFeverCasesLayer map={map.current} />
+          <MastomysTracker map={map.current} />
         </>
       )}
     </div>

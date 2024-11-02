@@ -4,12 +4,12 @@ import { X, Download, MapPin, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/button';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { fetchRatLocations } from '../utils/api';
+import { fetchMastomysLocations } from '../utils/api';
 
 const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
   const { data: trendData } = useQuery({
-    queryKey: ['rat-trends', selectedPoint?.id],
-    queryFn: () => fetchRatLocations(selectedPoint?.id),
+    queryKey: ['mastomys-trends', selectedPoint?.id],
+    queryFn: () => fetchMastomysLocations(selectedPoint?.id),
     enabled: !!selectedPoint?.id
   });
 

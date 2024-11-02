@@ -1,12 +1,13 @@
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
   
   ENDPOINTS: {
-    MASTOMYS_LOCATIONS: '/api/rat-locations',  // Updated to match Flask route
-    LASSA_CASES: '/api/cases',                 // Updated to match Flask route
-    ENVIRONMENTAL: '/api/environment',          // Updated to match Flask route
-    UPLOAD: '/api/uploads',                    // Updated to match Flask route
-    WEATHER: '/api/environment/weather'         // Subpath under environment
+    MASTOMYS_LOCATIONS: '/api/rat-locations',  // Matches Flask route
+    CASES: '/api/cases',
+    ENVIRONMENTAL: '/api/environment',
+    UPLOAD: '/api/uploads',
+    WEATHER: '/api/environment/weather',
+    TRAINING: '/api/uploads/training'
   }
 };
 

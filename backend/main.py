@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from routes.data_routes import data_bp
 from routes.training_routes import training_bp
 from routes.file_routes import file_bp
+import os
 
 # Load environment variables
 load_dotenv()
@@ -23,4 +24,5 @@ app.register_blueprint(training_bp, url_prefix='/api')
 app.register_blueprint(file_bp, url_prefix='/api')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

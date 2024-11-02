@@ -42,6 +42,8 @@ const LassaFeverCasesLayer = ({ map }) => {
 
     // Add popup on click
     map.on('click', 'points', (e) => {
+      if (!e.features?.length) return;
+      
       const coordinates = e.features[0].geometry.coordinates.slice();
       const properties = e.features[0].properties;
       
@@ -51,7 +53,7 @@ const LassaFeverCasesLayer = ({ map }) => {
           <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
             <h3 class="text-amber-400 font-bold mb-2">Point Details</h3>
             <div class="space-y-1 text-white">
-              ${Object.entries(properties)
+              ${Object.entries(properties || {})
                 .map(([key, value]) => `<p><span class="text-amber-400">${key}:</span> ${value}</p>`)
                 .join('')}
             </div>
@@ -61,11 +63,15 @@ const LassaFeverCasesLayer = ({ map }) => {
     });
 
     map.on('mouseenter', 'points', () => {
-      map.getCanvas().style.cursor = 'pointer';
+      if (map.getCanvas()) {
+        map.getCanvas().style.cursor = 'pointer';
+      }
     });
 
     map.on('mouseleave', 'points', () => {
-      map.getCanvas().style.cursor = '';
+      if (map.getCanvas()) {
+        map.getCanvas().style.cursor = '';
+      }
     });
 
     return () => {

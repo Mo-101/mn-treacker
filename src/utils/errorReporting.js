@@ -3,6 +3,7 @@ const extractRequestInfo = (request) => {
   
   try {
     if (request instanceof Request) {
+      // Only extract safe, serializable properties
       return {
         url: request.url,
         method: request.method,
@@ -14,7 +15,7 @@ const extractRequestInfo = (request) => {
         )
       };
     }
-    return String(request);
+    return typeof request === 'string' ? request : null;
   } catch (err) {
     console.warn('Error extracting request info:', err);
     return null;
@@ -32,11 +33,15 @@ export const reportError = (error, context = {}) => {
     };
 
     if (context.request) {
-      errorReport.request = extractRequestInfo(context.request);
+      const safeRequest = extractRequestInfo(context.request);
+      if (safeRequest) {
+        errorReport.request = safeRequest;
+      }
     }
 
-    // Only send safe, cloneable data
-    window.parent.postMessage(errorReport, '*');
+    // Use structured clone to ensure the object is cloneable
+    const cloneableReport = JSON.parse(JSON.stringify(errorReport));
+    window.parent.postMessage(cloneableReport, '*');
   } catch (err) {
     console.warn('Error reporting failed:', err);
   }

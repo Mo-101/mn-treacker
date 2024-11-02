@@ -1,19 +1,19 @@
 import { toast } from '../components/ui/use-toast';
 import { API_CONFIG } from '../config/apiConfig';
 
-export const fetchRatLocations = async () => {
+export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch rat data');
+      throw new Error('Failed to fetch Mastomys natalensis data');
     }
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching rat data:', error);
+    console.error('Error fetching Mastomys data:', error);
     toast({
       title: "Error",
-      description: "Failed to fetch rat data. Please check your data source configuration.",
+      description: "Failed to fetch Mastomys natalensis data. Please check your data source configuration.",
       variant: "destructive",
     });
     return { type: 'FeatureCollection', features: [] };
@@ -22,7 +22,7 @@ export const fetchRatLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
     if (!response.ok) {
       throw new Error('Failed to fetch Lassa Fever cases');
     }
@@ -58,7 +58,7 @@ export const fetchWeatherData = async () => {
 
 export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINING}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}/training`);
     if (!response.ok) {
       throw new Error('Failed to fetch training progress');
     }

@@ -48,19 +48,19 @@ export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
     return response;
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
 };
 
-export const fetchRatLocations = async () => {
+export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
     return response;
   } catch (error) {
-    return handleApiError(error, 'rat locations');
+    return handleApiError(error, 'Mastomys natalensis locations');
   }
 };
 

@@ -4,11 +4,11 @@ import { toast } from '../components/ui/use-toast';
 const handleApiError = (error, context) => {
   console.error(`Error in ${context}:`, error);
   toast({
-    title: "Error",
-    description: `Failed to fetch ${context}. Please try again later.`,
-    variant: "destructive",
+    title: "Backend Connection Error",
+    description: "The backend service is not available yet. Using fallback data.",
+    variant: "warning",
   });
-  throw error;
+  return null;
 };
 
 const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
@@ -36,13 +36,25 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   }
 };
 
+// Fallback data when backend is not available
+const fallbackData = {
+  environmentalData: {
+    temperature: 25,
+    humidity: 60,
+    rainfall: 100
+  },
+  lassaCases: [],
+  mastomysLocations: []
+};
+
 export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
   try {
     return await fetchWithTimeout(
       `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}/data?timeframe=${timeframe}`
     );
   } catch (error) {
-    return handleApiError(error, 'environmental data');
+    handleApiError(error, 'environmental data');
+    return fallbackData.environmentalData;
   }
 };
 
@@ -51,7 +63,8 @@ export const fetchLassaFeverCases = async () => {
     const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
     return response;
   } catch (error) {
-    return handleApiError(error, 'Lassa fever cases');
+    handleApiError(error, 'Lassa fever cases');
+    return fallbackData.lassaCases;
   }
 };
 
@@ -60,7 +73,8 @@ export const fetchMastomysLocations = async () => {
     const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
     return response;
   } catch (error) {
-    return handleApiError(error, 'Mastomys natalensis locations');
+    handleApiError(error, 'Mastomys natalensis locations');
+    return fallbackData.mastomysLocations;
   }
 };
 
@@ -77,7 +91,8 @@ export const uploadDataset = async (formData) => {
     
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'dataset upload');
+    handleApiError(error, 'dataset upload');
+    return { success: false, message: 'Backend not available' };
   }
 };
 
@@ -87,6 +102,7 @@ export const fetchWeatherData = async (lat, lon) => {
       `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
     );
   } catch (error) {
-    return handleApiError(error, 'weather data');
+    handleApiError(error, 'weather data');
+    return fallbackData.environmentalData;
   }
 };

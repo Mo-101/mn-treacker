@@ -1,6 +1,15 @@
 import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
-import { reportError } from './errorReporting';
+
+const handleApiError = (error, context) => {
+  console.error(`Error in ${context}:`, error);
+  toast({
+    title: "Error",
+    description: `Failed to fetch ${context}. Please try again later.`,
+    variant: "destructive",
+  });
+  throw error;
+};
 
 const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   const controller = new AbortController();
@@ -10,6 +19,10 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
     });
     clearTimeout(id);
     
@@ -19,7 +32,6 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
     return await response.json();
   } catch (error) {
     clearTimeout(id);
-    reportError(error, { request: { url, ...options } });
     throw error;
   }
 };
@@ -27,67 +39,54 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
 export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
   try {
     return await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}/environmental-data?timeframe=${timeframe}`
+      `${API_CONFIG.BASE_URL}/api/environment/data?timeframe=${timeframe}`
     );
   } catch (error) {
-    console.error('API Error:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch environmental data",
-      variant: "destructive",
-    });
-    return null;
+    return handleApiError(error, 'environmental data');
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.CASES);
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}/api/cases`);
+    return response;
+  } catch (error) {
+    return handleApiError(error, 'Lassa fever cases');
+  }
+};
+
+export const fetchRatLocations = async () => {
+  try {
+    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}/api/rat-locations`);
+    return response;
+  } catch (error) {
+    return handleApiError(error, 'rat locations');
+  }
+};
+
+export const uploadDataset = async (formData) => {
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/uploads/dataset`, {
+      method: 'POST',
+      body: formData,
+    });
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch cases data');
+      throw new Error(`Upload failed: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
-    console.error('Error fetching cases data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch cases data",
-      variant: "destructive",
-    });
-    return { type: 'FeatureCollection', features: [] };
+    return handleApiError(error, 'dataset upload');
   }
 };
 
 export const fetchWeatherData = async (lat, lon) => {
   try {
     return await fetchWithTimeout(
-      `${API_CONFIG.ENDPOINTS.WEATHER_DATA}?lat=${lat}&lon=${lon}`
+      `${API_CONFIG.BASE_URL}/api/environment/weather?lat=${lat}&lon=${lon}`
     );
   } catch (error) {
-    console.error('API Error:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch weather data",
-      variant: "destructive",
-    });
-    return null;
-  }
-};
-
-export const fetchRatData = async () => {
-  try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.RAT_LOCATIONS);
-    if (!response.ok) {
-      throw new Error('Failed to fetch rat location data');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching rat location data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch rat location data",
-      variant: "destructive",
-    });
-    return { type: 'FeatureCollection', features: [] };
+    return handleApiError(error, 'weather data');
   }
 };

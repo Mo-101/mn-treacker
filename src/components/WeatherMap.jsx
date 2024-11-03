@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -16,7 +18,6 @@ import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
-import { toggleLayer, setLayerOpacity, updateDetectionData, updatePredictionData } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -35,21 +36,37 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
+  // Fetch data using React Query
+  const { data: ratLocations } = useQuery({
+    queryKey: ['ratLocations'],
+    queryFn: fetchMastomysLocations,
+    staleTime: 300000
+  });
+
+  const { data: lassaCases } = useQuery({
+    queryKey: ['lassaCases'],
+    queryFn: fetchLassaFeverCases,
+    staleTime: 300000
+  });
+
   const handleLayerToggle = (layerId) => {
     if (map.current) {
       const isActive = activeLayers.includes(layerId);
-      toggleLayer(map.current, layerId, !isActive);
-      setActiveLayers(prev => 
-        isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
-      );
+      if (isActive) {
+        map.current.setLayoutProperty(layerId, 'visibility', 'none');
+        setActiveLayers(prev => prev.filter(id => id !== layerId));
+      } else {
+        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+        setActiveLayers(prev => [...prev, layerId]);
+      }
     }
   };
 
   const handleOpacityChange = (opacity) => {
+    setLayerOpacity(opacity);
     if (map.current) {
-      setLayerOpacity(opacity);
       activeLayers.forEach(layerId => {
-        setLayerOpacity(map.current, layerId, opacity);
+        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
       });
     }
   };
@@ -136,9 +153,9 @@ const WeatherMap = () => {
 
       {map.current && (
         <>
-          <DetectionSpotLayer map={map.current} />
-          <LassaFeverCasesLayer map={map.current} />
-          <MastomysTracker map={map.current} />
+          <DetectionSpotLayer map={map.current} detections={ratLocations} />
+          <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
+          <MastomysTracker sightings={ratLocations} />
         </>
       )}
     </div>

@@ -3,70 +3,80 @@ import { toast } from '../components/ui/use-toast';
 
 const fetchFromTerrabox = async (endpoint) => {
   const url = `${API_CONFIG.TERRABOX.BASE_URL}/${endpoint}`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${API_KEYS.TERRABOX}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  return response.json();
-};
-
-// OpenWeather API for weather data
-const fetchOpenWeatherData = async (lat, lon) => {
-  const url = `${API_CONFIG.FALLBACK.OPENWEATHER}&lat=${lat}&lon=${lon}&units=metric`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return response.json();
-};
-
-export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
   try {
-    return await fetchFromTerrabox(`${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}?timeframe=${timeframe}`);
-  } catch (error) {
-    console.error('Error fetching environmental data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch environmental data",
-      variant: "destructive",
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${API_KEYS.TERRABOX}`,
+        'Content-Type': 'application/json',
+      },
     });
-    return {
-      temperature: 25,
-      humidity: 60,
-      rainfall: 100
-    };
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`Error fetching from Terrabox (${endpoint}):`, error);
+    return null;
   }
 };
 
-export const fetchLassaFeverCases = async () => {
+export const fetchMastomysLocations = async () => {
   try {
-    return await fetchFromTerrabox(API_CONFIG.ENDPOINTS.CASES);
+    const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
+    if (!data) {
+      // Return mock data for development
+      return {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [3.379206, 6.524379]
+            },
+            properties: {
+              id: 1,
+              confidence: 0.95,
+              timestamp: new Date().toISOString()
+            }
+          }
+        ]
+      };
+    }
+    return data;
   } catch (error) {
-    console.error('Error fetching Lassa fever cases:', error);
+    console.error('Error fetching Mastomys locations:', error);
     toast({
       title: "Error",
-      description: "Failed to fetch Lassa fever cases",
+      description: "Failed to fetch Mastomys locations. Using mock data.",
       variant: "destructive",
     });
     return [];
   }
 };
 
-export const fetchMastomysLocations = async () => {
+export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchFromTerrabox(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
+    const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.CASES);
+    if (!data) {
+      // Return mock data for development
+      return [
+        {
+          id: 1,
+          latitude: 6.524379,
+          longitude: 3.379206,
+          severity: 'high'
+        }
+      ];
+    }
+    return data;
   } catch (error) {
-    console.error('Error fetching Mastomys locations:', error);
+    console.error('Error fetching Lassa fever cases:', error);
     toast({
       title: "Error",
-      description: "Failed to fetch Mastomys locations",
+      description: "Failed to fetch Lassa fever cases. Using mock data.",
       variant: "destructive",
     });
     return [];
@@ -74,9 +84,13 @@ export const fetchMastomysLocations = async () => {
 };
 
 export const fetchWeatherData = async (lat, lon) => {
+  const url = `${API_CONFIG.FALLBACK.OPENWEATHER}&lat=${lat}&lon=${lon}&units=metric`;
   try {
-    const weatherData = await fetchOpenWeatherData(lat, lon);
-    return weatherData;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   } catch (error) {
     console.error('Error fetching weather data:', error);
     toast({

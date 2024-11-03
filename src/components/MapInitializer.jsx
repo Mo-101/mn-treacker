@@ -29,31 +29,15 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: hybridMapStyle,
-        center: [20, 0], // Centered on Africa
-        zoom: 3.5,
-        pitch: 0,
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom,
+        pitch: 45,
         bearing: 0,
-        antialias: true,
-        maxZoom: 20,
-        preserveDrawingBuffer: true,
-        renderWorldCopies: true,
-        localIdeographFontFamily: "'Noto Sans', 'Noto Sans CJK SC', sans-serif",
-        fadeDuration: 0,
-        crossSourceCollisions: true,
-        pixelRatio: window.devicePixelRatio > 1 ? 2 : 1, // Enhanced for 4K displays
-        maxTileCacheSize: 100, // Increased tile cache for better quality
-        transformRequest: (url, resourceType) => {
-          if (resourceType === 'Tile' && url.includes('satellite')) {
-            // Request high-resolution satellite imagery
-            return {
-              url: url.replace('{ratio}', window.devicePixelRatio > 1 ? '@2x' : '')
-            };
-          }
-        }
+        antialias: true
       });
 
-      // Add terrain with increased exaggeration
       map.current.on('load', () => {
+        // Add terrain source
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -61,11 +45,8 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           maxzoom: 14
         });
 
-        map.current.setTerrain({ 
-          source: 'mapbox-dem', 
-          exaggeration: 4.0 // Increased terrain exaggeration
-        });
-
+        // Add terrain and fog
+        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
         map.current.setFog({
           'horizon-blend': 0.3,
           'color': '#f8f8f8',
@@ -74,30 +55,16 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           'star-intensity': 0.0
         });
 
-        try {
-          initializeLayers(map.current);
-          toast({
-            title: "Map Initialized",
-            description: "High-resolution map and layers loaded successfully",
-          });
-        } catch (error) {
-          console.error('Error initializing layers:', error);
-          toast({
-            title: "Layer Initialization Error",
-            description: "Some layers failed to load. Basic map functionality is still available.",
-            variant: "warning",
-          });
-        }
+        // Initialize weather and data layers
+        initializeLayers(map.current);
+
+        toast({
+          title: "Map Initialized",
+          description: "Weather layers and data points loaded successfully.",
+        });
       });
 
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          showCompass: true,
-          showZoom: true,
-          visualizePitch: true
-        }), 
-        'top-right'
-      );
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     } catch (error) {
       console.error('Error initializing map:', error);

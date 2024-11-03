@@ -40,7 +40,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           maxzoom: 14
         });
 
-        // Enhanced fog effect
+        // Enhanced fog effect for better depth perception
         map.current.setFog({
           'range': [0.5, 10],
           'color': '#ffffff',
@@ -50,7 +50,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           'star-intensity': 0.15
         });
 
-        // Add weather layers with improved height handling
+        // Add weather layers with improved height handling and resampling
         const weatherLayers = await fetchWeatherLayers();
         if (weatherLayers) {
           weatherLayers.forEach(layer => {
@@ -58,7 +58,8 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
               map.current.addSource(layer.id, {
                 type: 'raster',
                 tiles: [layer.url],
-                tileSize: 256
+                tileSize: 256,
+                maxzoom: 20
               });
 
               map.current.addLayer({
@@ -67,27 +68,27 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
                 source: layer.id,
                 paint: {
                   'raster-opacity': 0.7,
-                  'raster-opacity-transition': {
-                    duration: 0
-                  }
+                  'raster-opacity-transition': { duration: 0 },
+                  'raster-fade-duration': 0,
+                  'raster-brightness-min': 0,
+                  'raster-brightness-max': 1,
+                  'raster-saturation': 1,
+                  'raster-contrast': 0,
+                  'raster-resampling': 'linear'
                 },
-                layout: {
-                  'visibility': 'visible'
-                }
+                layout: { visibility: 'visible' }
               });
 
               // Enhanced cloud layer handling
               if (layer.id === 'clouds') {
                 map.current.setLayerZoomRange(layer.id, 0, 22);
-                map.current.setPaintProperty(layer.id, 'raster-fade-duration', 0);
-                map.current.setPaintProperty(layer.id, 'raster-height', 8000); // Increased cloud height
+                map.current.setPaintProperty(layer.id, 'raster-height', 8000);
                 map.current.setPaintProperty(layer.id, 'raster-resampling', 'linear');
               }
             }
           });
         }
 
-        // Initialize other layers with improved settings
         await initializeLayers(map.current);
 
         toast({

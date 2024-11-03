@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, BarChart2, Map, Settings, HelpCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { useToast } from './ui/use-toast';
-import { useQuery } from '@tanstack/react-query';
 import TopNavigationBar from './AITrainingComponents/TopNavigationBar';
 import DataUploadSection from './AITrainingComponents/DataUploadSection';
 import ModelPerformanceDashboard from './AITrainingComponents/ModelPerformanceDashboard';
@@ -12,20 +10,17 @@ import TrainingControlsPanel from './AITrainingComponents/TrainingControlsPanel'
 import InteractiveSidebar from './AITrainingComponents/InteractiveSidebar';
 import HelpSection from './AITrainingComponents/HelpSection';
 import BrainModel from './AITrainingComponents/BrainModel';
-import { fetchTrainingProgress } from '../utils/api';
 
-const AITrainingInterface = ({ isOpen, onClose }) => {
+const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
   const [activeSection, setActiveSection] = useState('upload');
   const [showHelp, setShowHelp] = useState(false);
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [isTraining, setIsTraining] = useState(false);
   const [dataUploaded, setDataUploaded] = useState(false);
-  const { toast } = useToast();
-
-  const { data: trainingData, isLoading } = useQuery({
-    queryKey: ['training-progress'],
-    queryFn: fetchTrainingProgress,
-    refetchInterval: 1000,
-    enabled: isOpen
-  });
+  const [trainingActivities, setTrainingActivities] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [knowledgeLevel, setKnowledgeLevel] = useState(0);
 
   const navItems = [
     { icon: Upload, label: 'Upload', section: 'upload' },
@@ -34,12 +29,42 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
     { icon: Settings, label: 'Settings', section: 'settings' },
   ];
 
+  useEffect(() => {
+    let interval;
+    if (isTraining) {
+      interval = setInterval(() => {
+        setTrainingProgress(prev => {
+          const newProgress = prev + 1;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            setIsTraining(false);
+            addToConsoleLog('Training completed');
+            return 100;
+          }
+          setElapsedTime(prev => prev + 1);
+          setTimeLeft(prev => Math.max(0, prev - 1));
+          setTrainingActivities(prev => [...prev, `Training step ${newProgress} completed`]);
+          setKnowledgeLevel(newProgress); // Update knowledge level as training progresses
+          return newProgress;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTraining, addToConsoleLog]);
+
+  const handleStartTraining = () => {
+    setIsTraining(true);
+    setTrainingProgress(0);
+    setElapsedTime(0);
+    setTimeLeft(100); // Assuming 100 seconds for training
+    setTrainingActivities([]);
+    setKnowledgeLevel(0);
+    addToConsoleLog('Training started');
+  };
+
   const handleDataUpload = () => {
     setDataUploaded(true);
-    toast({
-      title: "Success",
-      description: "Data uploaded successfully",
-    });
+    addToConsoleLog('Data uploaded successfully');
   };
 
   return (
@@ -103,19 +128,21 @@ const AITrainingInterface = ({ isOpen, onClose }) => {
                 exit={{ opacity: 0 }}
               >
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
+                {/* Add settings controls here */}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <BrainModel knowledgeLevel={trainingData?.knowledgeLevel || 0} />
+          <BrainModel knowledgeLevel={knowledgeLevel} />
 
           <TrainingControlsPanel 
-            isTraining={trainingData?.isTraining || false}
-            trainingProgress={trainingData?.progress || 0}
+            onStartTraining={handleStartTraining}
+            isTraining={isTraining}
+            trainingProgress={trainingProgress}
             dataUploaded={dataUploaded}
-            trainingActivities={trainingData?.activities || []}
-            timeLeft={trainingData?.timeLeft || 0}
-            elapsedTime={trainingData?.elapsedTime || 0}
+            trainingActivities={trainingActivities}
+            timeLeft={timeLeft}
+            elapsedTime={elapsedTime}
           />
         </div>
       </div>

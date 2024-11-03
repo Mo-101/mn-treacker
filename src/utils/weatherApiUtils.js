@@ -5,37 +5,27 @@ const openWeatherApiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 export const getWeatherLayer = async (layer) => {
   try {
-    const response = await fetch(`https://api.aerisapi.com/maps/${layer}`, {
-      headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_XWEATHER_ID}`
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch weather data');
-    
-    const data = await response.json();
-    return {
-      type: 'raster',
-      tiles: [data.tileUrl],
-      tileSize: 256,
-      attribution: 'Weather data © AerisWeather'
-    };
+    const aerisLayer = await getAerisLayer(layer);
+    if (aerisLayer) return aerisLayer;
   } catch (error) {
-    console.error('Error fetching weather layer:', error);
-    return getOpenWeatherLayer(layer);
+    console.error('Aeris API error:', error);
   }
+
+  return getOpenWeatherLayer(layer);
+};
+
+const getAerisLayer = async (layer) => {
+  // Implement Aeris layer fetching logic here
+  // Return null if the API is down or rate limited
+  return null;
 };
 
 const getOpenWeatherLayer = (layer) => {
   const baseUrl = 'https://tile.openweathermap.org/map';
+  const intensityParam = '&opacity=0.8&fill_bound=true';
   return {
     type: 'raster',
-    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}`],
-    tileSize: 256,
-    attribution: 'Weather data © OpenWeather'
+    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}${intensityParam}`],
+    tileSize: 256
   };
-};
-
-export const getOpenWeatherTemperatureLayer = () => {
-  return getOpenWeatherLayer('temp_new');
 };

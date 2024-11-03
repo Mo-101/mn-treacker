@@ -1,207 +1,184 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useQuery } from '@tanstack/react-query';
-import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
-import { WeatherLayerManager } from '../utils/weatherLayerManager';
-import TopNavigationBar from './TopNavigationBar';
-import SidePanels from './SidePanels';
+import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
+import TopNavigationBar from './TopNavigationBar';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
+import FloatingInsightsBar from './FloatingInsightsButton';
+import AITrainingInterface from './AITrainingInterface';
+import MastomysTracker from './MastomysTracker';
+import PredictionPanel from './PredictionPanel';
+import { getWeatherLayer } from '../utils/weatherApiUtils';
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const weatherLayerManager = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
-  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind', 'cases', 'points']);
+  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
+  const [activeLayers, setActiveLayers] = useState([]);
+  const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const { toast } = useToast();
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [mastomysData, setMastomysData] = useState([]);
+  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [activeLayer, setActiveLayer] = useState(null);
+  const [selectAll, setSelectAll] = useState(false);
 
-  // Fetch data using React Query
-  const { data: ratLocations } = useQuery({
-    queryKey: ['ratLocations'],
-    queryFn: fetchMastomysLocations,
-    staleTime: 300000
-  });
-
-  const { data: lassaCases } = useQuery({
-    queryKey: ['lassaCases'],
-    queryFn: fetchLassaFeverCases,
-    staleTime: 300000
-  });
+  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
 
   useEffect(() => {
-    if (!mapboxgl.accessToken) {
-      mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    }
-
     if (map.current) return;
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
+      center: [mapState.lng, mapState.lat],
+      zoom: mapState.zoom
+    });
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
-        center: [mapState.lng, mapState.lat],
-        zoom: mapState.zoom,
-        pitch: 45,
-        bearing: 0,
-        antialias: true
-      });
+    map.current.on('load', () => {
+      addWeatherLayers();
+      console.log('Map loaded and layers added');
+    });
 
-      map.current.on('load', async () => {
-        // Initialize terrain
-        map.current.addSource('mapbox-dem', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          tileSize: 512,
-          maxzoom: 14
-        });
+    return () => map.current && map.current.remove();
+  }, []);
 
-        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
-
-        // Initialize weather layer manager
-        weatherLayerManager.current = new WeatherLayerManager(
-          map.current,
-          import.meta.env.VITE_OPENWEATHER_API_KEY
-        );
-        await weatherLayerManager.current.initializeLayers();
-
-        // Add rat locations source and layer
-        if (ratLocations) {
-          map.current.addSource('rat-points', {
-            type: 'geojson',
-            data: ratLocations
-          });
-
-          map.current.addLayer({
-            id: 'points',
-            type: 'circle',
-            source: 'rat-points',
-            paint: {
-              'circle-radius': 6,
-              'circle-color': '#FFD700',
-              'circle-opacity': 0.8,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#fff'
-            }
-          });
-        }
-
-        // Add Lassa fever cases source and layer
-        if (lassaCases) {
-          map.current.addSource('lassa-cases', {
-            type: 'geojson',
-            data: lassaCases
-          });
-
-          map.current.addLayer({
-            id: 'cases',
-            type: 'circle',
-            source: 'lassa-cases',
-            paint: {
-              'circle-radius': 8,
-              'circle-color': '#FF4136',
-              'circle-opacity': 0.8,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#fff'
-            }
-          });
-        }
-
-        // Set initial layer visibility
-        activeLayers.forEach(layerId => {
-          if (map.current.getLayer(layerId)) {
-            map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+  const addWeatherLayers = async () => {
+    for (const layer of layers) {
+      try {
+        const source = await getWeatherLayer(layer);
+        map.current.addSource(layer, source);
+        map.current.addLayer({
+          id: layer,
+          type: 'raster',
+          source: layer,
+          layout: {
+            visibility: 'none'
+          },
+          paint: {
+            'raster-opacity': 0.8
           }
         });
-
-        // Add popups for points and cases
-        map.current.on('click', 'points', (e) => {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const properties = e.features[0].properties;
-
-          new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(`
-              <div class="p-2">
-                <h3 class="font-bold">Rat Location</h3>
-                <p>Coordinates: ${coordinates}</p>
-                ${Object.entries(properties).map(([key, value]) => 
-                  `<p>${key}: ${value}</p>`
-                ).join('')}
-              </div>
-            `)
-            .addTo(map.current);
-        });
-
-        map.current.on('click', 'cases', (e) => {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const properties = e.features[0].properties;
-
-          new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(`
-              <div class="p-2">
-                <h3 class="font-bold">Lassa Fever Case</h3>
-                <p>Coordinates: ${coordinates}</p>
-                ${Object.entries(properties).map(([key, value]) => 
-                  `<p>${key}: ${value}</p>`
-                ).join('')}
-              </div>
-            `)
-            .addTo(map.current);
-        });
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    } catch (error) {
-      console.error('Error initializing map:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize map. Please check your configuration.",
-        variant: "destructive",
-      });
+        console.log(`Added layer: ${layer}`);
+      } catch (error) {
+        console.error(`Error adding layer ${layer}:`, error);
+      }
     }
-
-    return () => map.current?.remove();
-  }, [ratLocations, lassaCases]);
+  };
 
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => {
-      const isActive = prev.includes(layerId);
-      const newLayers = isActive
-        ? prev.filter(id => id !== layerId)
-        : [...prev, layerId];
-      
-      if (map.current && map.current.getLayer(layerId)) {
-        map.current.setLayoutProperty(
-          layerId,
-          'visibility',
-          isActive ? 'none' : 'visible'
-        );
+    if (selectAll) return;
+
+    console.log(`Toggling layer: ${layerId}`);
+    const newVisibility = activeLayer === layerId ? 'none' : 'visible';
+
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', layer === layerId ? newVisibility : 'none');
       }
-      
-      return newLayers;
     });
+
+    setActiveLayer(activeLayer === layerId ? null : layerId);
+    setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
+  };
+
+  const handleSelectAllLayers = () => {
+    const newSelectAllState = !selectAll;
+
+    layers.forEach(layer => {
+      if (map.current.getLayer(layer)) {
+        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
+      }
+    });
+
+    setSelectAll(newSelectAllState);
+    setActiveLayer(null);
+    setActiveLayers(newSelectAllState ? layers : []);
+  };
+
+  const handleOpacityChange = (layerId, opacity) => {
+    if (map.current && map.current.getLayer(layerId)) {
+      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+    }
+  };
+
+  const handleDetailView = () => {
+    console.log('Detail view requested');
+    setPredictionPanelOpen(false);
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
-      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-      
-      <TopNavigationBar 
-        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-      />
-
-      <SidePanels
-        leftPanelOpen={leftPanelOpen}
-        rightPanelOpen={rightPanelOpen}
-        setLeftPanelOpen={setLeftPanelOpen}
-        setRightPanelOpen={setRightPanelOpen}
-        activeLayers={activeLayers}
-        handleLayerToggle={handleLayerToggle}
-      />
+    <div className="relative w-screen h-screen overflow-hidden">
+      <div ref={mapContainer} className="absolute inset-0" />
+      {map.current && (
+        <MastomysTracker data={mastomysData} map={map.current} />
+      )}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="pointer-events-auto">
+          <TopNavigationBar 
+            onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+            onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+            onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
+          />
+        </div>
+        <AnimatePresence>
+          {leftPanelOpen && (
+            <div className="pointer-events-auto">
+              <LeftSidePanel 
+                isOpen={leftPanelOpen} 
+                onClose={() => setLeftPanelOpen(false)}
+                activeLayers={activeLayers}
+                onLayerToggle={handleLayerToggle}
+                onOpacityChange={handleOpacityChange}
+                layers={layers}
+                selectAll={selectAll}
+                onSelectAllLayers={handleSelectAllLayers}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {rightPanelOpen && (
+            <div className="pointer-events-auto">
+              <RightSidePanel 
+                isOpen={rightPanelOpen} 
+                onClose={() => setRightPanelOpen(false)}
+                selectedPoint={selectedPoint}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {predictionPanelOpen && (
+            <div className="pointer-events-auto">
+              <PredictionPanel
+                isOpen={predictionPanelOpen}
+                onClose={() => setPredictionPanelOpen(false)}
+                onDetailView={handleDetailView}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <div className="pointer-events-auto">
+          <FloatingInsightsBar />
+        </div>
+        <AnimatePresence>
+          {aiTrainingOpen && (
+            <div className="pointer-events-auto">
+              <AITrainingInterface
+                isOpen={aiTrainingOpen}
+                onClose={() => setAiTrainingOpen(false)}
+                addToConsoleLog={(log) => console.log(log)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

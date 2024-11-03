@@ -1,57 +1,66 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { hybridMapStyle } from '../config/mapStyle';
-import { useToast } from './ui/use-toast';
 
-// Ensure token is set globally
-if (!mapboxgl.accessToken) {
-  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-}
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const MiniMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const { toast } = useToast();
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (map.current) return;
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v10',
+      center: [0, 0],
+      zoom: 2
+    });
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: hybridMapStyle,
-        center: [27.12657, 3.46732],
-        zoom: 1.5,
-        interactive: true,
-        preserveDrawingBuffer: true
+    // Add prediction hotspots (example)
+    map.current.on('load', () => {
+      map.current.addSource('hotspots', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+              },
+              properties: {
+                title: 'Hotspot 1',
+                risk: 'high'
+              }
+            }
+            // Add more hotspots as needed
+          ]
+        }
       });
 
-      map.current.on('load', () => {
-        toast({
-          title: "Mini Map Ready",
-          description: "Prediction visualization initialized",
-        });
+      map.current.addLayer({
+        id: 'hotspots',
+        type: 'circle',
+        source: 'hotspots',
+        paint: {
+          'circle-radius': 8,
+          'circle-color': [
+            'match',
+            ['get', 'risk'],
+            'high', '#ff0000',
+            'medium', '#ffff00',
+            'low', '#00ff00',
+            '#ffffff'
+          ]
+        }
       });
-    } catch (error) {
-      console.error('Error initializing mini map:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initialize mini map",
-        variant: "destructive",
-      });
-    }
+    });
 
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
+    return () => map.current.remove();
   }, []);
 
-  return (
-    <div ref={mapContainer} className="w-full h-48 rounded-lg overflow-hidden border border-yellow-400/20" />
-  );
+  return <div ref={mapContainer} className="w-full h-48 mb-4" />;
 };
 
 export default MiniMap;

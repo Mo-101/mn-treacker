@@ -1,6 +1,4 @@
 import mapboxgl from 'mapbox-gl';
-import { processWeatherData } from '../utils/weatherDataUtils';
-import { toast } from '../components/ui/use-toast';
 
 const addLayer = (map, id, source, type, paint, layout = {}) => {
   if (!map.getSource(id)) {
@@ -12,96 +10,39 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
       type,
       source: id,
       paint,
-      layout: { visibility: 'visible', ...layout }
+      layout: { visibility: 'none', ...layout }
     });
   }
 };
 
 export const addCustomLayers = (map) => {
+  addTemperatureLayer(map);
   addVegetationLayer(map);
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
-  addHistoricalWeatherLayer(map);
   addAdminBoundariesLayer(map);
 };
 
-const addHistoricalWeatherLayer = async (map) => {
-  try {
-    const response = await fetch('/data/weather_data.geojson');
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather data');
-    }
-    const weatherData = await response.json();
-    const processedData = processWeatherData(weatherData);
-
-    addLayer(map, 'historical-weather', {
-      type: 'geojson',
-      data: processedData
-    }, 'circle', {
-      'circle-radius': [
-        'interpolate',
-        ['linear'],
-        ['get', 'temperature'],
-        0, 4,
-        30, 12
-      ],
-      'circle-color': [
-        'interpolate',
-        ['linear'],
-        ['get', 'temperature'],
-        0, '#0000FF',
-        15, '#FFFF00',
-        30, '#FF0000'
-      ],
-      'circle-opacity': 0.7,
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#FFFFFF'
-    });
-
-    // Add popup for weather data points
-    map.on('click', 'historical-weather', (e) => {
-      const coordinates = e.features[0].geometry.coordinates.slice();
-      const properties = e.features[0].properties;
-      const date = new Date(properties.timestamp).toLocaleDateString();
-
-      const description = `
-        <div class="p-2">
-          <h3 class="font-bold mb-2">Weather Data (${date})</h3>
-          <p>Temperature: ${properties.temperature}°C</p>
-          <p>Precipitation: ${properties.precipitation}mm</p>
-          <p>Humidity: ${properties.humidity}%</p>
-          <p>Wind Speed: ${properties.windSpeed}m/s</p>
-        </div>
-      `;
-
-      new mapboxgl.Popup()
-        .setLngLat(coordinates)
-        .setHTML(description)
-        .addTo(map);
-    });
-
-  } catch (error) {
-    console.error('Error loading historical weather data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to load historical weather data. Using fallback data.",
-      variant: "destructive",
-    });
-  }
+const addTemperatureLayer = (map) => {
+  map.addSource('temperature', {
+    type: 'raster',
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+  });
+  map.addLayer({
+    id: 'temperature',
+    type: 'raster',
+    source: 'temperature',
+    paint: { 'raster-opacity': 0.7 },
+    layout: { visibility: 'none' }
+  });
 };
 
 const addVegetationLayer = (map) => {
   addLayer(map, 'vegetation', {
     type: 'raster',
-    url: 'mapbox://mapbox.satellite',
-    tileSize: 256
-  }, 'raster', { 
-    'raster-opacity': 0.7,
-    'raster-saturation': 0.5,
-    'raster-hue-rotate': 90, // Adjust hue to emphasize vegetation
-    'raster-brightness-min': 0.2
-  });
+    url: 'mapbox://mapbox.terrain-rgb'
+  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addPrecipitationLayer = (map) => {
@@ -126,58 +67,37 @@ const addRadarLayer = (map) => {
 };
 
 const addAdminBoundariesLayer = (map) => {
-  if (!map.getSource('admin-boundaries')) {
-    map.addSource('admin-boundaries', {
-      type: 'vector',
-      url: 'mapbox://mapbox.boundaries-adm0-v3,mapbox.boundaries-adm1-v3,mapbox.boundaries-adm2-v3'
-    });
-  }
+  map.addSource('admin-boundaries', {
+    type: 'vector',
+    url: 'mapbox://mapbox.mapbox-streets-v8'
+  });
+  map.addLayer({
+    id: 'admin-boundaries',
+    type: 'line',
+    source: 'admin-boundaries',
+    'source-layer': 'admin',
+    paint: {
+      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
+      'line-width': 1  // Reduced stroke width
+    },
+    layout: { visibility: 'visible' }
+  });
+};
 
-  // Add country boundaries
-  if (!map.getLayer('admin-boundaries-country')) {
-    map.addLayer({
-      id: 'admin-boundaries-country',
-      type: 'line',
-      source: 'admin-boundaries',
-      'source-layer': 'boundaries_admin_0',
-      paint: {
-        'line-color': '#FFD700',  // Gold color for country boundaries
-        'line-width': 2,
-        'line-opacity': 0.8
-      },
-      layout: { visibility: 'visible' }
-    });
-  }
-
-  // Add state/province boundaries
-  if (!map.getLayer('admin-boundaries-state')) {
-    map.addLayer({
-      id: 'admin-boundaries-state',
-      type: 'line',
-      source: 'admin-boundaries',
-      'source-layer': 'boundaries_admin_1',
-      paint: {
-        'line-color': '#FFA500',  // Orange color for state boundaries
-        'line-width': 1,
-        'line-opacity': 0.6
-      },
-      layout: { visibility: 'visible' }
-    });
-  }
-
-  // Add district/county boundaries
-  if (!map.getLayer('admin-boundaries-district')) {
-    map.addLayer({
-      id: 'admin-boundaries-district',
-      type: 'line',
-      source: 'admin-boundaries',
-      'source-layer': 'boundaries_admin_2',
-      paint: {
-        'line-color': '#FFE4B5',  // Moccasin color for district boundaries
-        'line-width': 0.5,
-        'line-opacity': 0.4
-      },
-      layout: { visibility: 'visible' }
-    });
+export const toggleLayer = (map, layerId, visible) => {
+  console.log(`Attempting to toggle layer ${layerId} to ${visible ? 'visible' : 'hidden'}`);
+  if (map.getLayer(layerId) && layerId !== 'admin-boundaries') {
+    const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
+    console.log(`Current visibility of ${layerId}: ${currentVisibility}`);
+    if (currentVisibility !== (visible ? 'visible' : 'none')) {
+      map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+      console.log(`Layer ${layerId} is now ${visible ? 'visible' : 'hidden'}`);
+    } else {
+      console.log(`Layer ${layerId} visibility unchanged`);
+    }
+  } else if (layerId === 'admin-boundaries') {
+    console.log('Admin boundaries layer is always visible');
+  } else {
+    console.warn(`Layer ${layerId} not found on the map.`);
   }
 };

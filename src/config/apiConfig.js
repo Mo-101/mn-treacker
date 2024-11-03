@@ -4,12 +4,12 @@ export const API_CONFIG = {
     CASES: 'lassa-cases',
     ENVIRONMENTAL: 'environmental',
     WEATHER: 'weather-data',
-    WEATHER_LAYERS: 'https://terabox.com/s/1LE_5sz7dG8D0KtSKgyOJ4g',
-    TRAINING_DATA: 'https://terabox.com/s/1TkJb0as7k71GMMx3CwFklQ'
+    WEATHER_LAYERS: '/api/weather-layers',  // Changed to use backend proxy
+    TRAINING_DATA: '/api/training-data'     // Changed to use backend proxy
   },
 
   TERRABOX: {
-    BASE_URL: 'https://api.terrabox.com/v1/data',
+    BASE_URL: '/api/terrabox',  // Changed to use backend proxy
   },
 
   FALLBACK: {

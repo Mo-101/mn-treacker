@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 const RatTracker = ({ sightings = [] }) => {
+  // Ensure sightings is always an array
+  const sightingsArray = Array.isArray(sightings) ? sightings : [];
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
@@ -16,7 +19,7 @@ const RatTracker = ({ sightings = [] }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {sightings.map((sighting, index) => (
+            {sightingsArray.map((sighting, index) => (
               <div key={index} className="bg-white/20 p-2 rounded">
                 <p>Latitude: {sighting.latitude}</p>
                 <p>Longitude: {sighting.longitude}</p>
@@ -24,7 +27,7 @@ const RatTracker = ({ sightings = [] }) => {
               </div>
             ))}
           </div>
-          {sightings.length === 0 && (
+          {sightingsArray.length === 0 && (
             <p className="text-center text-gray-300">No rat sightings found</p>
           )}
         </CardContent>

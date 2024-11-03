@@ -2,33 +2,33 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
-const RatTracker = ({ sightings = [] }) => {
-  // Ensure sightings is always an array
-  const sightingsArray = Array.isArray(sightings) ? sightings : [];
+const MastomysTracker = ({ sightings }) => {
+  const sightingsArray = sightings?.features || [];
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      className="absolute top-4 right-4 w-80 bg-white/10 backdrop-blur-md rounded-lg shadow-lg text-white overflow-hidden"
+      className="absolute right-4 top-20 w-80"
     >
-      <Card className="bg-transparent border-none">
+      <Card className="bg-black/50 text-white backdrop-blur-md border-gray-800">
         <CardHeader>
-          <CardTitle className="text-xl font-bold">Mastomys natalensis Tracker</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            Mastomys Sightings
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {sightingsArray.map((sighting, index) => (
               <div key={index} className="bg-white/20 p-2 rounded">
-                <p>Latitude: {sighting.latitude}</p>
-                <p>Longitude: {sighting.longitude}</p>
-                <p>Confidence: {(sighting.confidence * 100).toFixed(2)}%</p>
+                <p>Longitude: {sighting.geometry.coordinates[0]}</p>
+                <p>Latitude: {sighting.geometry.coordinates[1]}</p>
+                <p>Time: {new Date(sighting.properties.timestamp).toLocaleString()}</p>
               </div>
             ))}
           </div>
           {sightingsArray.length === 0 && (
-            <p className="text-center text-gray-300">No rat sightings found</p>
+            <p className="text-center text-gray-300">No sightings found</p>
           )}
         </CardContent>
       </Card>
@@ -36,4 +36,4 @@ const RatTracker = ({ sightings = [] }) => {
   );
 };
 
-export default RatTracker;
+export default MastomysTracker;

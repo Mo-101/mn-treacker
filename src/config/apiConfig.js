@@ -1,15 +1,15 @@
 export const API_CONFIG = {
   ENDPOINTS: {
-    MASTOMYS_LOCATIONS: 'mastomys-locations',
-    CASES: 'lassa-cases',
+    MASTOMYS_LOCATIONS: '/files/geojsonPaths/mnData',
+    CASES: '/files/csvPaths/historicalCases',
     ENVIRONMENTAL: 'environmental',
     WEATHER: 'weather-data',
-    WEATHER_LAYERS: '/api/weather-layers',  // Changed to use backend proxy
-    TRAINING_DATA: '/api/training-data'     // Changed to use backend proxy
+    WEATHER_LAYERS: '/api/weather-layers',
+    TRAINING_DATA: '/api/training-data'
   },
 
   TERRABOX: {
-    BASE_URL: '/api/terrabox',  // Changed to use backend proxy
+    BASE_URL: '/api/terrabox',
   },
 
   FALLBACK: {
@@ -20,5 +20,4 @@ export const API_CONFIG = {
 export const API_KEYS = {
   MAPBOX: import.meta.env.VITE_MAPBOX_TOKEN,
   OPENWEATHER: import.meta.env.VITE_OPENWEATHER_API_KEY,
-  TERRABOX: import.meta.env.VITE_TERRABOX_TOKEN
 };

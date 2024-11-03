@@ -1,4 +1,4 @@
-import { API_CONFIG, API_KEYS } from '../config/apiConfig';
+import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
 const fetchWithFallback = async (url, options = {}) => {
@@ -24,15 +24,15 @@ const fetchWithFallback = async (url, options = {}) => {
 
 export const fetchWeatherLayers = async () => {
   try {
-    const data = await fetchWithFallback(API_CONFIG.ENDPOINTS.WEATHER_LAYERS);
-    if (!data) {
-      return [{
-        id: 'default-weather',
-        url: `${API_CONFIG.FALLBACK.OPENWEATHER}&lat={lat}&lon={lon}`,
-        type: 'temperature'
-      }];
+    const response = await fetch(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch weather layers');
     }
-    return data;
+    return [{
+      id: 'temperature',
+      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      type: 'temperature'
+    }];
   } catch (error) {
     console.error('Error fetching weather layers:', error);
     toast({
@@ -44,41 +44,31 @@ export const fetchWeatherLayers = async () => {
   }
 };
 
-export const fetchTrainingData = async () => {
-  try {
-    const data = await fetchWithFallback(API_CONFIG.ENDPOINTS.TRAINING_DATA);
-    return data || {
-      trainingSet: [],
-      validationSet: [],
-      metadata: {
-        lastUpdated: new Date().toISOString(),
-        totalSamples: 0,
-        accuracy: 0
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching training data:', error);
-    return null;
-  }
-};
-
 export const fetchMastomysLocations = async () => {
   try {
-    const data = await fetchWithFallback(`${API_CONFIG.TERRABOX.BASE_URL}/${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
-    return data || [];
+    const response = await fetch(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Mastomys locations');
+    }
+    const data = await response.json();
+    return data || { type: 'FeatureCollection', features: [] };
   } catch (error) {
     console.error('Error fetching Mastomys locations:', error);
-    return [];
+    return { type: 'FeatureCollection', features: [] };
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const data = await fetchWithFallback(`${API_CONFIG.TERRABOX.BASE_URL}/${API_CONFIG.ENDPOINTS.CASES}`);
-    return data || [];
+    const response = await fetch(API_CONFIG.ENDPOINTS.CASES);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Lassa fever cases');
+    }
+    const data = await response.json();
+    return data || { type: 'FeatureCollection', features: [] };
   } catch (error) {
     console.error('Error fetching Lassa fever cases:', error);
-    return [];
+    return { type: 'FeatureCollection', features: [] };
   }
 };
 
@@ -113,6 +103,24 @@ export const fetchEnvironmentalData = async () => {
     return data;
   } catch (error) {
     console.error('Error fetching environmental data:', error);
+    return null;
+  }
+};
+
+export const fetchTrainingData = async () => {
+  try {
+    const data = await fetchWithFallback(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+    return data || {
+      trainingSet: [],
+      validationSet: [],
+      metadata: {
+        lastUpdated: new Date().toISOString(),
+        totalSamples: 0,
+        accuracy: 0
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching training data:', error);
     return null;
   }
 };

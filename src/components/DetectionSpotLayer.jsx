@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 
 const DetectionSpotLayer = ({ map, detections }) => {
   useEffect(() => {
-    if (!map || !detections) return;
+    if (!map || !detections?.features) return;
 
     // Remove existing layers if they exist
     ['detection-glow-outer', 'detection-glow-inner', 'detection-center'].forEach(layerId => {
@@ -14,27 +14,10 @@ const DetectionSpotLayer = ({ map, detections }) => {
     // Add the detection points source
     map.addSource('detection-points', {
       type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: detections.map(detection => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: detection.coordinates || [detection.longitude, detection.latitude]
-          },
-          properties: {
-            species: detection.species || 'Mastomys natalensis',
-            confidence: detection.confidence || 95,
-            timestamp: detection.timestamp || new Date().toISOString(),
-            details: detection.details || 'Adult specimen detected',
-            habitat: detection.habitat || 'Urban environment',
-            behavior: detection.behavior || 'Foraging activity'
-          }
-        }))
-      }
+      data: detections
     });
 
-    // Add outer glow layer
+    // Add layers
     map.addLayer({
       id: 'detection-glow-outer',
       type: 'circle',
@@ -47,7 +30,6 @@ const DetectionSpotLayer = ({ map, detections }) => {
       }
     });
 
-    // Add inner glow layer
     map.addLayer({
       id: 'detection-glow-inner',
       type: 'circle',
@@ -60,7 +42,6 @@ const DetectionSpotLayer = ({ map, detections }) => {
       }
     });
 
-    // Add center point layer
     map.addLayer({
       id: 'detection-center',
       type: 'circle',
@@ -72,51 +53,30 @@ const DetectionSpotLayer = ({ map, detections }) => {
       }
     });
 
-    // Add pulsing animation
-    let size = 30;
-    const pulseAnimation = () => {
-      size = size === 30 ? 35 : 30;
-      map.setPaintProperty('detection-glow-outer', 'circle-radius', size);
-      requestAnimationFrame(pulseAnimation);
-    };
-    pulseAnimation();
-
-    // Add hover popup
+    // Add popup
     const popup = new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
-      className: 'detection-popup',
-      maxWidth: '300px'
+      className: 'detection-popup'
     });
 
     map.on('mouseenter', 'detection-center', (e) => {
-      map.getCanvas().style.cursor = 'pointer';
-      
       const coordinates = e.features[0].geometry.coordinates.slice();
       const properties = e.features[0].properties;
       
-      const popupContent = `
-        <div class="bg-gray-900/95 p-4 rounded-lg shadow-xl">
-          <h3 class="text-amber-400 font-bold mb-2">${properties.species}</h3>
-          <div class="space-y-1 text-white">
-            <p><span class="text-amber-400">Confidence:</span> ${properties.confidence}%</p>
-            <p><span class="text-amber-400">Time:</span> ${new Date(properties.timestamp).toLocaleString()}</p>
-            <p><span class="text-amber-400">Details:</span> ${properties.details}</p>
-            <p><span class="text-amber-400">Habitat:</span> ${properties.habitat}</p>
-            <p><span class="text-amber-400">Behavior:</span> ${properties.behavior}</p>
+      popup
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div class="bg-black/90 p-3 rounded-lg text-white">
+            <h3 class="font-bold text-amber-400">Detection Details</h3>
+            <p>Time: ${new Date(properties.timestamp).toLocaleString()}</p>
+            <p>Confidence: ${properties.confidence || 'N/A'}%</p>
           </div>
-        </div>
-      `;
-
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      }
-
-      popup.setLngLat(coordinates).setHTML(popupContent).addTo(map);
+        `)
+        .addTo(map);
     });
 
     map.on('mouseleave', 'detection-center', () => {
-      map.getCanvas().style.cursor = '';
       popup.remove();
     });
 

@@ -18,6 +18,7 @@ import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
 import RodentDetectionPanel from './RodentDetectionPanel';
+import WindParticleLayer from './WindParticleLayer';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -139,7 +140,15 @@ const WeatherMap = () => {
         mapState={mapState}
       />
 
-      {map.current && <WindGLLayer map={map.current} />}
+      {map.current && (
+        <>
+          <WindParticleLayer map={map.current} />
+          <WindGLLayer map={map.current} />
+          <DetectionSpotLayer map={map.current} detections={ratLocations} />
+          <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
+          <MastomysTracker sightings={ratLocations} />
+        </>
+      )}
 
       <TopNavigationBar 
         onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
@@ -178,14 +187,6 @@ const WeatherMap = () => {
       </AnimatePresence>
 
       <MapLegend activeLayers={activeLayers} />
-
-      {map.current && (
-        <>
-          <DetectionSpotLayer map={map.current} detections={ratLocations} />
-          <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
-          <MastomysTracker sightings={ratLocations} />
-        </>
-      )}
 
       <RodentDetectionPanel 
         isOpen={rodentPanelOpen}

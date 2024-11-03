@@ -50,6 +50,18 @@ export const fetchHistoricalWeather = async () => {
   }
 };
 
+export const fetchEnvironmentalData = async () => {
+  try {
+    const weatherData = await fetchHistoricalWeather();
+    return {
+      populationTrend: weatherData?.populationTrend || [],
+      habitatSuitability: weatherData?.habitatSuitability || []
+    };
+  } catch (error) {
+    return handleApiError(error, 'environmental data');
+  }
+};
+
 export const fetchWeatherLayers = async () => {
   try {
     const layers = ['temp_new', 'precipitation_new', 'clouds_new', 'wind_new'];

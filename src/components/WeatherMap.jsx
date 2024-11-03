@@ -33,40 +33,54 @@ const WeatherMap = () => {
 
   useEffect(() => {
     if (map.current) return;
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
-    });
+    
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom
+      });
 
-    map.current.on('load', () => {
-      addWeatherLayers();
-      console.log('Map loaded and layers added');
-    });
+      map.current.on('load', () => {
+        addWeatherLayers();
+        console.log('Map loaded and layers added');
+      });
 
-    return () => map.current && map.current.remove();
+      return () => map.current && map.current.remove();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
   const addWeatherLayers = async () => {
     for (const layer of layers) {
       try {
         const source = await getWeatherLayer(layer);
-        map.current.addSource(layer, source);
-        map.current.addLayer({
-          id: layer,
-          type: 'raster',
-          source: layer,
-          layout: {
-            visibility: 'none'
-          },
-          paint: {
-            'raster-opacity': 0.8
-          }
-        });
-        console.log(`Added layer: ${layer}`);
+        if (!map.current.getSource(layer)) {
+          map.current.addSource(layer, source);
+          map.current.addLayer({
+            id: layer,
+            type: 'raster',
+            source: layer,
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'raster-opacity': 0.8
+            }
+          });
+        }
       } catch (error) {
-        console.error(`Error adding layer ${layer}:`, error);
+        toast({
+          title: "Warning",
+          description: `Failed to load ${layer} layer. Some features may be limited.`,
+          variant: "warning",
+        });
       }
     }
   };

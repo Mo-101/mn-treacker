@@ -1,14 +1,9 @@
 export const API_CONFIG = {
   ENDPOINTS: {
-    MASTOMYS_LOCATIONS: `/api/files/geojsonPaths/mnData`,
-    CASES: `/api/files/csvPaths/historicalCases`,
-    ENVIRONMENTAL: `/api/environmental`,
-    WEATHER: `/api/weather-data`,
-    WEATHER_LAYERS: `/api/weather-layers`,
-    TRAINING_DATA: `/api/training-data`
+    WEATHER: `https://api.openweathermap.org/data/2.5/weather`,
+    WEATHER_LAYERS: `https://tile.openweathermap.org/map`,
+    FORECAST: `https://api.openweathermap.org/data/2.5/forecast`
   },
 
-  TERRABOX: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || window.location.origin,
-  }
+  WEATHER_API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY
 };

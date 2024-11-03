@@ -11,74 +11,42 @@ const handleApiError = (error, context) => {
   return null;
 };
 
-const createApiUrl = (endpoint) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-  return `${baseUrl}${endpoint}`;
-};
-
-export const fetchMastomysLocations = async () => {
+export const fetchWeatherData = async (lat, lon) => {
   try {
-    const response = await fetch(createApiUrl(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS));
+    const response = await fetch(
+      `${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`
+    );
     if (!response.ok) {
-      throw new Error('Failed to fetch Mastomys locations');
+      throw new Error('Failed to fetch weather data');
     }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'Mastomys locations');
-  }
-};
-
-export const fetchLassaFeverCases = async () => {
-  try {
-    const response = await fetch(createApiUrl(API_CONFIG.ENDPOINTS.CASES));
-    if (!response.ok) {
-      throw new Error('Failed to fetch Lassa fever cases');
-    }
-    return await response.json();
-  } catch (error) {
-    return handleApiError(error, 'Lassa fever cases');
-  }
-};
-
-export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
-  try {
-    const response = await fetch(createApiUrl(`${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}?timeframe=${timeframe}`));
-    if (!response.ok) {
-      throw new Error('Failed to fetch environmental data');
-    }
-    return await response.json();
-  } catch (error) {
-    return handleApiError(error, 'environmental data');
+    return handleApiError(error, 'weather data');
   }
 };
 
 export const fetchWeatherLayers = async () => {
   try {
-    const response = await fetch(createApiUrl(API_CONFIG.ENDPOINTS.WEATHER_LAYERS));
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather layers');
-    }
-    return await response.json();
+    const layers = ['temp_new', 'precipitation_new', 'clouds_new', 'wind_new'];
+    return layers.map(layer => ({
+      id: layer.replace('_new', ''),
+      url: `${API_CONFIG.ENDPOINTS.WEATHER_LAYERS}/${layer}/{z}/{x}/{y}.png?appid=${API_CONFIG.WEATHER_API_KEY}`
+    }));
   } catch (error) {
     return handleApiError(error, 'weather layers');
   }
 };
 
-export const streamFromTeraBox = async (streamId) => {
+export const fetchWeatherForecast = async (lat, lon) => {
   try {
-    const response = await fetch(createApiUrl(`/stream/${streamId}`), {
-      headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_TERRABOX_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
+    const response = await fetch(
+      `${API_CONFIG.ENDPOINTS.FORECAST}?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`
+    );
     if (!response.ok) {
-      throw new Error('Failed to fetch the stream');
+      throw new Error('Failed to fetch weather forecast');
     }
-
-    return response.body.getReader();
+    return await response.json();
   } catch (error) {
-    return handleApiError(error, 'TeraBox stream');
+    return handleApiError(error, 'weather forecast');
   }
 };

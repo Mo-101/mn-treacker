@@ -16,16 +16,6 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    const token = import.meta.env.VITE_MAPBOX_TOKEN;
-    if (!token) {
-      toast({
-        title: "Configuration Error",
-        description: "Mapbox token is missing. Please check your environment variables.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -34,11 +24,15 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         zoom: mapState.zoom,
         pitch: 45,
         bearing: 0,
-        antialias: true
+        antialias: true,
+        terrain: {
+          source: 'mapbox-dem',
+          exaggeration: 2.5
+        }
       });
 
       map.current.on('load', async () => {
-        // Add terrain source with higher exaggeration
+        // Add terrain source with higher resolution
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.terrain-rgb',
@@ -46,13 +40,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           maxzoom: 14
         });
 
-        // Set terrain with higher exaggeration
-        map.current.setTerrain({ 
-          source: 'mapbox-dem', 
-          exaggeration: 2.5 // Increased from 1.5 to make terrain more visible
-        });
-
-        // Add enhanced fog effect
+        // Enhanced fog effect
         map.current.setFog({
           'range': [0.5, 10],
           'color': '#ffffff',
@@ -62,7 +50,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           'star-intensity': 0.15
         });
 
-        // Fetch and initialize weather layers with adjusted height
+        // Add weather layers with improved height handling
         const weatherLayers = await fetchWeatherLayers();
         if (weatherLayers) {
           weatherLayers.forEach(layer => {
@@ -72,13 +60,12 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
                 tiles: [layer.url],
                 tileSize: 256
               });
-              
-              // Add layer with adjusted height for clouds
+
               map.current.addLayer({
                 id: layer.id,
                 type: 'raster',
                 source: layer.id,
-                paint: { 
+                paint: {
                   'raster-opacity': 0.7,
                   'raster-opacity-transition': {
                     duration: 0
@@ -89,18 +76,19 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
                 }
               });
 
-              // If this is the clouds layer, add it at a higher elevation
+              // Enhanced cloud layer handling
               if (layer.id === 'clouds') {
                 map.current.setLayerZoomRange(layer.id, 0, 22);
                 map.current.setPaintProperty(layer.id, 'raster-fade-duration', 0);
-                map.current.setPaintProperty(layer.id, 'raster-height', 5000); // Raise clouds higher
+                map.current.setPaintProperty(layer.id, 'raster-height', 8000); // Increased cloud height
+                map.current.setPaintProperty(layer.id, 'raster-resampling', 'linear');
               }
             }
           });
         }
 
-        // Initialize other layers
-        initializeLayers(map.current);
+        // Initialize other layers with improved settings
+        await initializeLayers(map.current);
 
         toast({
           title: "Map Initialized",

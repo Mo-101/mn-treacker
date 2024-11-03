@@ -37,14 +37,31 @@ const WeatherMap = () => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m', // Default layer
+        style: 'mapbox://styles/mapbox/dark-v10', // Fallback to default Mapbox style
         center: [mapState.lng, mapState.lat],
-        zoom: mapState.zoom
+        zoom: mapState.zoom,
+        transformRequest: (url, resourceType) => {
+          // Handle missing images gracefully
+          if (resourceType === 'Image' && url.includes('wizard-logo.png')) {
+            return {
+              url: '/placeholder.svg' // Use local placeholder image
+            };
+          }
+        }
       });
 
       map.current.on('load', () => {
         addWeatherLayers();
         console.log('Map loaded and layers added');
+      });
+
+      map.current.on('error', (e) => {
+        console.error('Map error:', e);
+        toast({
+          title: "Map Error",
+          description: "An error occurred with the map. Some features may be limited.",
+          variant: "destructive",
+        });
       });
 
       return () => map.current && map.current.remove();

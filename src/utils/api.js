@@ -56,3 +56,23 @@ export const fetchWeatherLayers = async () => {
     handleApiError(error, 'weather layers');
   }
 };
+
+export const streamFromTeraBox = async (streamId) => {
+  try {
+    const response = await fetch(`${API_CONFIG.TERRABOX.BASE_URL}/stream/${streamId}`, {
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_TERRABOX_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch the stream');
+    }
+
+    const reader = response.body.getReader();
+    return reader;
+  } catch (error) {
+    handleApiError(error, 'TeraBox stream');
+  }
+};

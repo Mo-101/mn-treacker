@@ -12,7 +12,6 @@ import AITrainingInterface from './AITrainingInterface';
 import PredictionPanel from './PredictionPanel';
 import DetectionSpotLayer from './DetectionSpotLayer';
 import LassaFeverCasesLayer from './LassaFeverCasesLayer';
-import WeatherControls from './WeatherControls';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
@@ -38,7 +37,6 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
-  // Fetch data using React Query
   const { data: ratLocations } = useQuery({
     queryKey: ['ratLocations'],
     queryFn: fetchMastomysLocations,
@@ -61,6 +59,11 @@ const WeatherMap = () => {
         map.current.setLayoutProperty(layerId, 'visibility', 'visible');
         setActiveLayers(prev => [...prev, layerId]);
       }
+      
+      toast({
+        title: isActive ? "Layer Hidden" : "Layer Shown",
+        description: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} layer has been ${isActive ? 'hidden' : 'shown'}`,
+      });
     }
   };
 
@@ -141,15 +144,6 @@ const WeatherMap = () => {
           />
         )}
       </AnimatePresence>
-
-      <div className="absolute bottom-4 left-4 z-10">
-        <WeatherControls
-          activeLayers={activeLayers}
-          onLayerToggle={handleLayerToggle}
-          layerOpacity={layerOpacity}
-          onOpacityChange={handleOpacityChange}
-        />
-      </div>
 
       <MapLegend activeLayers={activeLayers} />
 

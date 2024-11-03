@@ -1,5 +1,4 @@
 import { API_CONFIG } from '../config/apiConfig';
-import { toast } from '../components/ui/use-toast';
 
 const handleApiError = (error, context) => {
   console.error(`Error fetching ${context}:`, error);
@@ -29,6 +28,19 @@ export const fetchLassaFeverCases = async () => {
     return data;
   } catch (error) {
     handleApiError(error, 'Lassa fever cases');
+  }
+};
+
+export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
+  try {
+    const response = await fetch(`${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}?timeframe=${timeframe}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch environmental data');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    handleApiError(error, 'environmental data');
   }
 };
 

@@ -101,7 +101,9 @@ const WeatherMap = () => {
     setLayerOpacity(opacity);
     if (map.current) {
       activeLayers.forEach(layerId => {
-        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+        if (map.current.getLayer(layerId)) {
+          map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+        }
       });
     }
   };

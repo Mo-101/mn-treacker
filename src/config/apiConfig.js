@@ -4,7 +4,8 @@ export const API_CONFIG = {
     CASES: 'lassa-cases',
     ENVIRONMENTAL: 'environmental',
     WEATHER: 'weather-data',
-    WEATHER_LAYERS: 'https://terabox.com/s/1LE_5sz7dG8D0KtSKgyOJ4g'
+    WEATHER_LAYERS: 'https://terabox.com/s/1LE_5sz7dG8D0KtSKgyOJ4g',
+    TRAINING_DATA: 'https://terabox.com/s/1TkJb0as7k71GMMx3CwFklQ'
   },
 
   TERRABOX: {

@@ -40,6 +40,32 @@ export const fetchWeatherLayers = async () => {
   }
 };
 
+export const fetchTrainingData = async () => {
+  try {
+    const response = await fetch(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+    if (!response.ok) {
+      throw new Error('Failed to fetch training data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching training data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch training data. Using fallback data.",
+      variant: "destructive",
+    });
+    return {
+      trainingSet: [],
+      validationSet: [],
+      metadata: {
+        lastUpdated: new Date().toISOString(),
+        totalSamples: 0,
+        accuracy: 0
+      }
+    };
+  }
+};
+
 export const fetchMastomysLocations = async () => {
   try {
     const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
@@ -124,25 +150,33 @@ export const fetchWeatherData = async (lat, lon) => {
 
 export const fetchEnvironmentalData = async () => {
   try {
-    const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.ENVIRONMENTAL);
-    if (!data) {
-      return {
-        populationTrend: [
-          { month: 'Jan', actual: 4000, predicted: 4400 },
-          { month: 'Feb', actual: 3000, predicted: 3200 },
-          { month: 'Mar', actual: 2000, predicted: 2400 },
-          { month: 'Apr', actual: 2780, predicted: 2900 },
-          { month: 'May', actual: 1890, predicted: 2100 },
-          { month: 'Jun', actual: 2390, predicted: 2500 }
-        ],
-        habitatSuitability: [
-          { area: 'Forest', suitability: 80 },
-          { area: 'Grassland', suitability: 65 },
-          { area: 'Urban', suitability: 30 },
-          { area: 'Wetland', suitability: 75 }
-        ]
-      };
+    const [terraboxData, trainingData] = await Promise.all([
+      fetchFromTerrabox(API_CONFIG.ENDPOINTS.ENVIRONMENTAL),
+      fetchTrainingData()
+    ]);
+
+    const data = terraboxData || {
+      populationTrend: [
+        { month: 'Jan', actual: 4000, predicted: 4400 },
+        { month: 'Feb', actual: 3000, predicted: 3200 },
+        { month: 'Mar', actual: 2000, predicted: 2400 },
+        { month: 'Apr', actual: 2780, predicted: 2900 },
+        { month: 'May', actual: 1890, predicted: 2100 },
+        { month: 'Jun', actual: 2390, predicted: 2500 }
+      ],
+      habitatSuitability: [
+        { area: 'Forest', suitability: 80 },
+        { area: 'Grassland', suitability: 65 },
+        { area: 'Urban', suitability: 30 },
+        { area: 'Wetland', suitability: 75 }
+      ]
+    };
+
+    // Merge training data with environmental data if available
+    if (trainingData) {
+      data.trainingMetrics = trainingData.metadata;
     }
+
     return data;
   } catch (error) {
     console.error('Error fetching environmental data:', error);

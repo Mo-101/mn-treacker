@@ -2,8 +2,8 @@ import React from 'react';
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { Info } from 'lucide-react';
-import { Tooltip } from './ui/tooltip';
 import {
+  Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -18,13 +18,13 @@ const layerInfo = {
 
 const InteractiveSidebar = () => {
   return (
-    <div className="w-64 bg-gradient-to-b from-gray-900/95 to-gray-800/95 backdrop-blur-md p-4 overflow-y-auto shadow-xl border border-yellow-400/10">
+    <div className="w-full sm:w-64 md:w-72 lg:w-80 bg-gradient-to-b from-gray-900/95 to-gray-800/95 backdrop-blur-md p-4 overflow-y-auto shadow-xl border border-yellow-400/10 min-h-screen transition-all duration-300 ease-in-out">
       <h3 className="text-xl font-bold mb-6 text-yellow-400 tracking-tight">
         Data Layers
       </h3>
       <div className="space-y-6">
         {Object.entries(layerInfo).map(([layer, info]) => (
-          <div key={layer} className="space-y-3 bg-black/40 p-4 rounded-lg border border-yellow-400/20 shadow-lg">
+          <div key={layer} className="space-y-3 bg-black/40 p-4 rounded-lg border border-yellow-400/20 shadow-lg transform transition-transform hover:scale-[1.02]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-yellow-400 font-medium">{layer}</span>

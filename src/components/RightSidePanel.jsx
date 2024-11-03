@@ -26,7 +26,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
       initial={{ x: '100%' }}
       animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
-      className="fixed right-0 top-0 h-full w-96 bg-gray-900 text-yellow-400 p-6 z-30 overflow-y-auto shadow-2xl"
+      className="fixed right-0 top-0 h-full w-[90vw] sm:w-80 md:w-96 bg-gray-900 text-yellow-400 p-4 sm:p-6 z-30 overflow-y-auto shadow-2xl"
     >
       <Button 
         variant="ghost" 
@@ -37,7 +37,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
         <X className="h-5 w-5" />
       </Button>
 
-      <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300 pr-12">
         Risk Assessment
       </h2>
 
@@ -47,7 +47,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="p-4 bg-black/40 rounded-lg space-y-2">
+          <div className="p-4 bg-black/40 rounded-lg space-y-2 transform transition-all duration-300 hover:bg-black/50">
             <div className="flex items-center gap-2 text-yellow-400">
               <MapPin className="h-5 w-5" />
               <h3 className="font-semibold">Location Details</h3>
@@ -59,7 +59,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
 
           <div className="p-4 bg-black/40 rounded-lg space-y-4">
             <h3 className="font-semibold text-yellow-400">Population Trend</h3>
-            <div className="h-48">
+            <div className="h-48 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={mockData}>
                   <XAxis 
@@ -91,7 +91,7 @@ const RightSidePanel = ({ isOpen, onClose, selectedPoint }) => {
             </div>
           </div>
 
-          <div className="p-4 bg-black/40 rounded-lg space-y-2">
+          <div className="p-4 bg-black/40 rounded-lg space-y-2 transform transition-all duration-300 hover:bg-black/50">
             <div className="flex items-center gap-2 text-yellow-400">
               <AlertTriangle className="h-5 w-5" />
               <h3 className="font-semibold">Risk Analysis</h3>

@@ -56,8 +56,8 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle }) => {
       initial={{ x: '-100%' }}
       animate={{ x: isOpen ? 0 : '-100%' }}
       exit={{ x: '-100%' }}
-      transition={{ duration: 0.3 }}
-      className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-30 overflow-y-auto shadow-2xl"
+      transition={{ duration: 0.3, type: 'spring', stiffness: 100 }}
+      className="fixed left-0 top-0 h-full w-[90vw] sm:w-80 md:w-96 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 sm:p-6 z-30 overflow-y-auto shadow-2xl"
     >
       <Button 
         variant="ghost" 
@@ -68,13 +68,16 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle }) => {
         <X className="h-5 w-5" />
       </Button>
 
-      <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300 pr-12">
         Map Layers
       </h2>
 
       <div className="space-y-4">
         {weatherLayers.map((layer) => (
-          <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg">
+          <div 
+            key={layer.id} 
+            className="space-y-2 bg-black/40 p-3 rounded-lg transform transition-all duration-300 hover:translate-x-1 hover:bg-black/50"
+          >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <layer.icon className={`h-5 w-5 ${layer.color}`} />

@@ -1,127 +1,93 @@
 import { API_CONFIG, API_KEYS } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
-const handleApiError = (error, context) => {
-  console.error(`Error in ${context}:`, error);
-  toast({
-    title: "Backend Connection Error",
-    description: "Falling back to alternative data sources.",
-    variant: "warning",
+const fetchFromTerrabox = async (endpoint) => {
+  const url = `${API_CONFIG.TERRABOX.BASE_URL}/${endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${API_KEYS.TERRABOX}`,
+      'Content-Type': 'application/json',
+    },
   });
-  return null;
-};
-
-const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-    clearTimeout(id);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    clearTimeout(id);
-    throw error;
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
-};
-
-// OpenWeather API fallback
-const fetchOpenWeatherData = async (lat, lon) => {
-  const url = `${API_CONFIG.FALLBACK.OPENWEATHER}&lat=${lat}&lon=${lon}&units=metric`;
-  const response = await fetch(url);
+  
   return response.json();
 };
 
-// Terrabox API fallback
-const fetchTerraboxData = async (endpoint) => {
-  const url = `${API_CONFIG.FALLBACK.TERRABOX}/${endpoint}`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${API_KEYS.TERRABOX}`
-    }
-  });
+// OpenWeather API for weather data
+const fetchOpenWeatherData = async (lat, lon) => {
+  const url = `${API_CONFIG.FALLBACK.OPENWEATHER}&lat=${lat}&lon=${lon}&units=metric`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
   return response.json();
 };
 
 export const fetchEnvironmentalData = async (timeframe = 'weekly') => {
   try {
-    const response = await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}/data?timeframe=${timeframe}`
-    );
-    return response;
+    return await fetchFromTerrabox(`${API_CONFIG.ENDPOINTS.ENVIRONMENTAL}?timeframe=${timeframe}`);
   } catch (error) {
-    handleApiError(error, 'environmental data');
-    try {
-      return await fetchTerraboxData('environmental');
-    } catch (fallbackError) {
-      console.error('Fallback error:', fallbackError);
-      return {
-        temperature: 25,
-        humidity: 60,
-        rainfall: 100
-      };
-    }
+    console.error('Error fetching environmental data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch environmental data",
+      variant: "destructive",
+    });
+    return {
+      temperature: 25,
+      humidity: 60,
+      rainfall: 100
+    };
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
-    return response;
+    return await fetchFromTerrabox(API_CONFIG.ENDPOINTS.CASES);
   } catch (error) {
-    handleApiError(error, 'Lassa fever cases');
-    try {
-      return await fetchTerraboxData('lassa-cases');
-    } catch (fallbackError) {
-      console.error('Fallback error:', fallbackError);
-      return [];
-    }
+    console.error('Error fetching Lassa fever cases:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch Lassa fever cases",
+      variant: "destructive",
+    });
+    return [];
   }
 };
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetchWithTimeout(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
-    return response;
+    return await fetchFromTerrabox(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
   } catch (error) {
-    handleApiError(error, 'Mastomys natalensis locations');
-    try {
-      return await fetchTerraboxData('mastomys-locations');
-    } catch (fallbackError) {
-      console.error('Fallback error:', fallbackError);
-      return [];
-    }
+    console.error('Error fetching Mastomys locations:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch Mastomys locations",
+      variant: "destructive",
+    });
+    return [];
   }
 };
 
 export const fetchWeatherData = async (lat, lon) => {
   try {
-    const response = await fetchWithTimeout(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}`
-    );
-    return response;
+    const weatherData = await fetchOpenWeatherData(lat, lon);
+    return weatherData;
   } catch (error) {
-    handleApiError(error, 'weather data');
-    try {
-      return await fetchOpenWeatherData(lat, lon);
-    } catch (fallbackError) {
-      console.error('Fallback error:', fallbackError);
-      return {
-        temperature: 25,
-        humidity: 60,
-        rainfall: 100
-      };
-    }
+    console.error('Error fetching weather data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch weather data",
+      variant: "destructive",
+    });
+    return {
+      temperature: 25,
+      humidity: 60,
+      rainfall: 100
+    };
   }
 };

@@ -18,6 +18,7 @@ import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
+import RodentDetectionPanel from './RodentDetectionPanel';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -33,6 +34,7 @@ const WeatherMap = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [rodentPanelOpen, setRodentPanelOpen] = useState(false);
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
@@ -158,6 +160,12 @@ const WeatherMap = () => {
           <MastomysTracker sightings={ratLocations} />
         </>
       )}
+
+      <RodentDetectionPanel 
+        isOpen={rodentPanelOpen}
+        onToggle={() => setRodentPanelOpen(!rodentPanelOpen)}
+        detections={ratLocations?.features || []}
+      />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React from 'react';
 import { Thermometer, CloudRain, Wind, Cloud } from 'lucide-react';
 import { Slider } from './ui/slider';
 import { X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 const WeatherControls = ({ activeLayers, onLayerToggle, layerOpacity, onOpacityChange }) => {
   const layers = [
@@ -32,14 +33,11 @@ const WeatherControls = ({ activeLayers, onLayerToggle, layerOpacity, onOpacityC
   ];
 
   return (
-    <div className="absolute top-16 left-4 bg-gray-900/95 p-6 rounded-lg shadow-lg w-80 text-white">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-yellow-400">Weather Layers</h3>
-        <button onClick={() => {}} className="text-gray-400 hover:text-white transition-colors">
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="space-y-6">
+    <Card className="bg-gray-800 bg-opacity-50 backdrop-blur-md text-yellow-400 w-80">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">Weather Layers</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
         {layers.map((layer) => (
           <div 
             key={layer.id}
@@ -66,8 +64,8 @@ const WeatherControls = ({ activeLayers, onLayerToggle, layerOpacity, onOpacityC
             />
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

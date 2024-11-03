@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Thermometer, Droplet, Wind } from 'lucide-react';
+import { X, Cloud, Thermometer, Droplet, Wind, MapPin, Activity } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle }) => {
   const weatherLayers = [
     { 
       id: 'temperature', 
@@ -34,6 +34,20 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       icon: Cloud,
       description: 'Cloud coverage data',
       color: 'text-gray-500'
+    },
+    {
+      id: 'points',
+      name: 'Rat Locations',
+      icon: MapPin,
+      description: 'Mastomys natalensis sightings',
+      color: 'text-yellow-500'
+    },
+    {
+      id: 'cases',
+      name: 'Lassa Cases',
+      icon: Activity,
+      description: 'Reported Lassa fever cases',
+      color: 'text-red-600'
     }
   ];
 
@@ -55,7 +69,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       </Button>
 
       <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300">
-        Weather Layers
+        Map Layers
       </h2>
 
       <div className="space-y-4">
@@ -73,14 +87,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               />
             </div>
             <p className="text-sm text-gray-400">{layer.description}</p>
-            <Slider 
-              defaultValue={[100]} 
-              max={100} 
-              step={1}
-              onValueChange={(value) => onOpacityChange(value[0])}
-              disabled={!activeLayers.includes(layer.id)}
-              className="[&_.relative]:bg-yellow-400/20 [&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400 [&_.absolute]:bg-yellow-400"
-            />
           </div>
         ))}
       </div>

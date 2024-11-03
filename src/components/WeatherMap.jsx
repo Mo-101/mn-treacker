@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
 import { WeatherLayerManager } from '../utils/weatherLayerManager';
 import TopNavigationBar from './TopNavigationBar';
 import SidePanels from './SidePanels';
@@ -11,10 +13,23 @@ const WeatherMap = () => {
   const map = useRef(null);
   const weatherLayerManager = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
-  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind']);
+  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind', 'cases', 'points']);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const { toast } = useToast();
+
+  // Fetch data using React Query
+  const { data: ratLocations } = useQuery({
+    queryKey: ['ratLocations'],
+    queryFn: fetchMastomysLocations,
+    staleTime: 300000
+  });
+
+  const { data: lassaCases } = useQuery({
+    queryKey: ['lassaCases'],
+    queryFn: fetchLassaFeverCases,
+    staleTime: 300000
+  });
 
   useEffect(() => {
     if (!mapboxgl.accessToken) {
@@ -52,9 +67,90 @@ const WeatherMap = () => {
         );
         await weatherLayerManager.current.initializeLayers();
 
+        // Add rat locations source and layer
+        if (ratLocations) {
+          map.current.addSource('rat-points', {
+            type: 'geojson',
+            data: ratLocations
+          });
+
+          map.current.addLayer({
+            id: 'points',
+            type: 'circle',
+            source: 'rat-points',
+            paint: {
+              'circle-radius': 6,
+              'circle-color': '#FFD700',
+              'circle-opacity': 0.8,
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#fff'
+            }
+          });
+        }
+
+        // Add Lassa fever cases source and layer
+        if (lassaCases) {
+          map.current.addSource('lassa-cases', {
+            type: 'geojson',
+            data: lassaCases
+          });
+
+          map.current.addLayer({
+            id: 'cases',
+            type: 'circle',
+            source: 'lassa-cases',
+            paint: {
+              'circle-radius': 8,
+              'circle-color': '#FF4136',
+              'circle-opacity': 0.8,
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#fff'
+            }
+          });
+        }
+
         // Set initial layer visibility
         activeLayers.forEach(layerId => {
-          weatherLayerManager.current.toggleLayer(layerId, true);
+          if (map.current.getLayer(layerId)) {
+            map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+          }
+        });
+
+        // Add popups for points and cases
+        map.current.on('click', 'points', (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const properties = e.features[0].properties;
+
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(`
+              <div class="p-2">
+                <h3 class="font-bold">Rat Location</h3>
+                <p>Coordinates: ${coordinates}</p>
+                ${Object.entries(properties).map(([key, value]) => 
+                  `<p>${key}: ${value}</p>`
+                ).join('')}
+              </div>
+            `)
+            .addTo(map.current);
+        });
+
+        map.current.on('click', 'cases', (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const properties = e.features[0].properties;
+
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(`
+              <div class="p-2">
+                <h3 class="font-bold">Lassa Fever Case</h3>
+                <p>Coordinates: ${coordinates}</p>
+                ${Object.entries(properties).map(([key, value]) => 
+                  `<p>${key}: ${value}</p>`
+                ).join('')}
+              </div>
+            `)
+            .addTo(map.current);
         });
       });
 
@@ -69,7 +165,7 @@ const WeatherMap = () => {
     }
 
     return () => map.current?.remove();
-  }, []);
+  }, [ratLocations, lassaCases]);
 
   const handleLayerToggle = (layerId) => {
     setActiveLayers(prev => {
@@ -78,8 +174,12 @@ const WeatherMap = () => {
         ? prev.filter(id => id !== layerId)
         : [...prev, layerId];
       
-      if (weatherLayerManager.current) {
-        weatherLayerManager.current.toggleLayer(layerId, !isActive);
+      if (map.current && map.current.getLayer(layerId)) {
+        map.current.setLayoutProperty(
+          layerId,
+          'visibility',
+          isActive ? 'none' : 'visible'
+        );
       }
       
       return newLayers;

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
-const RatTracker = ({ sightings }) => {
+const RatTracker = ({ sightings = [] }) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: 50 }}

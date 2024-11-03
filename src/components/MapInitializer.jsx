@@ -38,25 +38,31 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
       });
 
       map.current.on('load', async () => {
-        // Add terrain source
+        // Add terrain source with higher exaggeration
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
-          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          url: 'mapbox://mapbox.terrain-rgb',
           tileSize: 512,
           maxzoom: 14
         });
 
-        // Add terrain and fog
-        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
-        map.current.setFog({
-          'horizon-blend': 0.3,
-          'color': '#f8f8f8',
-          'high-color': '#add8e6',
-          'space-color': '#d8f2ff',
-          'star-intensity': 0.0
+        // Set terrain with higher exaggeration
+        map.current.setTerrain({ 
+          source: 'mapbox-dem', 
+          exaggeration: 2.5 // Increased from 1.5 to make terrain more visible
         });
 
-        // Fetch and initialize weather layers
+        // Add enhanced fog effect
+        map.current.setFog({
+          'range': [0.5, 10],
+          'color': '#ffffff',
+          'horizon-blend': 0.2,
+          'high-color': '#add8e6',
+          'space-color': '#d8f2ff',
+          'star-intensity': 0.15
+        });
+
+        // Fetch and initialize weather layers with adjusted height
         const weatherLayers = await fetchWeatherLayers();
         if (weatherLayers) {
           weatherLayers.forEach(layer => {
@@ -66,12 +72,29 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
                 tiles: [layer.url],
                 tileSize: 256
               });
+              
+              // Add layer with adjusted height for clouds
               map.current.addLayer({
                 id: layer.id,
                 type: 'raster',
                 source: layer.id,
-                paint: { 'raster-opacity': 0.7 }
+                paint: { 
+                  'raster-opacity': 0.7,
+                  'raster-opacity-transition': {
+                    duration: 0
+                  }
+                },
+                layout: {
+                  'visibility': 'visible'
+                }
               });
+
+              // If this is the clouds layer, add it at a higher elevation
+              if (layer.id === 'clouds') {
+                map.current.setLayerZoomRange(layer.id, 0, 22);
+                map.current.setPaintProperty(layer.id, 'raster-fade-duration', 0);
+                map.current.setPaintProperty(layer.id, 'raster-height', 5000); // Raise clouds higher
+              }
             }
           });
         }
@@ -81,7 +104,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
 
         toast({
           title: "Map Initialized",
-          description: "Weather layers and data points loaded successfully.",
+          description: "Weather layers and terrain loaded successfully.",
         });
       });
 

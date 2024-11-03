@@ -11,20 +11,32 @@ const handleApiError = (error, context) => {
   return null;
 };
 
-const fetchFromTeraBox = async (url) => {
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${API_CONFIG.TERABOX_TOKEN}`,
-      'Content-Type': 'application/json'
+const fetchWithRetry = async (url, options = {}, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+          ...options.headers,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
-  });
-  if (!response.ok) throw new Error('TeraBox fetch failed');
-  return response.json();
+  }
 };
 
 export const fetchMastomysLocations = async () => {
   try {
-    return await fetchFromTeraBox(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    return await fetchWithRetry(`${API_CONFIG.ENDPOINTS.MASTOMYS_DATA}`, {
+      mode: 'cors'
+    });
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -32,27 +44,20 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchWeatherData = async (lat, lon) => {
   try {
-    const response = await fetch(
-      `${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`
+    return await fetchWithRetry(
+      `${API_CONFIG.ENDPOINTS.WEATHER}?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`,
+      { mode: 'cors' }
     );
-    if (!response.ok) throw new Error('Failed to fetch weather data');
-    return await response.json();
   } catch (error) {
     return handleApiError(error, 'weather data');
   }
 };
 
-export const fetchHistoricalWeather = async () => {
-  try {
-    return await fetchFromTeraBox(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL);
-  } catch (error) {
-    return handleApiError(error, 'historical weather data');
-  }
-};
-
 export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchFromTeraBox(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    return await fetchWithRetry(`${API_CONFIG.ENDPOINTS.LASSA_CASES}`, {
+      mode: 'cors'
+    });
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
@@ -60,7 +65,9 @@ export const fetchLassaFeverCases = async () => {
 
 export const fetchEnvironmentalData = async () => {
   try {
-    const weatherData = await fetchHistoricalWeather();
+    const weatherData = await fetchWithRetry(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL, {
+      mode: 'cors'
+    });
     return {
       populationTrend: weatherData?.populationTrend || [],
       habitatSuitability: weatherData?.habitatSuitability || []
@@ -84,7 +91,9 @@ export const fetchWeatherLayers = async () => {
 
 export const fetchTrainingProgress = async () => {
   try {
-    return await fetchFromTeraBox(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+    return await fetchWithRetry(API_CONFIG.ENDPOINTS.TRAINING_DATA, {
+      mode: 'cors'
+    });
   } catch (error) {
     return handleApiError(error, 'training progress');
   }

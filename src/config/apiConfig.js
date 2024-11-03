@@ -3,7 +3,8 @@ export const API_CONFIG = {
     MASTOMYS_LOCATIONS: 'mastomys-locations',
     CASES: 'lassa-cases',
     ENVIRONMENTAL: 'environmental',
-    WEATHER: 'weather-data'
+    WEATHER: 'weather-data',
+    WEATHER_LAYERS: 'https://terabox.com/s/1LE_5sz7dG8D0KtSKgyOJ4g'
   },
 
   TERRABOX: {

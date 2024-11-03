@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { hybridMapStyle } from '../config/mapStyle';
 import { initializeLayers } from '../utils/mapLayers';
+import { fetchWeatherLayers } from '../utils/api';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -36,7 +37,7 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
         antialias: true
       });
 
-      map.current.on('load', () => {
+      map.current.on('load', async () => {
         // Add terrain source
         map.current.addSource('mapbox-dem', {
           type: 'raster-dem',
@@ -55,7 +56,27 @@ const MapInitializer = ({ map, mapContainer, mapState }) => {
           'star-intensity': 0.0
         });
 
-        // Initialize weather and data layers
+        // Fetch and initialize weather layers
+        const weatherLayers = await fetchWeatherLayers();
+        if (weatherLayers) {
+          weatherLayers.forEach(layer => {
+            if (!map.current.getSource(layer.id)) {
+              map.current.addSource(layer.id, {
+                type: 'raster',
+                tiles: [layer.url],
+                tileSize: 256
+              });
+              map.current.addLayer({
+                id: layer.id,
+                type: 'raster',
+                source: layer.id,
+                paint: { 'raster-opacity': 0.7 }
+              });
+            }
+          });
+        }
+
+        // Initialize other layers
         initializeLayers(map.current);
 
         toast({

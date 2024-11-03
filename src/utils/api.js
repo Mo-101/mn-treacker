@@ -22,11 +22,28 @@ const fetchFromTerrabox = async (endpoint) => {
   }
 };
 
+export const fetchWeatherLayers = async () => {
+  try {
+    const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER_LAYERS);
+    if (!response.ok) {
+      throw new Error('Failed to fetch weather layers');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching weather layers:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch weather layers. Using fallback data.",
+      variant: "destructive",
+    });
+    return null;
+  }
+};
+
 export const fetchMastomysLocations = async () => {
   try {
     const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS);
     if (!data) {
-      // Return mock data for development
       return {
         type: 'FeatureCollection',
         features: [
@@ -61,7 +78,6 @@ export const fetchLassaFeverCases = async () => {
   try {
     const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.CASES);
     if (!data) {
-      // Return mock data for development
       return [
         {
           id: 1,
@@ -103,5 +119,38 @@ export const fetchWeatherData = async (lat, lon) => {
       humidity: 60,
       rainfall: 100
     };
+  }
+};
+
+export const fetchEnvironmentalData = async () => {
+  try {
+    const data = await fetchFromTerrabox(API_CONFIG.ENDPOINTS.ENVIRONMENTAL);
+    if (!data) {
+      return {
+        populationTrend: [
+          { month: 'Jan', actual: 4000, predicted: 4400 },
+          { month: 'Feb', actual: 3000, predicted: 3200 },
+          { month: 'Mar', actual: 2000, predicted: 2400 },
+          { month: 'Apr', actual: 2780, predicted: 2900 },
+          { month: 'May', actual: 1890, predicted: 2100 },
+          { month: 'Jun', actual: 2390, predicted: 2500 }
+        ],
+        habitatSuitability: [
+          { area: 'Forest', suitability: 80 },
+          { area: 'Grassland', suitability: 65 },
+          { area: 'Urban', suitability: 30 },
+          { area: 'Wetland', suitability: 75 }
+        ]
+      };
+    }
+    return data;
+  } catch (error) {
+    console.error('Error fetching environmental data:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch environmental data. Using mock data.",
+      variant: "destructive",
+    });
+    return null;
   }
 };

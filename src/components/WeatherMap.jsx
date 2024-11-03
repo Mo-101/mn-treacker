@@ -10,7 +10,7 @@ import FloatingInsightsBar from './FloatingInsightsButton';
 import AITrainingInterface from './AITrainingInterface';
 import MastomysTracker from './MastomysTracker';
 import PredictionPanel from './PredictionPanel';
-import { getWeatherLayer } from '../utils/weatherApiUtils';
+import { addWeatherLayers, toggleLayer } from '../utils/mapUtils';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -27,9 +27,6 @@ const WeatherMap = () => {
   const [mastomysData, setMastomysData] = useState([]);
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [activeLayer, setActiveLayer] = useState(null);
-  const [selectAll, setSelectAll] = useState(false);
-
-  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
 
   useEffect(() => {
     if (map.current) return;
@@ -37,21 +34,18 @@ const WeatherMap = () => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v10', // Fallback to default Mapbox style
+        style: 'mapbox://styles/mapbox/dark-v10',
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
         transformRequest: (url, resourceType) => {
-          // Handle missing images gracefully
           if (resourceType === 'Image' && url.includes('wizard-logo.png')) {
-            return {
-              url: '/placeholder.svg' // Use local placeholder image
-            };
+            return { url: '/placeholder.svg' };
           }
         }
       });
 
       map.current.on('load', () => {
-        addWeatherLayers();
+        addWeatherLayers(map.current);
         console.log('Map loaded and layers added');
       });
 
@@ -74,73 +68,15 @@ const WeatherMap = () => {
     }
   }, []);
 
-  const addWeatherLayers = async () => {
-    for (const layer of layers) {
-      try {
-        const source = await getWeatherLayer(layer);
-        if (!map.current.getSource(layer)) {
-          map.current.addSource(layer, source);
-          map.current.addLayer({
-            id: layer,
-            type: 'raster',
-            source: layer,
-            layout: {
-              visibility: 'none'
-            },
-            paint: {
-              'raster-opacity': 0.8
-            }
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Warning",
-          description: `Failed to load ${layer} layer. Some features may be limited.`,
-          variant: "warning",
-        });
-      }
-    }
-  };
-
   const handleLayerToggle = (layerId) => {
-    if (selectAll) return;
-
     console.log(`Toggling layer: ${layerId}`);
     const newVisibility = activeLayer === layerId ? 'none' : 'visible';
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', layer === layerId ? newVisibility : 'none');
-      }
-    });
-
-    setActiveLayer(activeLayer === layerId ? null : layerId);
-    setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
-  };
-
-  const handleSelectAllLayers = () => {
-    const newSelectAllState = !selectAll;
-
-    layers.forEach(layer => {
-      if (map.current.getLayer(layer)) {
-        map.current.setLayoutProperty(layer, 'visibility', newSelectAllState ? 'visible' : 'none');
-      }
-    });
-
-    setSelectAll(newSelectAllState);
-    setActiveLayer(null);
-    setActiveLayers(newSelectAllState ? layers : []);
-  };
-
-  const handleOpacityChange = (layerId, opacity) => {
-    if (map.current && map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+    
+    if (map.current) {
+      toggleLayer(map.current, layerId, newVisibility === 'visible');
+      setActiveLayer(activeLayer === layerId ? null : layerId);
+      setActiveLayers(newVisibility === 'visible' ? [layerId] : []);
     }
-  };
-
-  const handleDetailView = () => {
-    console.log('Detail view requested');
-    setPredictionPanelOpen(false);
   };
 
   return (
@@ -165,10 +101,6 @@ const WeatherMap = () => {
                 onClose={() => setLeftPanelOpen(false)}
                 activeLayers={activeLayers}
                 onLayerToggle={handleLayerToggle}
-                onOpacityChange={handleOpacityChange}
-                layers={layers}
-                selectAll={selectAll}
-                onSelectAllLayers={handleSelectAllLayers}
               />
             </div>
           )}
@@ -190,7 +122,6 @@ const WeatherMap = () => {
               <PredictionPanel
                 isOpen={predictionPanelOpen}
                 onClose={() => setPredictionPanelOpen(false)}
-                onDetailView={handleDetailView}
               />
             </div>
           )}

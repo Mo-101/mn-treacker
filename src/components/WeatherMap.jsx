@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
+import { fetchMastomysLocations, fetchLassaFeverCases, fetchWeatherLayers } from '../utils/api';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -37,16 +37,46 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
-  const { data: ratLocations } = useQuery({
+  const { data: ratLocations, isError: ratError } = useQuery({
     queryKey: ['ratLocations'],
     queryFn: fetchMastomysLocations,
-    staleTime: 300000
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch rat location data",
+        variant: "destructive",
+      });
+    }
   });
 
-  const { data: lassaCases } = useQuery({
+  const { data: lassaCases, isError: lassaError } = useQuery({
     queryKey: ['lassaCases'],
     queryFn: fetchLassaFeverCases,
-    staleTime: 300000
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch Lassa fever cases",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const { data: weatherLayers, isError: weatherError } = useQuery({
+    queryKey: ['weatherLayers'],
+    queryFn: fetchWeatherLayers,
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch weather layers",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleLayerToggle = (layerId) => {

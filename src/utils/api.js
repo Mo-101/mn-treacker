@@ -50,6 +50,14 @@ export const fetchHistoricalWeather = async () => {
   }
 };
 
+export const fetchLassaFeverCases = async () => {
+  try {
+    return await fetchFromTeraBox(API_CONFIG.ENDPOINTS.LASSA_CASES);
+  } catch (error) {
+    return handleApiError(error, 'Lassa fever cases');
+  }
+};
+
 export const fetchEnvironmentalData = async () => {
   try {
     const weatherData = await fetchHistoricalWeather();

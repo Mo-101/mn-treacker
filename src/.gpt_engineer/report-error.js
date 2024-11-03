@@ -28,7 +28,7 @@ const extractRequestData = (request) => {
   }
 };
 
-// Safe postMessage function
+// Safe postMessage function that ensures data is cloneable
 const postMessage = (message) => {
   try {
     const safeMessage = {
@@ -51,7 +51,9 @@ const postMessage = (message) => {
       }
     }
 
-    window.parent.postMessage(safeMessage, '*');
+    // Use structured clone to ensure the object is cloneable
+    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
+    window.parent.postMessage(cloneableMessage, '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     window.parent.postMessage({

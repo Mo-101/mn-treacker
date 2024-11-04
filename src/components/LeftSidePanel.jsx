@@ -1,83 +1,89 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Thermometer, Sun, Wind } from 'lucide-react';
+import { X, Cloud, Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
-import { Input } from './ui/input';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers, selectAll, onSelectAllLayers }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
   const weatherLayers = [
-    { id: 'precipitation', name: 'Precipitation', icon: Cloud },
-    { id: 'temp', name: 'Temperature', icon: Thermometer },
-    { id: 'clouds', name: 'Cloud Cover', icon: Sun },
-    { id: 'wind', name: 'Wind Speed', icon: Wind },
+    { 
+      id: 'temperature', 
+      name: 'Temperature', 
+      icon: Thermometer,
+      description: 'High-resolution temperature data',
+      color: 'text-red-500'
+    },
+    { 
+      id: 'precipitation', 
+      name: 'Precipitation', 
+      icon: Droplet,
+      description: 'Shows rainfall intensity',
+      color: 'text-blue-500'
+    },
+    { 
+      id: 'wind', 
+      name: 'Wind Speed', 
+      icon: Wind,
+      description: 'Wind patterns and speed',
+      color: 'text-cyan-500'
+    },
+    { 
+      id: 'clouds', 
+      name: 'Cloud Cover', 
+      icon: Cloud,
+      description: 'Cloud coverage data',
+      color: 'text-gray-500'
+    }
   ];
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-    // Implement search functionality here
-  };
 
   return (
     <motion.div
       initial={{ x: '-100%' }}
       animate={{ x: isOpen ? 0 : '-100%' }}
+      exit={{ x: '-100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed left-0 top-0 h-full w-64 bg-[#1e293b] text-white p-4 z-30 overflow-y-auto"
+      className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-30 overflow-y-auto shadow-2xl"
     >
-      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onClose} 
+        className="absolute top-4 right-4 hover:bg-white/10 transition-colors"
+      >
         <X className="h-5 w-5" />
       </Button>
-      <h2 className="text-xl font-bold mb-4">Weather Layers</h2>
-      <form onSubmit={handleSearch} className="mb-4">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search for locations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pr-10 bg-[#0f172a] border-gray-600"
-          />
-          <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-      </form>
+
+      <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300">
+        Weather Layers
+      </h2>
+
       <div className="space-y-4">
         {weatherLayers.map((layer) => (
-          <div key={layer.id} className="space-y-2">
+          <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="flex items-center">
-                <layer.icon className="mr-2 h-5 w-5" />
-                {layer.name}
+              <span className="flex items-center gap-2">
+                <layer.icon className={`h-5 w-5 ${layer.color}`} />
+                <span className="text-yellow-400">{layer.name}</span>
               </span>
-              <Switch
+              <Switch 
                 checked={activeLayers.includes(layer.id)}
                 onCheckedChange={() => onLayerToggle(layer.id)}
-                disabled={selectAll}
+                className="data-[state=checked]:bg-yellow-400"
               />
             </div>
-            <Slider
-              defaultValue={[100]}
-              max={100}
+            <p className="text-sm text-gray-400">{layer.description}</p>
+            <Slider 
+              defaultValue={[100]} 
+              max={100} 
               step={1}
-              className="w-full"
-              onValueChange={(value) => onOpacityChange(layer.id, value[0])}
-              disabled={!activeLayers.includes(layer.id) && !selectAll}
+              onValueChange={(value) => onOpacityChange(value[0])}
+              disabled={!activeLayers.includes(layer.id)}
+              className="[&_.relative]:bg-yellow-400/20 [&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400 [&_.absolute]:bg-yellow-400"
             />
           </div>
         ))}
       </div>
-      <Button
-        onClick={onSelectAllLayers}
-        className="mt-4 w-full"
-      >
-        {selectAll ? 'Deselect All Layers' : 'Select All Layers'}
-      </Button>
     </motion.div>
   );
 };

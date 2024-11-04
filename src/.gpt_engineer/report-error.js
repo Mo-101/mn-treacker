@@ -1,63 +1,88 @@
 // Function to safely extract data from a Request object
-function extractRequestData(request) {
-  if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: Object.fromEntries(request.headers),
-      // Add other properties you need, but avoid those that can't be cloned
-    };
-  }
-  return String(request);
-}
-
-// Function to extract relevant error information
-function extractErrorInfo(error) {
-  return {
-    message: error.message,
-    stack: error.stack,
-  };
-}
-
-// Modified postMessage function
-function postMessage(message) {
+const extractRequestData = (request) => {
+  if (!request) return null;
+  
   try {
-    // Extract only necessary information and ensure it's cloneable
-    const safeMessage = JSON.parse(JSON.stringify(message));
-    window.parent.postMessage(safeMessage, '*');
-  } catch (error) {
-    console.error('Error in postMessage:', error);
-    // Send a simplified error message
-    window.parent.postMessage({
-      type: 'error',
-      message: 'Failed to send message',
-      originalError: String(error)
-    }, '*');
+    // If it's a Request object
+    if (request instanceof Request) {
+      return {
+        url: request.url,
+        method: request.method,
+        // Only include safe headers
+        headers: Object.fromEntries(
+          Array.from(request.headers.entries()).filter(([key]) => {
+            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            return safeHeaders.includes(key.toLowerCase());
+          })
+        )
+      };
+    }
+    // If it's a string URL
+    if (typeof request === 'string') {
+      return { url: request };
+    }
+    return null;
+  } catch (err) {
+    console.warn('Error extracting request data:', err);
+    return null;
   }
-}
-
-// Function to report HTTP errors
-function reportHTTPError(error) {
-  const errorDetails = extractErrorInfo(error);
-  
-  if (error.request) {
-    errorDetails.request = extractRequestData(error.request);
-  }
-  
-  postMessage({
-    type: 'http_error',
-    error: errorDetails,
-  });
-}
-
-// Wrap the fetch function to catch and report errors
-const originalFetch = window.fetch;
-window.fetch = function(...args) {
-  return originalFetch.apply(this, args).catch(error => {
-    reportHTTPError(error);
-    throw error;
-  });
 };
 
-// Export functions if needed
+// Safe postMessage function that ensures data is cloneable
+const postMessage = (message) => {
+  try {
+    const safeMessage = {
+      type: 'error',
+      timestamp: new Date().toISOString()
+    };
+
+    if (message.error) {
+      safeMessage.error = {
+        message: message.error?.message || String(message.error),
+        stack: message.error?.stack,
+        type: message.error?.name || 'Error'
+      };
+    }
+
+    if (message.request) {
+      const safeRequest = extractRequestData(message.request);
+      if (safeRequest) {
+        safeMessage.request = safeRequest;
+      }
+    }
+
+    // Use structured clone to ensure the object is cloneable
+    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
+    window.parent.postMessage(cloneableMessage, '*');
+  } catch (err) {
+    console.warn('Error in postMessage:', err);
+    window.parent.postMessage({
+      type: 'error',
+      error: {
+        message: 'Failed to send error report',
+        timestamp: new Date().toISOString()
+      }
+    }, '*');
+  }
+};
+
+// Function to report HTTP errors
+const reportHTTPError = (error) => {
+  try {
+    const errorDetails = {
+      type: 'http_error',
+      error: {
+        message: error?.message || String(error),
+        stack: error?.stack,
+        type: error?.name || 'Error',
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    postMessage(errorDetails);
+  } catch (err) {
+    console.warn('Error reporting HTTP error:', err);
+  }
+};
+
 export { postMessage, reportHTTPError };

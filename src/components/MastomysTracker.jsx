@@ -1,33 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
-const MastomysTracker = ({ data, map }) => {
-  const [markersAdded, setMarkersAdded] = useState(false);
+const MastomysTracker = ({ sightings }) => {
+  const sightingsArray = sightings?.features || [];
 
-  useEffect(() => {
-    if (!map || data.length === 0 || markersAdded) return;
-
-    data.forEach((point) => {
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.backgroundColor = 'red';
-      el.style.width = '10px';
-      el.style.height = '10px';
-      el.style.borderRadius = '50%';
-
-      new mapboxgl.Marker(el)
-        .setLngLat([point.lng, point.lat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`<h3>Mastomys Population: ${point.population}</h3>`)
-        )
-        .addTo(map);
-    });
-
-    setMarkersAdded(true);
-  }, [map, data, markersAdded]);
-
-  return null; // This component doesn't render anything directly
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 50 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="absolute right-4 top-20 w-80"
+    >
+      <Card className="bg-black/50 text-white backdrop-blur-md border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">
+            Mastomys Sightings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {sightingsArray.map((sighting, index) => (
+              <div key={index} className="bg-white/20 p-2 rounded">
+                <p>Longitude: {sighting.geometry.coordinates[0]}</p>
+                <p>Latitude: {sighting.geometry.coordinates[1]}</p>
+                <p>Time: {new Date(sighting.properties.timestamp).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+          {sightingsArray.length === 0 && (
+            <p className="text-center text-gray-300">No sightings found</p>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 };
 
 export default MastomysTracker;

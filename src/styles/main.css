@@ -1,0 +1,14 @@
+/* Existing styles here */
+
+/* Temperature legend styles */
+.temperature-legend {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.temperature-legend.hidden {
+  display: none;
+}

@@ -1,8 +1,17 @@
 import React from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
+import { Mountain, Cloud, Droplets, Wind, Thermometer } from 'lucide-react';
 
 const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
+  const layerIcons = {
+    terrain: Mountain,
+    clouds: Cloud,
+    precipitation: Droplets,
+    wind: Wind,
+    temperature: Thermometer
+  };
+
   const handleLayerToggle = async (layerId) => {
     const isEnabled = !activeLayers.includes(layerId);
     const result = await onLayerToggle(layerId, isEnabled);
@@ -26,16 +35,22 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
   };
 
   return (
-    <div className="space-y-4">
-      {layers.map((layer) => (
-        <div key={layer.id} className="flex items-center justify-between">
-          <span>{layer.name}</span>
-          <Switch
-            checked={activeLayers.includes(layer.id)}
-            onCheckedChange={() => handleLayerToggle(layer.id)}
-          />
-        </div>
-      ))}
+    <div className="space-y-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
+      {layers.map((layer) => {
+        const Icon = layerIcons[layer.id] || Cloud;
+        return (
+          <div key={layer.id} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Icon className="h-5 w-5" />
+              <span>{layer.name}</span>
+            </div>
+            <Switch
+              checked={activeLayers.includes(layer.id)}
+              onCheckedChange={() => handleLayerToggle(layer.id)}
+            />
+          </div>
+        );
+      })}
       <div className="mt-4">
         <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>
         <Slider

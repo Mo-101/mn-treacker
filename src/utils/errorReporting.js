@@ -15,7 +15,7 @@ const extractRequestInfo = (request) => {
         )
       };
     }
-    return typeof request === 'string' ? request : null;
+    return typeof request === 'string' ? { url: request } : null;
   } catch (err) {
     console.warn('Error extracting request info:', err);
     return null;
@@ -44,5 +44,25 @@ export const reportError = (error, context = {}) => {
     window.parent.postMessage(cloneableReport, '*');
   } catch (err) {
     console.warn('Error reporting failed:', err);
+  }
+};
+
+export const reportHTTPError = (error) => {
+  try {
+    const errorDetails = {
+      type: 'http_error',
+      error: {
+        message: error?.message || String(error),
+        stack: error?.stack,
+        type: error?.name || 'Error',
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    // Use structured clone to ensure the object is cloneable
+    const cloneableError = JSON.parse(JSON.stringify(errorDetails));
+    window.parent.postMessage(cloneableError, '*');
+  } catch (err) {
+    console.warn('Error reporting HTTP error:', err);
   }
 };

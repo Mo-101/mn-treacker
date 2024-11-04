@@ -1,4 +1,5 @@
 import AerisWeather from '@aerisweather/javascript-sdk';
+import { reportError } from './errorReporting';
 
 const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
 
@@ -22,7 +23,7 @@ export const initializeAerisMap = async (container, mapState) => {
     });
     return { success: true, map };
   } catch (error) {
-    console.error('Error initializing AerisWeather map:', error);
+    reportError(error);
     return { success: false, error: error.message };
   }
 };
@@ -39,7 +40,7 @@ export const toggleAerisLayer = async (layerName, isEnabled) => {
     }
     return { success: false, error: 'Map not found' };
   } catch (error) {
-    console.error('Error toggling layer:', error);
+    reportError(error);
     return { success: false, error: error.message };
   }
 };
@@ -56,49 +57,7 @@ export const setAerisLayerOpacity = async (layerName, opacity) => {
     }
     return { success: false, error: 'Map not found' };
   } catch (error) {
-    console.error('Error setting layer opacity:', error);
+    reportError(error);
     return { success: false, error: error.message };
   }
 };
-
-// Helper function to safely extract data from a Request object
-const extractRequestData = (request) => {
-  if (request instanceof Request) {
-    return {
-      url: request.url,
-      method: request.method,
-      // Only include safe headers
-      headers: Object.fromEntries([...request.headers].filter(([key]) => {
-        const safeHeaders = ['content-type', 'accept', 'content-length'];
-        return safeHeaders.includes(key.toLowerCase());
-      }))
-    };
-  }
-  return String(request);
-};
-
-// Wrap fetch to handle errors without cloning the Request object
-const safeFetch = async (...args) => {
-  try {
-    const response = await fetch(...args);
-    if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
-      // Extract safe request data before reporting
-      const requestData = extractRequestData(args[0]);
-      if (typeof window.reportHTTPError === 'function') {
-        window.reportHTTPError({
-          message: error.message,
-          request: requestData
-        });
-      }
-      throw error;
-    }
-    return response;
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-};
-
-// Replace global fetch with our safe version
-window.fetch = safeFetch;

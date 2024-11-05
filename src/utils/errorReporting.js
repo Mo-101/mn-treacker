@@ -1,9 +1,8 @@
-const extractRequestInfo = (request) => {
+const extractRequestData = (request) => {
   if (!request) return null;
   
   try {
     if (request instanceof Request) {
-      // Only extract safe, serializable properties
       return {
         url: request.url,
         method: request.method,
@@ -17,33 +16,34 @@ const extractRequestInfo = (request) => {
     }
     return typeof request === 'string' ? { url: request } : null;
   } catch (err) {
-    console.warn('Error extracting request info:', err);
+    console.warn('Error extracting request data:', err);
     return null;
   }
 };
 
-export const reportError = (error, context = {}) => {
+export const reportError = (error, request = null) => {
   try {
-    const errorReport = {
+    const errorData = {
       type: 'error',
       timestamp: new Date().toISOString(),
-      message: error?.message || String(error),
-      stack: error?.stack,
-      errorType: error?.name || 'Error'
+      error: {
+        message: error?.message || String(error),
+        stack: error?.stack,
+        type: error?.name || 'Error'
+      }
     };
 
-    if (context.request) {
-      const safeRequest = extractRequestInfo(context.request);
+    if (request) {
+      const safeRequest = extractRequestData(request);
       if (safeRequest) {
-        errorReport.request = safeRequest;
+        errorData.request = safeRequest;
       }
     }
 
-    // Use structured clone to ensure the object is cloneable
-    const cloneableReport = JSON.parse(JSON.stringify(errorReport));
-    window.parent.postMessage(cloneableReport, '*');
+    const cloneableError = JSON.parse(JSON.stringify(errorData));
+    window.parent.postMessage(cloneableError, '*');
   } catch (err) {
-    console.warn('Error reporting failed:', err);
+    console.warn('Error in error reporting:', err);
   }
 };
 
@@ -59,7 +59,6 @@ export const reportHTTPError = (error) => {
       }
     };
 
-    // Use structured clone to ensure the object is cloneable
     const cloneableError = JSON.parse(JSON.stringify(errorDetails));
     window.parent.postMessage(cloneableError, '*');
   } catch (err) {

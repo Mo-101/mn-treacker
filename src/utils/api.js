@@ -67,3 +67,11 @@ export const fetchWeatherLayers = async () => {
     return handleApiError(error, 'weather layers');
   }
 };
+
+export const fetchTrainingProgress = async () => {
+  try {
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+  } catch (error) {
+    return handleApiError(error, 'training progress');
+  }
+};

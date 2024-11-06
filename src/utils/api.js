@@ -5,35 +5,17 @@ const handleApiError = (error, context) => {
   console.error(`Error fetching ${context}:`, error);
   toast({
     title: "Error",
-    description: `Failed to fetch ${context}. Using cached data if available.`,
+    description: `Failed to fetch ${context}. Please check your connection.`,
     variant: "destructive",
   });
   return null;
 };
 
-const fetchWithErrorHandling = async (url, options = {}) => {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Fetch failed: ${error.message}`);
-  }
-};
-
 export const fetchMastomysLocations = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    const response = await fetch(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    if (!response.ok) throw new Error('Failed to fetch Mastomys locations');
+    return await response.json();
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -41,29 +23,38 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    const response = await fetch(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    if (!response.ok) throw new Error('Failed to fetch Lassa fever cases');
+    return await response.json();
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
 };
 
-export const fetchEnvironmentalData = async () => {
+export const fetchWeatherLayers = async () => {
   try {
-    const weatherData = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL);
-    return {
-      populationTrend: weatherData?.populationTrend || [],
-      habitatSuitability: weatherData?.habitatSuitability || []
-    };
+    const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER);
+    if (!response.ok) throw new Error('Failed to fetch weather data');
+    return await response.json();
   } catch (error) {
-    return handleApiError(error, 'environmental data');
+    return handleApiError(error, 'weather layers');
   }
 };
 
-export const fetchWeatherLayers = async () => {
+export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER);
-    return response?.layers || [];
+    const response = await fetch(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+    if (!response.ok) throw new Error('Failed to fetch training progress');
+    const data = await response.json();
+    return {
+      progress: data.progress || 0,
+      isTraining: data.is_training || false,
+      knowledgeLevel: data.knowledge_level || 0,
+      activities: data.activities || [],
+      timeLeft: data.time_left || 0,
+      elapsedTime: data.elapsed_time || 0
+    };
   } catch (error) {
-    return handleApiError(error, 'weather layers');
+    return handleApiError(error, 'training progress');
   }
 };

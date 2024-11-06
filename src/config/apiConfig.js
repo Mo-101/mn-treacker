@@ -1,10 +1,10 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-
 export const API_CONFIG = {
-  BASE_URL,
   ENDPOINTS: {
-    MASTOMYS_DATA: `${BASE_URL}/api/rat-locations`,
-    LASSA_CASES: `${BASE_URL}/api/cases`,
+    WEATHER: `${import.meta.env.VITE_API_BASE_URL}/api/weather`,
+    MASTOMYS_DATA: `${import.meta.env.VITE_API_BASE_URL}/api/rat-locations`,
+    LASSA_CASES: `${import.meta.env.VITE_API_BASE_URL}/api/cases`,
+    WEATHER_HISTORICAL: `${import.meta.env.VITE_API_BASE_URL}/api/historical-weather`,
+    TRAINING_DATA: `${import.meta.env.VITE_API_BASE_URL}/api/training-progress`
   },
   WEATHER_API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY
 };

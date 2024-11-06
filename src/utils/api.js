@@ -47,11 +47,23 @@ export const fetchLassaFeverCases = async () => {
   }
 };
 
-export const fetchWeatherData = async (lat, lon) => {
+export const fetchEnvironmentalData = async () => {
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`;
-    return await fetchWithErrorHandling(url);
+    const weatherData = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL);
+    return {
+      populationTrend: weatherData?.populationTrend || [],
+      habitatSuitability: weatherData?.habitatSuitability || []
+    };
   } catch (error) {
-    return handleApiError(error, 'weather data');
+    return handleApiError(error, 'environmental data');
+  }
+};
+
+export const fetchWeatherLayers = async () => {
+  try {
+    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER);
+    return response?.layers || [];
+  } catch (error) {
+    return handleApiError(error, 'weather layers');
   }
 };

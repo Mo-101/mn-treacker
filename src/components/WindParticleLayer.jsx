@@ -8,7 +8,7 @@ const WindParticleLayer = ({ map }) => {
     if (!map) return;
 
     try {
-      const initializeWindLayer = () => {
+      map.on('load', () => {
         if (!map.getSource('raster-array-source')) {
           map.addSource('raster-array-source', {
             type: 'raster-array',
@@ -43,20 +43,7 @@ const WindParticleLayer = ({ map }) => {
             }
           });
         }
-      };
-
-      map.on('load', initializeWindLayer);
-
-      return () => {
-        if (map && map.loaded()) {
-          if (map.getLayer('wind-layer')) {
-            map.removeLayer('wind-layer');
-          }
-          if (map.getSource('raster-array-source')) {
-            map.removeSource('raster-array-source');
-          }
-        }
-      };
+      });
     } catch (error) {
       console.error('Error initializing wind particle layer:', error);
       toast({
@@ -65,6 +52,15 @@ const WindParticleLayer = ({ map }) => {
         variant: "destructive",
       });
     }
+
+    return () => {
+      if (map.getLayer('wind-layer')) {
+        map.removeLayer('wind-layer');
+      }
+      if (map.getSource('raster-array-source')) {
+        map.removeSource('raster-array-source');
+      }
+    };
   }, [map]);
 
   return null;

@@ -18,8 +18,7 @@ const fetchWithErrorHandling = async (url, options = {}) => {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
-      },
-      credentials: 'same-origin'
+      }
     });
     
     if (!response.ok) {
@@ -34,8 +33,7 @@ const fetchWithErrorHandling = async (url, options = {}) => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    return await fetchWithErrorHandling(`${baseUrl}/api/rat-locations`);
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -43,28 +41,17 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    return await fetchWithErrorHandling(`${baseUrl}/api/cases`);
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
 };
 
-export const fetchWeatherLayers = async () => {
+export const fetchWeatherData = async (lat, lon) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const response = await fetchWithErrorHandling(`${baseUrl}/api/weather`);
-    return response?.layers || [];
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_CONFIG.WEATHER_API_KEY}&units=metric`;
+    return await fetchWithErrorHandling(url);
   } catch (error) {
-    return handleApiError(error, 'weather layers');
-  }
-};
-
-export const fetchTrainingProgress = async () => {
-  try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    return await fetchWithErrorHandling(`${baseUrl}/api/training-progress`);
-  } catch (error) {
-    return handleApiError(error, 'training progress');
+    return handleApiError(error, 'weather data');
   }
 };

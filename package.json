@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aerisweather/javascript-sdk": "^1.8.6",
     "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
     "@floating-ui/react": "^0.26.9",
     "@hookform/resolvers": "^3.6.0",

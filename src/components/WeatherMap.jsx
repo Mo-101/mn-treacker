@@ -1,13 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMastomysLocations, fetchLassaFeverCases, fetchWeatherLayers } from '../utils/api';
+import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
 import MapContainer from './MapComponents/MapContainer';
 import MapControls from './MapComponents/MapControls';
 import MapLayers from './MapComponents/MapLayers';
 import { useToast } from './ui/use-toast';
 
 const WeatherMap = () => {
-  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind']);
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature']);
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
@@ -34,20 +36,6 @@ const WeatherMap = () => {
       toast({
         title: "Error",
         description: "Failed to fetch Lassa fever cases",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const { data: weatherLayers, isError: weatherError } = useQuery({
-    queryKey: ['weatherLayers'],
-    queryFn: fetchWeatherLayers,
-    staleTime: 300000,
-    retry: 2,
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to fetch weather layers",
         variant: "destructive",
       });
     }
@@ -82,7 +70,6 @@ const WeatherMap = () => {
       />
 
       <MapLayers
-        layers={weatherLayers}
         activeLayers={activeLayers}
         layerOpacity={layerOpacity}
       />

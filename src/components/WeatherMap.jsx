@@ -1,128 +1,108 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
-import TopNavigationBar from './TopNavigationBar';
-import LeftSidePanel from './LeftSidePanel';
-import RightSidePanel from './RightSidePanel';
-import FloatingInsightsBar from './FloatingInsightsButton';
-import AITrainingInterface from './AITrainingInterface';
-import MastomysTracker from './MastomysTracker';
-import PredictionPanel from './PredictionPanel';
-import WindParticleLayer from './WindParticleLayer';
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+const INITIAL_CENTER = [-74.0242, 40.6941];
+const INITIAL_ZOOM = 10.12;
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
-  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const [selectedPoint, setSelectedPoint] = useState(null);
-  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
-  const [mastomysData, setMastomysData] = useState([]);
-  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [activeLayer, setActiveLayer] = useState(null);
-  const [selectAll, setSelectAll] = useState(false);
-
-  const layers = ['precipitation', 'temp', 'clouds', 'wind'];
+  
+  const [center, setCenter] = useState(INITIAL_CENTER);
+  const [zoom, setZoom] = useState(INITIAL_ZOOM);
 
   useEffect(() => {
-    if (map.current) return;
+    if (!import.meta.env.VITE_MAPBOX_TOKEN) {
+      toast({
+        title: "Configuration Error",
+        description: "Mapbox token is missing. Please check your environment variables.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
     
+    if (map.current) return;
+
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/dark-v11',
-        center: [mapState.lng, mapState.lat],
-        zoom: mapState.zoom,
-        transformRequest: (url, resourceType) => {
-          if (resourceType === 'Image' && url.includes('wizard-logo.png')) {
-            return {
-              url: '/placeholder.svg'
-            };
-          }
-        }
+        center: center,
+        zoom: zoom,
+        pitch: 45,
+        bearing: 0,
+        antialias: true
       });
-  
-      map.current.on('error', (e) => {
-        console.error('Map error:', e);
-        toast({
-          title: "Map Error",
-          description: "An error occurred with the map. Some features may be limited.",
-          variant: "destructive",
+
+      map.current.on('move', () => {
+        const mapCenter = map.current.getCenter();
+        const mapZoom = map.current.getZoom();
+        setCenter([mapCenter.lng, mapCenter.lat]);
+        setZoom(mapZoom);
+      });
+
+      map.current.on('load', () => {
+        map.current.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+        map.current.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 90.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
         });
       });
-  
-      return () => map.current?.remove();
+
     } catch (error) {
+      console.error('Error initializing map:', error);
       toast({
         title: "Error",
-        description: "Failed to initialize map. Please check your connection and try again.",
+        description: "Failed to initialize map. Please check your configuration.",
         variant: "destructive",
       });
     }
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
+
+  const handleReset = () => {
+    map.current?.flyTo({
+      center: INITIAL_CENTER,
+      zoom: INITIAL_ZOOM
+    });
+  };
 
   return (
     <div className="relative w-screen h-screen">
+      <div className="sidebar">
+        Longitude: {center[0].toFixed(4)} | Latitude: {center[1].toFixed(4)} | Zoom: {zoom.toFixed(2)}
+      </div>
+      <button 
+        className="reset-button"
+        onClick={handleReset}
+      >
+        Reset
+      </button>
       <div ref={mapContainer} className="absolute inset-0" />
-      
-      <WindParticleLayer map={map} />
-
-      <TopNavigationBar 
-        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-        onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-        onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
-      />
-
-      <AnimatePresence>
-        {leftPanelOpen && (
-          <LeftSidePanel 
-            isOpen={leftPanelOpen}
-            onClose={() => setLeftPanelOpen(false)}
-            layers={layers}
-            activeLayers={activeLayers}
-            onLayerToggle={setActiveLayers}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {rightPanelOpen && (
-          <RightSidePanel 
-            isOpen={rightPanelOpen}
-            onClose={() => setRightPanelOpen(false)}
-            selectedPoint={selectedPoint}
-          />
-        )}
-      </AnimatePresence>
-
-      <FloatingInsightsBar />
-
-      <AnimatePresence>
-        {aiTrainingOpen && (
-          <AITrainingInterface
-            isOpen={aiTrainingOpen}
-            onClose={() => setAiTrainingOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {predictionPanelOpen && (
-          <PredictionPanel
-            isOpen={predictionPanelOpen}
-            onClose={() => setPredictionPanelOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <MastomysTracker data={mastomysData} />
     </div>
   );
 };

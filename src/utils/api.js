@@ -18,7 +18,8 @@ const fetchWithErrorHandling = async (url, options = {}) => {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
-      }
+      },
+      credentials: 'same-origin'
     });
     
     if (!response.ok) {
@@ -33,7 +34,8 @@ const fetchWithErrorHandling = async (url, options = {}) => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    return await fetchWithErrorHandling(`${baseUrl}/api/rat-locations`);
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -41,27 +43,17 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    return await fetchWithErrorHandling(`${baseUrl}/api/cases`);
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
 };
 
-export const fetchEnvironmentalData = async () => {
-  try {
-    const weatherData = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL);
-    return {
-      populationTrend: weatherData?.populationTrend || [],
-      habitatSuitability: weatherData?.habitatSuitability || []
-    };
-  } catch (error) {
-    return handleApiError(error, 'environmental data');
-  }
-};
-
 export const fetchWeatherLayers = async () => {
   try {
-    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const response = await fetchWithErrorHandling(`${baseUrl}/api/weather`);
     return response?.layers || [];
   } catch (error) {
     return handleApiError(error, 'weather layers');
@@ -70,7 +62,8 @@ export const fetchWeatherLayers = async () => {
 
 export const fetchTrainingProgress = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.TRAINING_DATA);
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    return await fetchWithErrorHandling(`${baseUrl}/api/training-progress`);
   } catch (error) {
     return handleApiError(error, 'training progress');
   }

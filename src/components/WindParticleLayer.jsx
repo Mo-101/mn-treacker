@@ -6,53 +6,54 @@ const WindParticleLayer = ({ map }) => {
       return;
     }
 
-    const addWindLayer = () => {
-      // Check if source already exists
-      if (!map.current.getSource('raster-array-source')) {
-        map.current.addSource('raster-array-source', {
-          type: 'raster-array',
-          url: 'mapbox://rasterarrayexamples.gfs-winds',
-          tileSize: 512,
-        });
+    const initializeWindLayer = () => {
+      // Remove existing layer and source if they exist
+      if (map.current.getLayer('wind-layer')) {
+        map.current.removeLayer('wind-layer');
+      }
+      if (map.current.getSource('wind-data')) {
+        map.current.removeSource('wind-data');
       }
 
-      // Check if layer already exists
-      if (!map.current.getLayer('wind-layer')) {
-        map.current.addLayer({
-          id: 'wind-layer',
-          type: 'raster-particle',
-          source: 'raster-array-source',
-          'source-layer': '10winds',
-          paint: {
-            'raster-particle-speed-factor': 0.4,
-            'raster-particle-fade-opacity-factor': 0.9,
-            'raster-particle-reset-rate-factor': 0.4,
-            'raster-particle-count': 4000,
-            'raster-particle-max-speed': 40,
-            'raster-particle-color': [
-              'interpolate',
-              ['linear'],
-              ['raster-particle-speed'],
-              1.5, 'rgba(134,163,171,256)',
-              4.12, 'rgba(110,143,208,256)',
-              7.72, 'rgba(15,147,167,256)',
-              11.83, 'rgba(194,134,62,256)',
-              16.46, 'rgba(200,66,13,256)',
-              21.6, 'rgba(175,80,136,256)',
-              33.44, 'rgba(194,251,119,256)',
-              50.41, 'rgba(256,256,256,256)',
-              59.16, 'rgba(0,256,256,256)',
-            ],
-          },
-        });
-      }
+      // Add the new raster-array source
+      map.current.addSource('wind-data', {
+        type: 'raster-array',
+        url: 'mapbox://mapbox.wind-speed',
+        tileSize: 256
+      });
+
+      // Add the wind layer with new styling options
+      map.current.addLayer({
+        id: 'wind-layer',
+        type: 'raster',
+        source: 'wind-data',
+        'source-layer': 'wind-speed',
+        slot: 'top',
+        paint: {
+          'raster-opacity': 0.75,
+          'raster-color-range': [0, 30], // Wind speed range in m/s
+          'raster-color': [
+            'interpolate',
+            ['linear'],
+            ['raster-value'],
+            0, 'rgba(0,0,255,0)',
+            5, 'rgba(0,255,255,0.5)',
+            10, 'rgba(0,255,0,0.7)',
+            15, 'rgba(255,255,0,0.8)',
+            20, 'rgba(255,165,0,0.9)',
+            25, 'rgba(255,0,0,1)'
+          ],
+          'raster-resampling': 'linear',
+          'raster-fade-duration': 0
+        }
+      });
     };
 
-    // Add layer when map is loaded
+    // Initialize the layer when the map is loaded
     if (map.current.loaded()) {
-      addWindLayer();
+      initializeWindLayer();
     } else {
-      map.current.on('load', addWindLayer);
+      map.current.on('load', initializeWindLayer);
     }
 
     // Cleanup
@@ -61,8 +62,8 @@ const WindParticleLayer = ({ map }) => {
         if (map.current.getLayer('wind-layer')) {
           map.current.removeLayer('wind-layer');
         }
-        if (map.current.getSource('raster-array-source')) {
-          map.current.removeSource('raster-array-source');
+        if (map.current.getSource('wind-data')) {
+          map.current.removeSource('wind-data');
         }
       }
     };

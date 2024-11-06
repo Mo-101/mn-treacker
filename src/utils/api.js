@@ -49,11 +49,7 @@ export const fetchLassaFeverCases = async () => {
 
 export const fetchEnvironmentalData = async () => {
   try {
-    const weatherData = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER_HISTORICAL);
-    return {
-      populationTrend: weatherData?.populationTrend || [],
-      habitatSuitability: weatherData?.habitatSuitability || []
-    };
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.ENVIRONMENTAL_DATA);
   } catch (error) {
     return handleApiError(error, 'environmental data');
   }

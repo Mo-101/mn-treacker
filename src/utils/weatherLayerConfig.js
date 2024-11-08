@@ -20,7 +20,7 @@ export const weatherLayers = [
     opacity: 0.6
   },
   {
-    id: 'wind_new',
+    id: 'wind',
     name: 'Wind',
     url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
     opacity: 0.7

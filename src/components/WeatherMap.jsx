@@ -21,6 +21,7 @@ const WeatherMap = () => {
   const [activeLayers, setActiveLayers] = useState([]);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [layerOpacity, setLayerOpacity] = useState(80);
+  const [showWindParticles, setShowWindParticles] = useState(false);
   const { toast } = useToast();
 
   const { data: weatherData } = useQuery({
@@ -74,6 +75,11 @@ const WeatherMap = () => {
         isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
       );
       
+      // Special handling for wind layer
+      if (layerId === 'wind') {
+        setShowWindParticles(!isActive);
+      }
+      
       if (map.current.getLayer(layerId)) {
         map.current.setLayoutProperty(
           layerId,
@@ -114,8 +120,7 @@ const WeatherMap = () => {
 
       <MapLegend activeLayers={activeLayers} />
       
-      {/* Add WindGLLayer component */}
-      <WindGLLayer map={map.current} />
+      {showWindParticles && <WindGLLayer map={map.current} />}
     </div>
   );
 };

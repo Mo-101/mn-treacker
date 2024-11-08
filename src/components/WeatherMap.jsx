@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from './ui/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import LeftSidePanel from './LeftSidePanel';
 import MapLegend from './MapLegend';
-import { addCustomLayers } from './MapLayers';
+import { addCustomLayers, toggleWeatherLayer, updateLayerOpacity } from './MapLayers';
 import { hybridMapStyle } from '../config/mapStyle';
 import WindGLLayer from './WindGLLayer';
 
@@ -24,22 +23,6 @@ const WeatherMap = () => {
   const [showWindParticles, setShowWindParticles] = useState(false);
   const { toast } = useToast();
 
-  const { data: weatherData } = useQuery({
-    queryKey: ['weatherLayers'],
-    queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/weather_data`);
-      if (!response.ok) throw new Error('Failed to fetch weather data');
-      return response.json();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load weather layers",
-        variant: "destructive",
-      });
-    }
-  });
-
   useEffect(() => {
     if (!map.current) {
       map.current = new mapboxgl.Map({
@@ -54,10 +37,11 @@ const WeatherMap = () => {
         try {
           await addCustomLayers(map.current);
           toast({
-            title: "Success",
-            description: "Map initialized successfully",
+            title: "Map Initialized",
+            description: "Map layers loaded successfully",
           });
         } catch (error) {
+          console.error('Error initializing layers:', error);
           toast({
             title: "Error",
             description: "Failed to initialize map layers",
@@ -71,21 +55,23 @@ const WeatherMap = () => {
   const handleLayerToggle = (layerId) => {
     if (map.current) {
       const isActive = activeLayers.includes(layerId);
-      setActiveLayers(prev => 
-        isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
-      );
-      
-      // Special handling for wind layer
-      if (layerId === 'wind') {
-        setShowWindParticles(!isActive);
-      }
-      
-      if (map.current.getLayer(layerId)) {
-        map.current.setLayoutProperty(
-          layerId,
-          'visibility',
-          isActive ? 'none' : 'visible'
+      const newIsActive = !isActive;
+
+      if (toggleWeatherLayer(map.current, layerId, newIsActive)) {
+        setActiveLayers(prev =>
+          newIsActive 
+            ? [...prev, layerId]
+            : prev.filter(id => id !== layerId)
         );
+
+        if (layerId === 'wind') {
+          setShowWindParticles(newIsActive);
+        }
+
+        toast({
+          title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+          description: newIsActive ? "Layer enabled" : "Layer disabled",
+        });
       }
     }
   };
@@ -93,9 +79,7 @@ const WeatherMap = () => {
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
     activeLayers.forEach(layerId => {
-      if (map.current && map.current.getLayer(layerId)) {
-        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-      }
+      updateLayerOpacity(map.current, layerId, opacity);
     });
   };
 

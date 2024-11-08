@@ -2,19 +2,19 @@ const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 export const weatherLayers = [
   {
-    id: 'temp_new',
+    id: 'temperature',
     name: 'Temperature',
     url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
     opacity: 0.8
   },
   {
-    id: 'precipitation_new',
+    id: 'precipitation',
     name: 'Precipitation',
     url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
     opacity: 0.8
   },
   {
-    id: 'clouds_new',
+    id: 'clouds',
     name: 'Clouds',
     url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
     opacity: 0.6

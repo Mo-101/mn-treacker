@@ -20,6 +20,7 @@ const fetchWithErrorHandling = async (url, options = {}) => {
         'Accept': 'application/json',
         ...options.headers
       },
+      mode: 'cors',
       credentials: 'include'
     });
     

@@ -4,6 +4,7 @@ import { X, Cloud, Thermometer, Droplet, Wind } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
+import { toast } from './ui/use-toast';
 
 const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
   const weatherLayers = [
@@ -37,6 +38,14 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
     }
   ];
 
+  const handleLayerToggle = (layerId) => {
+    onLayerToggle(layerId);
+    toast({
+      title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+      description: activeLayers.includes(layerId) ? "Layer disabled" : "Layer enabled",
+    });
+  };
+
   return (
     <motion.div
       initial={{ x: '-100%' }}
@@ -63,13 +72,15 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
           <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <layer.icon className={`h-5 w-5 ${layer.color}`} />
-                <span className="text-yellow-400">{layer.name}</span>
+                <layer.icon className={`h-5 w-5 ${activeLayers.includes(layer.id) ? layer.color : 'text-gray-500'}`} />
+                <span className={activeLayers.includes(layer.id) ? 'text-yellow-400' : 'text-gray-400'}>
+                  {layer.name}
+                </span>
               </span>
               <Switch 
                 checked={activeLayers.includes(layer.id)}
-                onCheckedChange={() => onLayerToggle(layer.id)}
-                className="data-[state=checked]:bg-yellow-400"
+                onCheckedChange={() => handleLayerToggle(layer.id)}
+                className="data-[state=checked]:bg-yellow-400 data-[state=unchecked]:bg-gray-600"
               />
             </div>
             <p className="text-sm text-gray-400">{layer.description}</p>
@@ -77,9 +88,13 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               defaultValue={[100]} 
               max={100} 
               step={1}
-              onValueChange={(value) => onOpacityChange(value[0])}
+              onValueChange={(value) => onOpacityChange(layer.id, value[0])}
               disabled={!activeLayers.includes(layer.id)}
-              className="[&_.relative]:bg-yellow-400/20 [&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400 [&_.absolute]:bg-yellow-400"
+              className={`${
+                activeLayers.includes(layer.id)
+                  ? '[&_.relative]:bg-yellow-400/20 [&_[role=slider]]:bg-yellow-400 [&_[role=slider]]:border-yellow-400 [&_.absolute]:bg-yellow-400'
+                  : '[&_.relative]:bg-gray-600/20 [&_[role=slider]]:bg-gray-500 [&_[role=slider]]:border-gray-500 [&_.absolute]:bg-gray-500'
+              }`}
             />
           </div>
         ))}

@@ -1,13 +1,7 @@
 import { API_CONFIG } from '../config/apiConfig';
-import { useToast } from '../components/ui/use-toast';
 
 const handleApiError = (error, context) => {
   console.error(`Error fetching ${context}:`, error);
-  toast({
-    title: "Error",
-    description: `Failed to fetch ${context} from PostGIS database. Please check your database connection.`,
-    variant: "destructive",
-  });
   return null;
 };
 
@@ -19,9 +13,7 @@ const fetchWithErrorHandling = async (url, options = {}) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...options.headers
-      },
-      mode: 'cors',
-      credentials: 'include'
+      }
     });
     
     if (!response.ok) {
@@ -30,28 +22,13 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     
     return await response.json();
   } catch (error) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('Database connection error: Please check if PostgreSQL server is running.');
-    }
     throw error;
   }
 };
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
-    return {
-      type: 'FeatureCollection',
-      features: response.map(point => ({
-        type: 'Feature',
-        geometry: point.geom,
-        properties: {
-          id: point.id,
-          timestamp: point.observation_date,
-          ...point.properties
-        }
-      }))
-    };
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -59,19 +36,7 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
-    return {
-      type: 'FeatureCollection',
-      features: response.map(point => ({
-        type: 'Feature',
-        geometry: point.geom,
-        properties: {
-          id: point.id,
-          timestamp: point.observation_date,
-          ...point.properties
-        }
-      }))
-    };
+    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }

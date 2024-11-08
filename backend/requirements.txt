@@ -1,4 +1,11 @@
 flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
+sqlalchemy==2.0.25
+geoalchemy2==0.14.3
+psycopg2-binary==2.9.9
 pandas==2.1.0
+shapely==2.0.2
+pyproj==3.6.1
+postgis==1.0.4
+alembic==1.13.1

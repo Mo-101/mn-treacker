@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
+import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -19,7 +20,6 @@ import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
 import RodentDetectionPanel from './RodentDetectionPanel';
 import WindParticleLayer from './WindParticleLayer';
-import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -38,16 +38,56 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom,
+        pitch: 45,
+        bearing: 0,
+        antialias: true
+      });
+
+      map.current.on('load', () => {
+        map.current.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14
+        });
+
+        map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+        map.current.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 90.0],
+            'sky-atmosphere-sun-intensity': 15
+          }
+        });
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your configuration.",
+        variant: "destructive",
+      });
+    }
+  }, []);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
-      <MapInitializer 
-        map={map}
-        mapContainer={mapContainer}
-        mapState={mapState}
-      />
-
       {map.current && (
         <>
           <WindParticleLayer map={map.current} />

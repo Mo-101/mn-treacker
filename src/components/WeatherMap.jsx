@@ -3,21 +3,10 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
 import { useToast } from './ui/use-toast';
-import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
-import RightSidePanel from './RightSidePanel';
-import FloatingInsightsBar from './FloatingInsightsButton';
-import AITrainingInterface from './AITrainingInterface';
-import PredictionPanel from './PredictionPanel';
-import DetectionSpotLayer from './DetectionSpotLayer';
-import LassaFeverCasesLayer from './LassaFeverCasesLayer';
-import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
-import MapInitializer from './MapInitializer';
-import MastomysTracker from './MastomysTracker';
-import RodentDetectionPanel from './RodentDetectionPanel';
+import { addCustomLayers } from './MapLayers';
 
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -27,163 +16,102 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
-  const [activeLayers, setActiveLayers] = useState(['lassa-cases', 'rat-locations']);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
-  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
-  const [rodentPanelOpen, setRodentPanelOpen] = useState(false);
+  const [activeLayers, setActiveLayers] = useState([]);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
-  const { data: ratLocations, isError: ratError } = useQuery({
-    queryKey: ['ratLocations'],
-    queryFn: fetchMastomysLocations,
-    staleTime: 300000,
-    retry: 2,
+  // Fetch weather data
+  const { data: weatherData } = useQuery({
+    queryKey: ['weatherLayers'],
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/weather_data`);
+      if (!response.ok) throw new Error('Failed to fetch weather data');
+      return response.json();
+    },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to fetch rat location data",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const { data: lassaCases, isError: lassaError } = useQuery({
-    queryKey: ['lassaCases'],
-    queryFn: fetchLassaFeverCases,
-    staleTime: 300000,
-    retry: 2,
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to fetch Lassa fever cases",
+        description: "Failed to load weather layers",
         variant: "destructive",
       });
     }
   });
 
   useEffect(() => {
-    if (!map.current) return;
-
-    const updateMapState = () => {
-      const center = map.current.getCenter();
-      setMapState({
-        lng: center.lng.toFixed(4),
-        lat: center.lat.toFixed(4),
-        zoom: map.current.getZoom().toFixed(2)
+    if (!map.current) {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom,
+        pitch: 45,
       });
-    };
 
-    map.current.on('move', updateMapState);
-
-    return () => {
-      if (map.current) {
-        map.current.off('move', updateMapState);
-      }
-    };
+      map.current.on('load', async () => {
+        try {
+          await addCustomLayers(map.current);
+          toast({
+            title: "Success",
+            description: "Map initialized successfully",
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to initialize map layers",
+            variant: "destructive",
+          });
+        }
+      });
+    }
   }, []);
-
-  useEffect(() => {
-    if (ratLocations?.features?.length > 0) {
-      toast({
-        title: "Data Loaded",
-        description: `Loaded ${ratLocations.features.length} rat locations`,
-      });
-    }
-  }, [ratLocations]);
 
   const handleLayerToggle = (layerId) => {
     if (map.current) {
       const isActive = activeLayers.includes(layerId);
-      if (isActive) {
-        map.current.setLayoutProperty(layerId, 'visibility', 'none');
-        setActiveLayers(prev => prev.filter(id => id !== layerId));
-      } else {
-        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
-        setActiveLayers(prev => [...prev, layerId]);
-      }
+      setActiveLayers(prev => 
+        isActive ? prev.filter(id => id !== layerId) : [...prev, layerId]
+      );
       
-      toast({
-        title: isActive ? "Layer Hidden" : "Layer Shown",
-        description: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} layer has been ${isActive ? 'hidden' : 'shown'}`,
-      });
+      if (map.current.getLayer(layerId)) {
+        map.current.setLayoutProperty(
+          layerId,
+          'visibility',
+          isActive ? 'none' : 'visible'
+        );
+      }
     }
   };
 
   const handleOpacityChange = (opacity) => {
     setLayerOpacity(opacity);
-    if (map.current) {
-      activeLayers.forEach(layerId => {
-        if (map.current.getLayer(layerId)) {
-          map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
-        }
-      });
-    }
+    activeLayers.forEach(layerId => {
+      if (map.current && map.current.getLayer(layerId)) {
+        map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+      }
+    });
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
-      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+      <div ref={mapContainer} className="absolute inset-0" />
       
-      <MapInitializer 
-        map={map}
-        mapContainer={mapContainer}
-        mapState={mapState}
-      />
-
-      {map.current && (
-        <>
-          <DetectionSpotLayer map={map.current} detections={ratLocations} />
-          <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
-          <MastomysTracker sightings={ratLocations} />
-        </>
-      )}
-
-      <TopNavigationBar 
-        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
-        onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
-        onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
-      />
-
-      <SidePanels
-        leftPanelOpen={leftPanelOpen}
-        rightPanelOpen={rightPanelOpen}
-        setLeftPanelOpen={setLeftPanelOpen}
-        setRightPanelOpen={setRightPanelOpen}
+      <LeftSidePanel
+        isOpen={leftPanelOpen}
+        onClose={() => setLeftPanelOpen(false)}
         activeLayers={activeLayers}
-        handleLayerToggle={handleLayerToggle}
-        handleOpacityChange={handleOpacityChange}
+        onLayerToggle={handleLayerToggle}
+        onOpacityChange={handleOpacityChange}
       />
 
-      <AnimatePresence>
-        {predictionPanelOpen && (
-          <PredictionPanel
-            isOpen={predictionPanelOpen}
-            onClose={() => setPredictionPanelOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <FloatingInsightsBar />
-
-      <AnimatePresence>
-        {aiTrainingOpen && (
-          <AITrainingInterface
-            isOpen={aiTrainingOpen}
-            onClose={() => setAiTrainingOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      <button
+        onClick={() => setLeftPanelOpen(true)}
+        className="absolute top-4 left-4 bg-white/10 p-2 rounded-lg backdrop-blur-sm hover:bg-white/20 transition-colors"
+      >
+        Show Layers
+      </button>
 
       <MapLegend activeLayers={activeLayers} />
-
-      <RodentDetectionPanel 
-        isOpen={rodentPanelOpen}
-        onToggle={() => setRodentPanelOpen(!rodentPanelOpen)}
-        detections={ratLocations?.features || []}
-      />
     </div>
   );
 };

@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
-from routes.data_routes import data_bp
-from routes.training_routes import training_bp
-from routes.file_routes import file_bp
+from routes.weather_controller import weather_bp
+from routes.cases_controller import cases_bp
+from routes.rat_locations_controller import rat_locations_bp
 import os
 
 # Load environment variables
@@ -19,9 +19,9 @@ CORS(app, resources={
 })
 
 # Register blueprints
-app.register_blueprint(data_bp, url_prefix='/api')
-app.register_blueprint(training_bp, url_prefix='/api')
-app.register_blueprint(file_bp, url_prefix='/api')
+app.register_blueprint(weather_bp, url_prefix='/api')
+app.register_blueprint(cases_bp, url_prefix='/api')
+app.register_blueprint(rat_locations_bp, url_prefix='/api')
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

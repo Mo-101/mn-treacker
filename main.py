@@ -35,5 +35,9 @@ app.register_blueprint(environmental_bp, url_prefix='/api')
 app.register_blueprint(upload_bp, url_prefix='/api')
 app.register_blueprint(weather_bp, url_prefix='/api')
 
+@app.route('/')
+def home():
+    return 'Welcome to the backend server!'
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)

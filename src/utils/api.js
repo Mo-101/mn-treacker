@@ -2,13 +2,14 @@ import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
 const handleApiError = (error, context) => {
+  console.error(`API Error (${context}):`, error);
   const errorMessage = `Failed to fetch ${context}. ${error.message || ''}`;
   toast({
     title: "Error",
     description: errorMessage,
     variant: "destructive",
   });
-  return null;
+  return { type: 'FeatureCollection', features: [] };
 };
 
 const safeRequest = async (url) => {
@@ -17,7 +18,8 @@ const safeRequest = async (url) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
     throw new Error(`Request failed: ${error.message}`);
   }
@@ -35,7 +37,7 @@ export const fetchMastomysLocations = async () => {
 export const fetchLassaFeverCases = async () => {
   try {
     const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
-    return data || [];
+    return data || { type: 'FeatureCollection', features: [] };
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }

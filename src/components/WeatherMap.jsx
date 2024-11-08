@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { fetchMastomysLocations, fetchLassaFeverCases, fetchWeatherLayers } from '../utils/api';
+import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -15,10 +15,8 @@ import LassaFeverCasesLayer from './LassaFeverCasesLayer';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
-import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
 import RodentDetectionPanel from './RodentDetectionPanel';
-import WindParticleLayer from './WindParticleLayer';
 import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
@@ -29,7 +27,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
-  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind']);
+  const [activeLayers, setActiveLayers] = useState(['lassa-cases', 'rat-locations']);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
@@ -61,20 +59,6 @@ const WeatherMap = () => {
       toast({
         title: "Error",
         description: "Failed to fetch Lassa fever cases",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const { data: weatherLayers, isError: weatherError } = useQuery({
-    queryKey: ['weatherLayers'],
-    queryFn: fetchWeatherLayers,
-    staleTime: 300000,
-    retry: 2,
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to fetch weather layers",
         variant: "destructive",
       });
     }
@@ -142,8 +126,6 @@ const WeatherMap = () => {
 
       {map.current && (
         <>
-          <WindParticleLayer map={map.current} />
-          <WindGLLayer map={map.current} />
           <DetectionSpotLayer map={map.current} detections={ratLocations} />
           <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
           <MastomysTracker sightings={ratLocations} />

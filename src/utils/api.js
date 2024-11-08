@@ -5,21 +5,9 @@ const handleApiError = (error, context) => {
   throw error;
 };
 
-export const fetchTrainingProgress = async () => {
-  try {
-    const response = await fetch(`${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    return handleApiError(error, 'training progress');
-  }
-};
-
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/mn`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -31,7 +19,7 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/cases`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -41,39 +29,19 @@ export const fetchLassaFeverCases = async () => {
   }
 };
 
-export const fetchEnvironmentalData = async () => {
-  try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.ENVIRONMENTAL_DATA);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    return handleApiError(error, 'environmental data');
-  }
-};
-
+// Weather data fetching is temporarily disabled
 export const fetchWeatherData = async () => {
+  return null;
+};
+
+export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER);
+    const response = await fetch(`${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'weather data');
-  }
-};
-
-export const fetchWeatherLayers = async () => {
-  try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    return handleApiError(error, 'weather layers');
+    return handleApiError(error, 'training progress');
   }
 };

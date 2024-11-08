@@ -14,6 +14,13 @@ export const addWeatherLayer = (map, layerId) => {
       map.removeLayer(layerId);
     }
 
+    if (layerId === 'temperature') {
+      // For temperature layer, load the custom style
+      map.setStyle(layer.url);
+      return true;
+    }
+
+    // For other layers, continue with the existing raster tile approach
     map.addSource(layerId, {
       type: 'raster',
       tiles: [layer.url],

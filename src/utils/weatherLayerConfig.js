@@ -4,17 +4,18 @@ export const weatherLayers = [
   {
     id: 'temperature',
     name: 'Temperature',
-    url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7',
+    type: 'style',
     opacity: 0.8,
     colorRamp: [
-      { temp: -20, color: '#0000FF' }, // Deep blue for very cold
-      { temp: -10, color: '#4169E1' }, // Royal blue
-      { temp: 0, color: '#87CEEB' },   // Sky blue
-      { temp: 10, color: '#90EE90' },  // Light green
-      { temp: 20, color: '#FFFF00' },  // Yellow
-      { temp: 30, color: '#FFA500' },  // Orange
-      { temp: 40, color: '#FF4500' },  // Red-orange
-      { temp: 50, color: '#FF0000' }   // Red for very hot
+      { temp: -20, color: '#0000FF' },
+      { temp: -10, color: '#4169E1' },
+      { temp: 0, color: '#87CEEB' },
+      { temp: 10, color: '#90EE90' },
+      { temp: 20, color: '#FFFF00' },
+      { temp: 30, color: '#FFA500' },
+      { temp: 40, color: '#FF4500' },
+      { temp: 50, color: '#FF0000' }
     ]
   },
   {

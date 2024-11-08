@@ -9,28 +9,32 @@ const addWeatherLayers = (map) => {
       url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.8,
-      height: 2000
+      height: 2000,
+      minZoom: 0
     },
     {
       id: 'temperature',
       url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.7,
-      height: 1000
+      height: 1000,
+      minZoom: 0
     },
     {
       id: 'clouds',
       url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.6,
-      height: 8000
+      height: 8000,
+      minZoom: 0
     },
     {
       id: 'wind',
       url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.7,
-      height: 3000
+      height: 3000,
+      minZoom: 0
     }
   ];
   
@@ -40,7 +44,8 @@ const addWeatherLayers = (map) => {
         type: 'raster',
         tiles: [layer.url],
         tileSize: 256,
-        maxzoom: layer.maxzoom
+        maxzoom: layer.maxzoom,
+        minZoom: layer.minZoom
       });
 
       map.addLayer({
@@ -50,8 +55,14 @@ const addWeatherLayers = (map) => {
         layout: { visibility: 'visible' },
         paint: { 
           'raster-opacity': layer.opacity,
-          'raster-height': layer.height,
-          'raster-resampling': 'linear'
+          'raster-opacity-transition': {
+            duration: 300
+          },
+          'raster-brightness-min': 0.2,
+          'raster-brightness-max': 1,
+          'raster-contrast': 0,
+          'raster-resampling': 'linear',
+          'raster-fade-duration': 300
         }
       });
     }

@@ -15,7 +15,6 @@ import MnDataLayer from './MnDataLayer';
 import PointsDataLayer from './PointsDataLayer';
 import SidePanels from './SidePanels';
 import MapLegend from './MapLegend';
-import MapInitializer from './MapInitializer';
 import WindGLLayer from './WindGLLayer';
 import MastomysTracker from './MastomysTracker';
 import RodentDetectionPanel from './RodentDetectionPanel';
@@ -28,7 +27,7 @@ if (!mapboxgl.accessToken) {
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
+  const [mapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
   const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind', 'mn-points', 'data-points']);
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
@@ -36,6 +35,7 @@ const WeatherMap = () => {
   const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
   const [rodentPanelOpen, setRodentPanelOpen] = useState(false);
   const [layerOpacity, setLayerOpacity] = useState(80);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,6 +71,8 @@ const WeatherMap = () => {
             'sky-atmosphere-sun-intensity': 15
           }
         });
+
+        setIsMapLoaded(true);
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -82,13 +84,20 @@ const WeatherMap = () => {
         variant: "destructive",
       });
     }
-  }, []);
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [mapState.lng, mapState.lat, mapState.zoom]);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
       
-      {map.current && (
+      {isMapLoaded && map.current && (
         <>
           <WindParticleLayer map={map.current} />
           <WindGLLayer map={map.current} />

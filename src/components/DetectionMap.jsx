@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
+import { hybridMapStyle } from '../config/mapStyle';
 
 const DetectionMap = ({ detections = [] }) => {
   const mapContainer = useRef(null);
@@ -14,7 +15,7 @@ const DetectionMap = ({ detections = [] }) => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: hybridMapStyle,
         center: [0, 0],
         zoom: 2,
         pitch: 45,

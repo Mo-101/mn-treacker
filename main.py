@@ -6,6 +6,8 @@ import os
 # Import blueprints
 from routes.data_routes import data_bp
 from routes.weather_controller import weather_bp
+from routes.cases_controller import cases_bp
+from routes.rat_locations_controller import rat_locations_bp
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +26,8 @@ if not app.config['SECRET_KEY'] or app.config['SECRET_KEY'] == 'default_secret_k
 # Register routes
 app.register_blueprint(data_bp, url_prefix='/api')
 app.register_blueprint(weather_bp, url_prefix='/api')
+app.register_blueprint(cases_bp, url_prefix='/api')
+app.register_blueprint(rat_locations_bp, url_prefix='/api')
 
 @app.route('/')
 def home():

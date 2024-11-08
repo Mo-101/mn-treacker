@@ -12,7 +12,7 @@ def get_rat_locations():
         query = """
             SELECT json_build_object(
                 'type', 'FeatureCollection',
-                'features', json_agg(
+                'features', COALESCE(json_agg(
                     json_build_object(
                         'type', 'Feature',
                         'geometry', ST_AsGeoJSON(geom)::json,
@@ -27,7 +27,7 @@ def get_rat_locations():
                             'humidity', humidity
                         )
                     )
-                )
+                ), '[]'::json)
             )
             FROM mastomys_locations;
         """

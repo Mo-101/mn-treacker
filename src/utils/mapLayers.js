@@ -1,31 +1,33 @@
 import mapboxgl from 'mapbox-gl';
 
 const addWeatherLayers = (map) => {
+  const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+  
   const layers = [
     {
       id: 'precipitation',
-      url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.8,
       height: 2000
     },
     {
       id: 'temperature',
-      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.7,
       height: 1000
     },
     {
       id: 'clouds',
-      url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.6,
       height: 8000
     },
     {
       id: 'wind',
-      url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`,
+      url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       maxzoom: 20,
       opacity: 0.7,
       height: 3000

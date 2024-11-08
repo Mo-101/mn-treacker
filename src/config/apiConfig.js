@@ -1,12 +1,19 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5432';
+const DB_NAME = 'MoBase';
 
 export const API_CONFIG = {
   ENDPOINTS: {
-    WEATHER: `${API_BASE_URL}/api/weather`,
-    MASTOMYS_DATA: `${API_BASE_URL}/api/rat-locations`,
-    LASSA_CASES: `${API_BASE_URL}/api/cases`,
-    TRAINING_DATA: `${API_BASE_URL}/api/training-progress`,
-    ENVIRONMENTAL_DATA: `${API_BASE_URL}/api/environmental-data`
+    WEATHER: `${API_BASE_URL}/${DB_NAME}/weather_data`,
+    MASTOMYS_DATA: `${API_BASE_URL}/${DB_NAME}/mn_geog`,
+    LASSA_CASES: `${API_BASE_URL}/${DB_NAME}/points_geog`,
+    LOCATIONS: `${API_BASE_URL}/${DB_NAME}/locations`,
+    ENVIRONMENTAL_DATA: `${API_BASE_URL}/${DB_NAME}/weather_data`
   },
-  WEATHER_API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY
+  DB_CONFIG: {
+    host: 'localhost',
+    port: 5432,
+    database: 'MoBase',
+    user: 'postgres',
+    password: 'mostar'
+  }
 };

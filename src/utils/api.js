@@ -1,11 +1,11 @@
 import { API_CONFIG } from '../config/apiConfig';
-import { toast } from '../components/ui/use-toast';
+import { useToast } from '../components/ui/use-toast';
 
 const handleApiError = (error, context) => {
   console.error(`Error fetching ${context}:`, error);
   toast({
     title: "Error",
-    description: `Failed to fetch ${context}. Please check your connection and try again.`,
+    description: `Failed to fetch ${context} from PostGIS database. Please check your database connection.`,
     variant: "destructive",
   });
   return null;
@@ -20,18 +20,17 @@ const fetchWithErrorHandling = async (url, options = {}) => {
         'Accept': 'application/json',
         ...options.headers
       },
-      mode: 'cors',
       credentials: 'include'
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Database error: ${response.status}`);
     }
     
     return await response.json();
   } catch (error) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('Network error: Please check your connection and ensure the API server is running.');
+      throw new Error('Database connection error: Please check if PostgreSQL server is running.');
     }
     throw error;
   }
@@ -39,7 +38,19 @@ const fetchWithErrorHandling = async (url, options = {}) => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
+    return {
+      type: 'FeatureCollection',
+      features: response.map(point => ({
+        type: 'Feature',
+        geometry: point.geom,
+        properties: {
+          id: point.id,
+          timestamp: point.observation_date,
+          ...point.properties
+        }
+      }))
+    };
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -47,7 +58,19 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.LASSA_CASES);
+    return {
+      type: 'FeatureCollection',
+      features: response.map(point => ({
+        type: 'Feature',
+        geometry: point.geom,
+        properties: {
+          id: point.id,
+          timestamp: point.observation_date,
+          ...point.properties
+        }
+      }))
+    };
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
@@ -64,16 +87,15 @@ export const fetchEnvironmentalData = async () => {
 export const fetchWeatherLayers = async () => {
   try {
     const response = await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.WEATHER);
-    return response?.layers || [];
+    return {
+      layers: response.map(data => ({
+        id: data.id,
+        type: data.weather_type,
+        value: data.value,
+        timestamp: data.observation_time
+      }))
+    };
   } catch (error) {
     return handleApiError(error, 'weather layers');
-  }
-};
-
-export const fetchTrainingProgress = async () => {
-  try {
-    return await fetchWithErrorHandling(API_CONFIG.ENDPOINTS.TRAINING_DATA);
-  } catch (error) {
-    return handleApiError(error, 'training progress');
   }
 };

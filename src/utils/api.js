@@ -7,11 +7,12 @@ const handleApiError = (error, context) => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/rat-locations`);
+    const response = await fetch(API_CONFIG.ENDPOINTS.RAT_LOCATIONS);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
     return handleApiError(error, 'Mastomys locations');
   }
@@ -19,36 +20,25 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/cases`);
+    const response = await fetch(API_CONFIG.ENDPOINTS.CASES);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
     return handleApiError(error, 'Lassa fever cases');
   }
 };
 
 export const fetchEnvironmentalData = async () => {
-  const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
   try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=${OPENWEATHER_API_KEY}&units=metric`);
+    const response = await fetch(API_CONFIG.ENDPOINTS.ENVIRONMENTAL_DATA);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return {
-      populationTrend: [
-        { month: 'Jan', actual: data.main.temp, predicted: data.main.feels_like },
-        { month: 'Feb', actual: data.main.humidity, predicted: data.main.pressure },
-      ],
-      habitatSuitability: [
-        { area: 'Forest', suitability: data.clouds.all },
-        { area: 'Grassland', suitability: data.main.humidity },
-        { area: 'Urban', suitability: 100 - data.clouds.all },
-        { area: 'Wetland', suitability: data.main.humidity },
-      ]
-    };
+    return data;
   } catch (error) {
     return handleApiError(error, 'environmental data');
   }

@@ -61,6 +61,8 @@ const DetectionSpotLayer = ({ map, detections }) => {
     });
 
     map.on('mouseenter', 'detection-center', (e) => {
+      if (!e.features?.length) return;
+      
       const coordinates = e.features[0].geometry.coordinates.slice();
       const properties = e.features[0].properties;
       
@@ -69,8 +71,9 @@ const DetectionSpotLayer = ({ map, detections }) => {
         .setHTML(`
           <div class="bg-black/90 p-3 rounded-lg text-white">
             <h3 class="font-bold text-amber-400">Detection Details</h3>
-            <p>Time: ${new Date(properties.timestamp).toLocaleString()}</p>
-            <p>Confidence: ${properties.confidence || 'N/A'}%</p>
+            <p>Population Size: ${properties.population_size || 'N/A'}</p>
+            <p>Habitat Type: ${properties.habitat_type || 'N/A'}</p>
+            <p>Date: ${new Date(properties.observation_date).toLocaleDateString()}</p>
           </div>
         `)
         .addTo(map);

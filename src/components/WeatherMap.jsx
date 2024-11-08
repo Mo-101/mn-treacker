@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMastomysLocations, fetchLassaFeverCases } from '../utils/api';
+import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
 import RightSidePanel from './RightSidePanel';
@@ -17,7 +18,6 @@ import MapLegend from './MapLegend';
 import MapInitializer from './MapInitializer';
 import MastomysTracker from './MastomysTracker';
 import RodentDetectionPanel from './RodentDetectionPanel';
-import { useToast } from './ui/use-toast';
 
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -64,6 +64,36 @@ const WeatherMap = () => {
     }
   });
 
+  useEffect(() => {
+    if (!map.current) return;
+
+    const updateMapState = () => {
+      const center = map.current.getCenter();
+      setMapState({
+        lng: center.lng.toFixed(4),
+        lat: center.lat.toFixed(4),
+        zoom: map.current.getZoom().toFixed(2)
+      });
+    };
+
+    map.current.on('move', updateMapState);
+
+    return () => {
+      if (map.current) {
+        map.current.off('move', updateMapState);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (ratLocations?.features?.length > 0) {
+      toast({
+        title: "Data Loaded",
+        description: `Loaded ${ratLocations.features.length} rat locations`,
+      });
+    }
+  }, [ratLocations]);
+
   const handleLayerToggle = (layerId) => {
     if (map.current) {
       const isActive = activeLayers.includes(layerId);
@@ -92,27 +122,6 @@ const WeatherMap = () => {
       });
     }
   };
-
-  useEffect(() => {
-    if (!map.current) return;
-
-    const updateMapState = () => {
-      const center = map.current.getCenter();
-      setMapState({
-        lng: center.lng.toFixed(4),
-        lat: center.lat.toFixed(4),
-        zoom: map.current.getZoom().toFixed(2)
-      });
-    };
-
-    map.current.on('move', updateMapState);
-
-    return () => {
-      if (map.current) {
-        map.current.off('move', updateMapState);
-      }
-    };
-  }, []);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">

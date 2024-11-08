@@ -19,7 +19,7 @@ export const fetchTrainingProgress = async () => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.ENDPOINTS.MASTOMYS_DATA}`);
+    const response = await fetch(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -29,27 +29,15 @@ export const fetchMastomysLocations = async () => {
   }
 };
 
-export const fetchMnData = async () => {
+export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/data/mn`);
+    const response = await fetch(API_CONFIG.ENDPOINTS.LASSA_CASES);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
-    return handleApiError(error, 'mn data');
-  }
-};
-
-export const fetchPointsData = async () => {
-  try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/data/points`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    return handleApiError(error, 'points data');
+    return handleApiError(error, 'Lassa fever cases');
   }
 };
 
@@ -87,18 +75,5 @@ export const fetchWeatherLayers = async () => {
     return data;
   } catch (error) {
     return handleApiError(error, 'weather layers');
-  }
-};
-
-export const fetchLassaFeverCases = async () => {
-  try {
-    const response = await fetch(`${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch Lassa Fever cases');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching Lassa Fever cases:', error);
-    throw error;
   }
 };

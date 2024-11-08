@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify
 import os
-import requests
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -14,7 +13,7 @@ OPENWEATHER_API_KEY = os.getenv('VITE_OPENWEATHER_API_KEY')
 def get_weather_data():
     """Get weather data from OpenWeather API"""
     try:
-        # Return a static configuration for weather layers that matches the frontend expectations
+        # Return a static configuration for weather layers
         weather_layers = {
             'layers': [
                 {

@@ -7,7 +7,7 @@ const handleApiError = (error, context) => {
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/mn`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/rat-locations`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

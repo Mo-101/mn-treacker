@@ -5,6 +5,18 @@ const handleApiError = (error, context) => {
   throw error;
 };
 
+export const fetchTrainingProgress = async () => {
+  try {
+    const response = await fetch(`${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    return handleApiError(error, 'training progress');
+  }
+};
+
 export const fetchMastomysLocations = async () => {
   try {
     const response = await fetch(API_CONFIG.ENDPOINTS.MASTOMYS_DATA);

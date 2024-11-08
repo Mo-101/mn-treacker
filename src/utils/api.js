@@ -89,3 +89,16 @@ export const fetchWeatherLayers = async () => {
     return handleApiError(error, 'weather layers');
   }
 };
+
+export const fetchLassaFeverCases = async () => {
+  try {
+    const response = await fetch(`${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Lassa Fever cases');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Lassa Fever cases:', error);
+    throw error;
+  }
+};

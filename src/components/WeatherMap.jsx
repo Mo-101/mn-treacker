@@ -8,6 +8,7 @@ import LeftSidePanel from './LeftSidePanel';
 import MapLegend from './MapLegend';
 import { addCustomLayers } from './MapLayers';
 import { hybridMapStyle } from '../config/mapStyle';
+import WindGLLayer from './WindGLLayer';
 
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -42,7 +43,7 @@ const WeatherMap = () => {
     if (!map.current) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: hybridMapStyle, // Using the hybrid satellite style
+        style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
         pitch: 45,
@@ -112,6 +113,9 @@ const WeatherMap = () => {
       </button>
 
       <MapLegend activeLayers={activeLayers} />
+      
+      {/* Add WindGLLayer component */}
+      <WindGLLayer map={map.current} />
     </div>
   );
 };

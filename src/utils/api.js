@@ -2,90 +2,58 @@ import { API_CONFIG } from '../config/apiConfig';
 import { toast } from '../components/ui/use-toast';
 
 const handleApiError = (error, context) => {
-  console.error(`Error fetching ${context}:`, error);
+  const errorMessage = `Failed to fetch ${context}. ${error.message || ''}`;
   toast({
     title: "Error",
-    description: `Failed to fetch ${context}. Please try again later.`,
+    description: errorMessage,
     variant: "destructive",
   });
-  throw error;
+  return null;
+};
+
+const safeRequest = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Request failed: ${error.message}`);
+  }
 };
 
 export const fetchMastomysLocations = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
+    const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.RAT_LOCATIONS}`);
+    return data || { type: 'FeatureCollection', features: [] };
   } catch (error) {
-    handleApiError(error, 'Mastomys locations');
-    return { layers: [] };
+    return handleApiError(error, 'Mastomys locations');
   }
 };
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
+    const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CASES}`);
+    return data || [];
   } catch (error) {
-    handleApiError(error, 'Lassa fever cases');
-    return [];
+    return handleApiError(error, 'Lassa fever cases');
   }
 };
 
 export const fetchWeatherLayers = async () => {
-  const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-  
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather layers');
-    }
-    const data = await response.json();
-    return data;
+    const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}`);
+    return data || { layers: [] };
   } catch (error) {
-    handleApiError(error, 'weather layers');
-    return {
-      layers: [
-        {
-          id: 'temperature',
-          type: 'raster',
-          source: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
-        },
-        {
-          id: 'precipitation',
-          type: 'raster',
-          source: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
-        },
-        {
-          id: 'clouds',
-          type: 'raster',
-          source: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
-        },
-        {
-          id: 'wind',
-          type: 'raster',
-          source: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
-        }
-      ]
-    };
+    return handleApiError(error, 'weather layers');
   }
 };
 
 export const fetchEnvironmentalData = async () => {
   try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.ENVIRONMENTAL_DATA);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
+    const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ENVIRONMENTAL_DATA}`);
+    return data || null;
   } catch (error) {
     return handleApiError(error, 'environmental data');
   }
@@ -93,11 +61,8 @@ export const fetchEnvironmentalData = async () => {
 
 export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    const data = await safeRequest(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINING_PROGRESS}`);
+    return data || { progress: 0, is_training: false };
   } catch (error) {
     return handleApiError(error, 'training progress');
   }

@@ -1,4 +1,13 @@
-const extractRequestData = (request) => {
+const sanitizeError = (error) => {
+  return {
+    message: error?.message || String(error),
+    stack: error?.stack,
+    type: error?.name || 'Error',
+    timestamp: new Date().toISOString()
+  };
+};
+
+const sanitizeRequest = (request) => {
   if (!request) return null;
   
   try {
@@ -16,7 +25,7 @@ const extractRequestData = (request) => {
     }
     return typeof request === 'string' ? { url: request } : null;
   } catch (err) {
-    console.warn('Error extracting request data:', err);
+    console.warn('Error sanitizing request:', err);
     return null;
   }
 };
@@ -25,23 +34,17 @@ export const reportError = (error, request = null) => {
   try {
     const errorData = {
       type: 'error',
-      timestamp: new Date().toISOString(),
-      error: {
-        message: error?.message || String(error),
-        stack: error?.stack,
-        type: error?.name || 'Error'
-      }
+      ...sanitizeError(error)
     };
 
     if (request) {
-      const safeRequest = extractRequestData(request);
+      const safeRequest = sanitizeRequest(request);
       if (safeRequest) {
         errorData.request = safeRequest;
       }
     }
 
-    const cloneableError = JSON.parse(JSON.stringify(errorData));
-    window.parent.postMessage(cloneableError, '*');
+    window.parent.postMessage(errorData, '*');
   } catch (err) {
     console.warn('Error in error reporting:', err);
   }
@@ -49,18 +52,8 @@ export const reportError = (error, request = null) => {
 
 export const reportHTTPError = (error) => {
   try {
-    const errorDetails = {
-      type: 'http_error',
-      error: {
-        message: error?.message || String(error),
-        stack: error?.stack,
-        type: error?.name || 'Error',
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    const cloneableError = JSON.parse(JSON.stringify(errorDetails));
-    window.parent.postMessage(cloneableError, '*');
+    const errorDetails = sanitizeError(error);
+    window.parent.postMessage(errorDetails, '*');
   } catch (err) {
     console.warn('Error reporting HTTP error:', err);
   }

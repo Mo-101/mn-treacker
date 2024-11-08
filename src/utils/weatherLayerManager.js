@@ -1,28 +1,25 @@
+import mapboxgl from 'mapbox-gl';
 import { weatherLayers } from './weatherLayerConfig';
 import { toast } from '../components/ui/use-toast';
 
 export const addWeatherLayer = (map, layerId) => {
   const layer = weatherLayers.find(l => l.id === layerId);
-  if (!layer || !map) return false;
+  if (!layer) return false;
 
   try {
-    // Remove existing layer and source if they exist
     if (map.getSource(layerId)) {
-      if (map.getLayer(layerId)) {
-        map.removeLayer(layerId);
-      }
       map.removeSource(layerId);
     }
+    if (map.getLayer(layerId)) {
+      map.removeLayer(layerId);
+    }
 
-    // Add new source
     map.addSource(layerId, {
       type: 'raster',
       tiles: [layer.url],
-      tileSize: 256,
-      attribution: '© OpenWeatherMap'
+      tileSize: 256
     });
 
-    // Add new layer
     map.addLayer({
       id: layerId,
       type: 'raster',
@@ -31,7 +28,7 @@ export const addWeatherLayer = (map, layerId) => {
         'raster-opacity': layer.opacity,
         'raster-opacity-transition': { duration: 300 }
       },
-      layout: { visibility: 'none' }
+      layout: { visibility: 'visible' }
     });
 
     return true;
@@ -47,7 +44,7 @@ export const addWeatherLayer = (map, layerId) => {
 };
 
 export const toggleWeatherLayer = (map, layerId, isVisible) => {
-  if (!map || !map.getLayer(layerId)) {
+  if (!map.getLayer(layerId)) {
     if (isVisible) {
       return addWeatherLayer(map, layerId);
     }
@@ -64,7 +61,7 @@ export const toggleWeatherLayer = (map, layerId, isVisible) => {
 };
 
 export const updateLayerOpacity = (map, layerId, opacity) => {
-  if (!map || !map.getLayer(layerId)) return false;
+  if (!map.getLayer(layerId)) return false;
   
   try {
     map.setPaintProperty(layerId, 'raster-opacity', opacity / 100);

@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import DetectionMap from './DetectionMap';
 import DetectionTimeSeries from './DetectionTimeSeries';
 
-const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
+const RodentDetectionPanel = ({ isOpen, onToggle, detections = [] }) => {
   const [expandedDetection, setExpandedDetection] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();

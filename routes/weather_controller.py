@@ -11,14 +11,14 @@ def get_weather_data():
     try:
         query = """
             SELECT json_build_object(
-                'layers', json_agg(
+                'layers', COALESCE(json_agg(
                     json_build_object(
                         'id', id,
                         'name', name,
                         'type', type,
                         'data', data
                     )
-                )
+                ), '[]'::json)
             )
             FROM weather_layers;
         """

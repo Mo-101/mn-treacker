@@ -14,7 +14,13 @@ from routes.weather_controller import weather_bp
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Load configurations
 app.config['SECRET_KEY'] = os.getenv('VITE_FLASK_SECRET_KEY', 'default_secret_key')
@@ -22,20 +28,12 @@ app.config['SECRET_KEY'] = os.getenv('VITE_FLASK_SECRET_KEY', 'default_secret_ke
 if not app.config['SECRET_KEY'] or app.config['SECRET_KEY'] == 'default_secret_key':
     print("Warning: 'VITE_FLASK_SECRET_KEY' not found or using a default value.")
 
-# Register routes
+# Register routes with correct prefixes
 app.register_blueprint(rat_locations_bp, url_prefix='/api')
 app.register_blueprint(cases_bp, url_prefix='/api')
 app.register_blueprint(environmental_bp, url_prefix='/api')
 app.register_blueprint(upload_bp, url_prefix='/api')
 app.register_blueprint(weather_bp, url_prefix='/api')
-
-@app.route('/test')
-def test():
-    return "Flask and CORS are working!"
-
-@app.route('/')
-def home():
-    return "Welcome to the Mastomys Natalensis Tracker API!"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)

@@ -34,7 +34,7 @@ def get_rat_locations():
             FROM mastomys_locations;
         """
         result = db.execute(text(query)).scalar()
-        return jsonify(result)
+        return jsonify(result if result else {'type': 'FeatureCollection', 'features': []})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
@@ -67,7 +67,7 @@ def get_cases():
             FROM lassa_fever_cases;
         """
         result = db.execute(text(query)).scalar()
-        return jsonify(result)
+        return jsonify(result if result else {'type': 'FeatureCollection', 'features': []})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

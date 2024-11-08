@@ -8,12 +8,5 @@ export const API_CONFIG = {
     LOCATIONS: `${API_BASE_URL}/api/locations`,
     ENVIRONMENTAL_DATA: `${API_BASE_URL}/api/environmental_data`,
     TRAINING_DATA: `${API_BASE_URL}/api/training_progress`
-  },
-  DB_CONFIG: {
-    host: 'localhost',
-    port: 5432,
-    database: 'MoBase',
-    user: 'mobase_user',
-    password: 'mobase_password'
   }
 };

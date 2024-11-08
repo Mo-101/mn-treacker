@@ -1,74 +1,59 @@
 from flask import Blueprint, jsonify
-from models.database import get_db
 from sqlalchemy import text
-from geoalchemy2.shape import to_shape
-import json
+from models.database import get_db
+from models.models import (
+    MastomysLocation,
+    LassaFeverCase,
+    EnvironmentalData,
+    HistoricalWeather
+)
 
 data_bp = Blueprint('data', __name__)
 
-@data_bp.route('/rat-locations', methods=['GET', 'OPTIONS'])
+@data_bp.route('/rat-locations', methods=['GET'])
 def get_rat_locations():
-    """Get rat locations from database"""
     db = next(get_db())
     try:
-        query = """
-            SELECT json_build_object(
-                'type', 'FeatureCollection',
-                'features', json_agg(
-                    json_build_object(
-                        'type', 'Feature',
-                        'geometry', ST_AsGeoJSON(geom)::json,
-                        'properties', json_build_object(
-                            'id', id,
-                            'observation_date', observation_date,
-                            'population_size', population_size,
-                            'habitat_type', habitat_type,
-                            'vegetation_density', vegetation_density,
-                            'elevation', elevation,
-                            'temperature', temperature,
-                            'humidity', humidity
-                        )
-                    )
-                )
-            )
-            FROM mastomys_locations;
-        """
-        result = db.execute(text(query)).scalar()
-        return jsonify(result if result else {'type': 'FeatureCollection', 'features': []})
+        locations = db.query(MastomysLocation).all()
+        return jsonify([{
+            'id': loc.id,
+            'latitude': db.scalar(text('ST_Y(ST_AsText(geom))')),
+            'longitude': db.scalar(text('ST_X(ST_AsText(geom))')),
+            'population_size': loc.population_size,
+            'habitat_type': loc.habitat_type,
+            'observation_date': loc.observation_date.isoformat() if loc.observation_date else None
+        } for loc in locations])
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+        return jsonify({'error': str(e)}), 500
 
-@data_bp.route('/cases', methods=['GET', 'OPTIONS'])
-def get_cases():
-    """Get Lassa fever cases from database"""
+@data_bp.route('/cases', methods=['GET'])
+def get_lassa_cases():
     db = next(get_db())
     try:
-        query = """
-            SELECT json_build_object(
-                'type', 'FeatureCollection',
-                'features', json_agg(
-                    json_build_object(
-                        'type', 'Feature',
-                        'geometry', ST_AsGeoJSON(geom)::json,
-                        'properties', json_build_object(
-                            'id', id,
-                            'report_date', report_date,
-                            'severity', severity,
-                            'patient_age', patient_age,
-                            'patient_gender', patient_gender,
-                            'outcome', outcome,
-                            'hospitalization_required', hospitalization_required
-                        )
-                    )
-                )
-            )
-            FROM lassa_fever_cases;
-        """
-        result = db.execute(text(query)).scalar()
-        return jsonify(result if result else {'type': 'FeatureCollection', 'features': []})
+        cases = db.query(LassaFeverCase).all()
+        return jsonify([{
+            'id': case.id,
+            'latitude': db.scalar(text('ST_Y(ST_AsText(geom))')),
+            'longitude': db.scalar(text('ST_X(ST_AsText(geom))')),
+            'severity': case.severity,
+            'report_date': case.report_date.isoformat() if case.report_date else None
+        } for case in cases])
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+        return jsonify({'error': str(e)}), 500
+
+@data_bp.route('/weather_data', methods=['GET'])
+def get_weather_data():
+    db = next(get_db())
+    try:
+        weather_data = db.query(EnvironmentalData).all()
+        return jsonify([{
+            'id': data.id,
+            'latitude': db.scalar(text('ST_Y(ST_AsText(geom))')),
+            'longitude': db.scalar(text('ST_X(ST_AsText(geom))')),
+            'temperature': data.temperature,
+            'humidity': data.humidity,
+            'precipitation': data.precipitation,
+            'observation_date': data.observation_date.isoformat() if data.observation_date else None
+        } for data in weather_data])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

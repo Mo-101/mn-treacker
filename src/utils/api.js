@@ -53,23 +53,6 @@ export const fetchWeatherData = async () => {
   }
 };
 
-export const fetchTrainingProgress = async () => {
-  try {
-    const response = await fetch(API_CONFIG.ENDPOINTS.TRAINING_DATA);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return {
-      progress: data.progress || 0,
-      isTraining: data.is_training || false,
-      metrics: data.metrics || {}
-    };
-  } catch (error) {
-    return handleApiError(error, 'training progress');
-  }
-};
-
 export const fetchWeatherLayers = async () => {
   try {
     const response = await fetch(API_CONFIG.ENDPOINTS.WEATHER);
@@ -77,7 +60,7 @@ export const fetchWeatherLayers = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return data.layers || [];
+    return data;
   } catch (error) {
     return handleApiError(error, 'weather layers');
   }

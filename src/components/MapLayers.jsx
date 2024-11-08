@@ -3,27 +3,70 @@ import { processWeatherData } from '../utils/weatherDataUtils';
 import { toast } from '../components/ui/use-toast';
 
 const addLayer = (map, id, source, type, paint, layout = {}) => {
-  if (!map.getSource(id)) {
-    map.addSource(id, source);
+  if (map.getSource(id)) {
+    map.removeSource(id);
   }
-  if (!map.getLayer(id)) {
-    map.addLayer({
-      id,
-      type,
-      source: id,
-      paint,
-      layout: { visibility: 'visible', ...layout }
-    });
+  if (map.getLayer(id)) {
+    map.removeLayer(id);
   }
+  
+  map.addSource(id, source);
+  map.addLayer({
+    id,
+    type,
+    source: id,
+    paint,
+    layout: { visibility: 'visible', ...layout }
+  });
 };
 
-export const addCustomLayers = (map) => {
-  addVegetationLayer(map);
-  addPrecipitationLayer(map);
-  addCloudsLayer(map);
-  addRadarLayer(map);
-  addHistoricalWeatherLayer(map);
-  addAdminBoundariesLayer(map);
+export const addCustomLayers = async (map) => {
+  const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+  
+  try {
+    const response = await fetch('/weather_data');
+    if (!response.ok) {
+      throw new Error('Failed to fetch weather data');
+    }
+    const weatherData = await response.json();
+
+    weatherData.layers.forEach(layer => {
+      addLayer(map, layer.id, {
+        type: 'raster',
+        tiles: [`https://tile.openweathermap.org/map/${layer.id}/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+        tileSize: 256
+      }, 'raster', {
+        'raster-opacity': 0.8,
+        'raster-resampling': 'linear'
+      });
+    });
+
+    toast({
+      title: "Success",
+      description: "Weather layers loaded successfully",
+    });
+
+  } catch (error) {
+    console.error('Error loading weather layers:', error);
+    toast({
+      title: "Error",
+      description: "Failed to load weather layers. Using fallback data.",
+      variant: "destructive",
+    });
+
+    // Fallback layers
+    const fallbackLayers = ['temp_new', 'precipitation_new', 'clouds_new', 'wind_new'];
+    fallbackLayers.forEach(layerId => {
+      addLayer(map, layerId, {
+        type: 'raster',
+        tiles: [`https://tile.openweathermap.org/map/${layerId}/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+        tileSize: 256
+      }, 'raster', {
+        'raster-opacity': 0.8,
+        'raster-resampling': 'linear'
+      });
+    });
+  }
 };
 
 const addHistoricalWeatherLayer = async (map) => {

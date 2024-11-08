@@ -11,7 +11,6 @@ def get_rat_locations():
     """Get rat locations from database"""
     db = next(get_db())
     try:
-        # Query mastomys locations and convert to GeoJSON
         query = """
             SELECT json_build_object(
                 'type', 'FeatureCollection',
@@ -46,7 +45,6 @@ def get_cases():
     """Get Lassa fever cases from database"""
     db = next(get_db())
     try:
-        # Query lassa fever cases and convert to GeoJSON
         query = """
             SELECT json_build_object(
                 'type', 'FeatureCollection',

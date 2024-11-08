@@ -7,6 +7,7 @@ import { useToast } from './ui/use-toast';
 import LeftSidePanel from './LeftSidePanel';
 import MapLegend from './MapLegend';
 import { addCustomLayers } from './MapLayers';
+import { hybridMapStyle } from '../config/mapStyle';
 
 if (!mapboxgl.accessToken) {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -21,7 +22,6 @@ const WeatherMap = () => {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
 
-  // Fetch weather data
   const { data: weatherData } = useQuery({
     queryKey: ['weatherLayers'],
     queryFn: async () => {
@@ -42,7 +42,7 @@ const WeatherMap = () => {
     if (!map.current) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: hybridMapStyle, // Using the hybrid satellite style
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
         pitch: 45,

@@ -2,14 +2,15 @@ import React from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Mountain, Cloud, Droplets, Wind, Thermometer } from 'lucide-react';
+import { weatherLayers } from '../utils/weatherLayerConfig';
 
-const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
+const LayerControls = ({ activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
   const layerIcons = {
-    terrain: Mountain,
-    clouds: Cloud,
-    precipitation: Droplets,
-    wind: Wind,
-    temperature: Thermometer
+    temp_new: Thermometer,
+    precipitation_new: Droplets,
+    clouds_new: Cloud,
+    wind_new: Wind,
+    terrain: Mountain
   };
 
   const handleLayerToggle = async (layerId) => {
@@ -19,24 +20,12 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
       setActiveLayers(prev => 
         isEnabled ? [...prev, layerId] : prev.filter(id => id !== layerId)
       );
-    } else {
-      console.error(`Failed to toggle ${layerId} layer:`, result.error);
-    }
-  };
-
-  const handleOpacityChange = async (opacity) => {
-    setLayerOpacity(opacity);
-    for (const layerId of activeLayers) {
-      const result = await onOpacityChange(layerId, opacity / 100);
-      if (!result.success) {
-        console.error(`Failed to set opacity for ${layerId} layer:`, result.error);
-      }
     }
   };
 
   return (
     <div className="space-y-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
-      {layers.map((layer) => {
+      {weatherLayers.map((layer) => {
         const Icon = layerIcons[layer.id] || Cloud;
         return (
           <div key={layer.id} className="flex items-center justify-between">
@@ -55,7 +44,7 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
         <h3 className="text-lg font-semibold mb-2">Layer Opacity</h3>
         <Slider
           value={[layerOpacity]}
-          onValueChange={(value) => handleOpacityChange(value[0])}
+          onValueChange={(value) => onOpacityChange(value[0])}
           max={100}
           step={1}
         />

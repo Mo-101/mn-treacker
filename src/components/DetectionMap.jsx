@@ -1,46 +1,61 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { useToast } from './ui/use-toast';
 
-// Fix Leaflet's default icon path issues
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+const DetectionMap = ({ detections = [] }) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const { toast } = useToast();
 
-const DetectionMap = ({ detections }) => {
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [0, 0],
+        zoom: 2,
+        pitch: 45,
+        bearing: 0,
+        antialias: true
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      map.current.on('load', () => {
+        detections.forEach((detection) => {
+          new mapboxgl.Marker()
+            .setLngLat(detection.coordinates)
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                <div class="p-2">
+                  <h3 class="font-bold">Detection #${detection.id}</h3>
+                  <p>Confidence: ${detection.confidence}%</p>
+                  <p>Time: ${detection.timestamp}</p>
+                </div>
+              `)
+            )
+            .addTo(map.current);
+        });
+      });
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize map. Please check your configuration.",
+        variant: "destructive",
+      });
+    }
+
+    return () => map.current?.remove();
+  }, []);
+
   return (
     <div className="h-[400px] w-full rounded-lg overflow-hidden">
-      <MapContainer
-        center={[0, 0]}
-        zoom={2}
-        className="h-full w-full"
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        <MarkerClusterGroup>
-          {detections.map((detection, index) => (
-            <Marker
-              key={index}
-              position={detection.coordinates}
-            >
-              <Popup>
-                <div className="p-2">
-                  <h3 className="font-bold">Detection #{detection.id}</h3>
-                  <p>Confidence: {detection.confidence}%</p>
-                  <p>Time: {detection.timestamp}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MarkerClusterGroup>
-      </MapContainer>
+      <div ref={mapContainer} className="h-full w-full" />
     </div>
   );
 };

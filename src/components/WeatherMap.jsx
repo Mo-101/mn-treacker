@@ -1,108 +1,198 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMastomysLocations, fetchLassaFeverCases, fetchWeatherLayers } from '../utils/api';
+import TopNavigationBar from './TopNavigationBar';
+import LeftSidePanel from './LeftSidePanel';
+import RightSidePanel from './RightSidePanel';
+import FloatingInsightsBar from './FloatingInsightsButton';
+import AITrainingInterface from './AITrainingInterface';
+import PredictionPanel from './PredictionPanel';
+import DetectionSpotLayer from './DetectionSpotLayer';
+import LassaFeverCasesLayer from './LassaFeverCasesLayer';
+import SidePanels from './SidePanels';
+import MapLegend from './MapLegend';
+import MapInitializer from './MapInitializer';
+import WindGLLayer from './WindGLLayer';
+import MastomysTracker from './MastomysTracker';
+import RodentDetectionPanel from './RodentDetectionPanel';
+import WindParticleLayer from './WindParticleLayer';
 import { useToast } from './ui/use-toast';
 
-const INITIAL_CENTER = [-74.0242, 40.6941];
-const INITIAL_ZOOM = 10.12;
+if (!mapboxgl.accessToken) {
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+}
 
 const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [mapState, setMapState] = useState({ lng: 27.12657, lat: 3.46732, zoom: 2 });
+  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temperature', 'clouds', 'wind']);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [aiTrainingOpen, setAiTrainingOpen] = useState(false);
+  const [predictionPanelOpen, setPredictionPanelOpen] = useState(false);
+  const [rodentPanelOpen, setRodentPanelOpen] = useState(false);
+  const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
-  
-  const [center, setCenter] = useState(INITIAL_CENTER);
-  const [zoom, setZoom] = useState(INITIAL_ZOOM);
 
-  useEffect(() => {
-    if (!import.meta.env.VITE_MAPBOX_TOKEN) {
-      toast({
-        title: "Configuration Error",
-        description: "Mapbox token is missing. Please check your environment variables.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-    
-    if (map.current) return;
-
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
-        center: center,
-        zoom: zoom,
-        pitch: 45,
-        bearing: 0,
-        antialias: true
-      });
-
-      map.current.on('move', () => {
-        const mapCenter = map.current.getCenter();
-        const mapZoom = map.current.getZoom();
-        setCenter([mapCenter.lng, mapCenter.lat]);
-        setZoom(mapZoom);
-      });
-
-      map.current.on('load', () => {
-        map.current.addSource('mapbox-dem', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-          tileSize: 512,
-          maxzoom: 14
-        });
-
-        map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-        map.current.addLayer({
-          id: 'sky',
-          type: 'sky',
-          paint: {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 90.0],
-            'sky-atmosphere-sun-intensity': 15
-          }
-        });
-      });
-
-    } catch (error) {
-      console.error('Error initializing map:', error);
+  const { data: ratLocations, isError: ratError } = useQuery({
+    queryKey: ['ratLocations'],
+    queryFn: fetchMastomysLocations,
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to initialize map. Please check your configuration.",
+        description: "Failed to fetch rat location data",
         variant: "destructive",
       });
     }
+  });
+
+  const { data: lassaCases, isError: lassaError } = useQuery({
+    queryKey: ['lassaCases'],
+    queryFn: fetchLassaFeverCases,
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch Lassa fever cases",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const { data: weatherLayers, isError: weatherError } = useQuery({
+    queryKey: ['weatherLayers'],
+    queryFn: fetchWeatherLayers,
+    staleTime: 300000,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch weather layers",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleLayerToggle = (layerId) => {
+    if (map.current) {
+      const isActive = activeLayers.includes(layerId);
+      if (isActive) {
+        map.current.setLayoutProperty(layerId, 'visibility', 'none');
+        setActiveLayers(prev => prev.filter(id => id !== layerId));
+      } else {
+        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+        setActiveLayers(prev => [...prev, layerId]);
+      }
+      
+      toast({
+        title: isActive ? "Layer Hidden" : "Layer Shown",
+        description: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} layer has been ${isActive ? 'hidden' : 'shown'}`,
+      });
+    }
+  };
+
+  const handleOpacityChange = (opacity) => {
+    setLayerOpacity(opacity);
+    if (map.current) {
+      activeLayers.forEach(layerId => {
+        if (map.current.getLayer(layerId)) {
+          map.current.setPaintProperty(layerId, 'raster-opacity', opacity / 100);
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    const updateMapState = () => {
+      const center = map.current.getCenter();
+      setMapState({
+        lng: center.lng.toFixed(4),
+        lat: center.lat.toFixed(4),
+        zoom: map.current.getZoom().toFixed(2)
+      });
+    };
+
+    map.current.on('move', updateMapState);
 
     return () => {
       if (map.current) {
-        map.current.remove();
-        map.current = null;
+        map.current.off('move', updateMapState);
       }
     };
   }, []);
 
-  const handleReset = () => {
-    map.current?.flyTo({
-      center: INITIAL_CENTER,
-      zoom: INITIAL_ZOOM
-    });
-  };
-
   return (
-    <div className="relative w-screen h-screen">
-      <div className="sidebar">
-        Longitude: {center[0].toFixed(4)} | Latitude: {center[1].toFixed(4)} | Zoom: {zoom.toFixed(2)}
-      </div>
-      <button 
-        className="reset-button"
-        onClick={handleReset}
-      >
-        Reset
-      </button>
-      <div ref={mapContainer} className="absolute inset-0" />
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+      
+      <MapInitializer 
+        map={map}
+        mapContainer={mapContainer}
+        mapState={mapState}
+      />
+
+      {map.current && (
+        <>
+          <WindParticleLayer map={map.current} />
+          <WindGLLayer map={map.current} />
+          <DetectionSpotLayer map={map.current} detections={ratLocations} />
+          <LassaFeverCasesLayer map={map.current} cases={lassaCases} />
+          <MastomysTracker sightings={ratLocations} />
+        </>
+      )}
+
+      <TopNavigationBar 
+        onLayerToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+        onAITrainingToggle={() => setAiTrainingOpen(!aiTrainingOpen)}
+        onPredictionToggle={() => setPredictionPanelOpen(!predictionPanelOpen)}
+      />
+
+      <SidePanels
+        leftPanelOpen={leftPanelOpen}
+        rightPanelOpen={rightPanelOpen}
+        setLeftPanelOpen={setLeftPanelOpen}
+        setRightPanelOpen={setRightPanelOpen}
+        activeLayers={activeLayers}
+        handleLayerToggle={handleLayerToggle}
+        handleOpacityChange={handleOpacityChange}
+      />
+
+      <AnimatePresence>
+        {predictionPanelOpen && (
+          <PredictionPanel
+            isOpen={predictionPanelOpen}
+            onClose={() => setPredictionPanelOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <FloatingInsightsBar />
+
+      <AnimatePresence>
+        {aiTrainingOpen && (
+          <AITrainingInterface
+            isOpen={aiTrainingOpen}
+            onClose={() => setAiTrainingOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <MapLegend activeLayers={activeLayers} />
+
+      <RodentDetectionPanel 
+        isOpen={rodentPanelOpen}
+        onToggle={() => setRodentPanelOpen(!rodentPanelOpen)}
+        detections={ratLocations?.features || []}
+      />
     </div>
   );
 };

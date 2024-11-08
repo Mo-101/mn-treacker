@@ -14,12 +14,3 @@
 .case-marker svg {
   filter: drop-shadow(0 0 4px rgba(255, 59, 59, 0.5));
 }
-
-.sidebar {
-  @apply bg-black/90 text-white p-3 font-mono z-10 absolute top-0 left-0 m-3 rounded-md;
-}
-
-.reset-button {
-  @apply absolute top-14 z-10 left-3 px-3 py-1 rounded-lg cursor-pointer 
-         bg-white/90 hover:bg-white transition-colors;
-}

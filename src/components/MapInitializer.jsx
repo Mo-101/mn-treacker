@@ -1,50 +1,53 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { hybridMapStyle } from '../config/mapStyle';
+import { initializeLayers } from '../utils/mapLayers';
 import { useToast } from './ui/use-toast';
 
-const MapInitializer = ({ map, mapContainer, mapState, onError }) => {
+const MapInitializer = ({ map, mapContainer, mapState }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (map.current) return;
-    
+    if (!mapContainer.current || map.current) return;
+
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: hybridMapStyle,
         center: [mapState.lng, mapState.lat],
         zoom: mapState.zoom,
-        transformRequest: (url, resourceType) => {
-          if (resourceType === 'Image' && url.includes('wizard-logo.png')) {
-            return { url: '/placeholder.svg' };
-          }
+        pitch: 45,
+        bearing: 0,
+        antialias: true
+      });
+
+      map.current.on('load', async () => {
+        try {
+          await initializeLayers(map.current);
+          toast({
+            title: "Map Initialized",
+            description: "Map layers loaded successfully",
+          });
+        } catch (error) {
+          console.error('Error initializing layers:', error);
+          toast({
+            title: "Warning",
+            description: "Some map layers failed to load",
+            variant: "destructive",
+          });
         }
       });
-  
-      map.current.on('load', () => {
-        addWeatherLayers();
-        addWindParticleLayer();
-        console.log('Map loaded and layers added');
-      });
-  
-      map.current.on('error', (e) => {
-        console.error('Map error:', e);
-        toast({
-          title: "Map Error",
-          description: "An error occurred with the map. Some features may be limited.",
-          variant: "destructive",
-        });
-        onError?.(e);
-      });
-  
-      return () => map.current && map.current.remove();
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
     } catch (error) {
+      console.error('Error initializing map:', error);
       toast({
         title: "Error",
-        description: "Failed to initialize map. Please check your connection and try again.",
+        description: "Failed to initialize map. Please check your configuration.",
         variant: "destructive",
       });
-      onError?.(error);
     }
   }, []);
 

@@ -5,7 +5,7 @@ const handleApiError = (error, context) => {
   console.error(`Error fetching ${context}:`, error);
   toast({
     title: "Error",
-    description: `Failed to fetch ${context}. Using cached data if available.`,
+    description: `Failed to fetch ${context}. Please check your connection and try again.`,
     variant: "destructive",
   });
   return null;
@@ -17,8 +17,11 @@ const fetchWithErrorHandling = async (url, options = {}) => {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...options.headers
-      }
+      },
+      mode: 'cors',
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -27,7 +30,10 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     
     return await response.json();
   } catch (error) {
-    throw new Error(`Fetch failed: ${error.message}`);
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('Network error: Please check your connection and ensure the API server is running.');
+    }
+    throw error;
   }
 };
 

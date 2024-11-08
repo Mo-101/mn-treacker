@@ -11,7 +11,7 @@ const extractRequestData = (request) => {
         // Only include safe headers
         headers: Object.fromEntries(
           Array.from(request.headers.entries()).filter(([key]) => {
-            const safeHeaders = ['content-type', 'accept', 'content-length'];
+            const safeHeaders = ['content-type', 'accept'];
             return safeHeaders.includes(key.toLowerCase());
           })
         )
@@ -51,9 +51,7 @@ const postMessage = (message) => {
       }
     }
 
-    // Use structured clone to ensure the object is cloneable
-    const cloneableMessage = JSON.parse(JSON.stringify(safeMessage));
-    window.parent.postMessage(cloneableMessage, '*');
+    window.parent.postMessage(JSON.parse(JSON.stringify(safeMessage)), '*');
   } catch (err) {
     console.warn('Error in postMessage:', err);
     window.parent.postMessage({
@@ -66,23 +64,4 @@ const postMessage = (message) => {
   }
 };
 
-// Function to report HTTP errors
-const reportHTTPError = (error) => {
-  try {
-    const errorDetails = {
-      type: 'http_error',
-      error: {
-        message: error?.message || String(error),
-        stack: error?.stack,
-        type: error?.name || 'Error',
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    postMessage(errorDetails);
-  } catch (err) {
-    console.warn('Error reporting HTTP error:', err);
-  }
-};
-
-export { postMessage, reportHTTPError };
+export { postMessage };

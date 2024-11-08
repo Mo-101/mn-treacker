@@ -7,76 +7,76 @@ import { useToast } from './ui/use-toast';
 const LassaFeverCasesLayer = ({ map }) => {
   const { toast } = useToast();
   const { data: points } = useQuery({
-    queryKey: ['points'],
+    queryKey: ['lassa-cases'],
     queryFn: fetchLassaFeverCases,
     staleTime: 300000,
-    retry: 1
+    retry: 1,
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to fetch Lassa fever cases",
+        variant: "destructive",
+      });
+    }
   });
 
   useEffect(() => {
     if (!map || !points?.features) return;
 
-    // Remove existing layer and source
-    if (map.getLayer('points')) map.removeLayer('points');
-    if (map.getSource('points')) map.removeSource('points');
+    if (map.getLayer('lassa-points')) map.removeLayer('lassa-points');
+    if (map.getSource('lassa-points')) map.removeSource('lassa-points');
 
-    // Add points source
-    map.addSource('points', {
+    map.addSource('lassa-points', {
       type: 'geojson',
       data: points
     });
 
-    // Add points layer
     map.addLayer({
-      id: 'points',
+      id: 'lassa-points',
       type: 'circle',
-      source: 'points',
+      source: 'lassa-points',
       paint: {
         'circle-radius': 6,
-        'circle-color': '#FF3B3B',
-        'circle-opacity': 0.9,
+        'circle-color': '#FF3B3B',  // Red color for Lassa fever cases
+        'circle-opacity': 0.8,
         'circle-stroke-width': 2,
-        'circle-stroke-color': '#FFFFFF'
+        'circle-stroke-color': '#fff'
       }
     });
 
-    // Add popup on click
-    map.on('click', 'points', (e) => {
-      if (!e.features?.length) return;
+    // Add popup for Lassa fever cases
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    map.on('mouseenter', 'lassa-points', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
       
       const coordinates = e.features[0].geometry.coordinates.slice();
       const properties = e.features[0].properties;
       
-      new mapboxgl.Popup()
+      popup
         .setLngLat(coordinates)
         .setHTML(`
-          <div class="bg-gray-900/95 p-3 rounded-lg shadow-xl">
-            <h3 class="text-amber-400 font-bold mb-2">Point Details</h3>
-            <div class="space-y-1 text-white">
-              ${Object.entries(properties || {})
-                .map(([key, value]) => `<p><span class="text-amber-400">${key}:</span> ${value}</p>`)
-                .join('')}
-            </div>
+          <div class="bg-black/90 p-3 rounded-lg text-white">
+            <h3 class="font-bold text-red-400">Lassa Fever Case</h3>
+            <p>Severity: ${properties.severity || 'Unknown'}</p>
+            <p>Date: ${new Date(properties.report_date).toLocaleDateString()}</p>
+            <p>Patient Age: ${properties.patient_age || 'Unknown'}</p>
           </div>
         `)
         .addTo(map);
     });
 
-    map.on('mouseenter', 'points', () => {
-      if (map.getCanvas()) {
-        map.getCanvas().style.cursor = 'pointer';
-      }
-    });
-
-    map.on('mouseleave', 'points', () => {
-      if (map.getCanvas()) {
-        map.getCanvas().style.cursor = '';
-      }
+    map.on('mouseleave', 'lassa-points', () => {
+      map.getCanvas().style.cursor = '';
+      popup.remove();
     });
 
     return () => {
-      if (map.getLayer('points')) map.removeLayer('points');
-      if (map.getSource('points')) map.removeSource('points');
+      if (map.getLayer('lassa-points')) map.removeLayer('lassa-points');
+      if (map.getSource('lassa-points')) map.removeSource('lassa-points');
     };
   }, [map, points]);
 

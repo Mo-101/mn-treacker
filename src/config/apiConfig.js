@@ -7,7 +7,8 @@ export const API_CONFIG = {
     MASTOMYS_DATA: `${API_BASE_URL}/${DB_NAME}/mn_geog`,
     LASSA_CASES: `${API_BASE_URL}/${DB_NAME}/points_geog`,
     LOCATIONS: `${API_BASE_URL}/${DB_NAME}/locations`,
-    ENVIRONMENTAL_DATA: `${API_BASE_URL}/${DB_NAME}/weather_data`
+    ENVIRONMENTAL_DATA: `${API_BASE_URL}/${DB_NAME}/weather_data`,
+    TRAINING_DATA: `${API_BASE_URL}/${DB_NAME}/training_progress`
   },
   DB_CONFIG: {
     host: 'localhost',

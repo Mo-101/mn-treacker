@@ -1,19 +1,19 @@
 import { toast } from '../components/ui/use-toast';
-import { API_CONFIG } from '../config/apiConfig';
 
-export const fetchMastomysLocations = async () => {
+export const fetchRatData = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MASTOMYS_LOCATIONS}`);
+    const response = await fetch('/api/rat-locations');
     if (!response.ok) {
-      throw new Error('Failed to fetch Mastomys natalensis data');
+      throw new Error('Failed to fetch rat data');
     }
     const data = await response.json();
+    console.log('Fetched rat data:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching Mastomys data:', error);
+    console.error('Error fetching rat data:', error);
     toast({
       title: "Error",
-      description: "Failed to fetch Mastomys natalensis data. Please check your data source configuration.",
+      description: "Failed to fetch rat data. Please try again later.",
       variant: "destructive",
     });
     return { type: 'FeatureCollection', features: [] };
@@ -22,7 +22,7 @@ export const fetchMastomysLocations = async () => {
 
 export const fetchLassaFeverCases = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LASSA_CASES}`);
+    const response = await fetch('/api/cases');
     if (!response.ok) {
       throw new Error('Failed to fetch Lassa Fever cases');
     }
@@ -31,34 +31,16 @@ export const fetchLassaFeverCases = async () => {
     console.error('Error fetching Lassa Fever cases:', error);
     toast({
       title: "Error",
-      description: "Failed to fetch Lassa Fever cases. Please check your data source configuration.",
+      description: "Failed to fetch Lassa Fever cases. Please try again later.",
       variant: "destructive",
     });
     return [];
   }
 };
 
-export const fetchWeatherData = async () => {
-  try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WEATHER}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather data');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch weather data. Please check your data source configuration.",
-      variant: "destructive",
-    });
-    return null;
-  }
-};
-
 export const fetchTrainingProgress = async () => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}/training`);
+    const response = await fetch('/api/training-progress');
     if (!response.ok) {
       throw new Error('Failed to fetch training progress');
     }

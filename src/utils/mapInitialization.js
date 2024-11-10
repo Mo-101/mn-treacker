@@ -1,15 +1,7 @@
 import mapboxgl from 'mapbox-gl';
-
-// Set the access token globally for mapbox-gl
-if (!mapboxgl.accessToken) {
-  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
-}
+import { getWeatherLayer, getOpenWeatherTemperatureLayer } from './weatherApiUtils';
 
 export const initializeMap = (mapContainer, mapState) => {
-  if (!mapboxgl.accessToken) {
-    throw new Error('Mapbox token is required but not provided. Please check your environment variables.');
-  }
-
   const map = new mapboxgl.Map({
     container: mapContainer,
     style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',

@@ -1,39 +1,120 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import React, { useEffect, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import { useToast } from "./ui/use-toast";
 
-const MastomysTracker = ({ sightings }) => {
-  const sightingsArray = sightings?.features || [];
+const MastomysTracker = ({ map }) => {
+  const [ratLocations, setRatLocations] = useState([]);
+  const { toast } = useToast();
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="absolute right-4 top-20 w-80"
-    >
-      <Card className="bg-black/50 text-white backdrop-blur-md border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            Mastomys Sightings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {sightingsArray.map((sighting, index) => (
-              <div key={index} className="bg-white/20 p-2 rounded">
-                <p>Longitude: {sighting.geometry.coordinates[0]}</p>
-                <p>Latitude: {sighting.geometry.coordinates[1]}</p>
-                <p>Time: {new Date(sighting.properties.timestamp).toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-          {sightingsArray.length === 0 && (
-            <p className="text-center text-gray-300">No sightings found</p>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+  useEffect(() => {
+    const fetchRatLocations = async () => {
+      try {
+        // Use mock data if in development or if API is not available
+        if (import.meta.env.DEV || !import.meta.env.VITE_API_URL) {
+          const mockData = {
+            features: [
+              {
+                geometry: {
+                  coordinates: [3.3792, 6.5244], // Lagos coordinates
+                  type: "Point"
+                },
+                properties: {
+                  timestamp: new Date().toISOString(),
+                  confidence: 0.95
+                }
+              }
+            ]
+          };
+          setRatLocations(mockData.features);
+          return;
+        }
+
+        const response = await fetch('/api/rat-locations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch rat locations');
+        }
+        const data = await response.json();
+        setRatLocations(data.features);
+      } catch (error) {
+        console.error('Error fetching rat locations:', error);
+        toast({
+          title: "Warning",
+          description: "Using sample data - couldn't fetch real rat locations",
+          variant: "warning",
+        });
+      }
+    };
+
+    fetchRatLocations();
+  }, [toast]);
+
+  useEffect(() => {
+    if (!map || !ratLocations.length) return;
+
+    // Add rat locations to the map
+    if (!map.getSource('rat-locations')) {
+      map.addSource('rat-locations', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: ratLocations
+        }
+      });
+
+      // Add glow effect layer
+      map.addLayer({
+        id: 'rat-points-glow',
+        type: 'circle',
+        source: 'rat-locations',
+        paint: {
+          'circle-radius': 15,
+          'circle-color': '#B42222',
+          'circle-opacity': 0.15,
+          'circle-blur': 1
+        }
+      });
+
+      // Add main point layer
+      map.addLayer({
+        id: 'rat-points',
+        type: 'circle',
+        source: 'rat-locations',
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#B42222',
+          'circle-opacity': 0.7,
+          // Add pulsing animation
+          'circle-radius-transition': {
+            duration: 2000,
+            delay: 0
+          }
+        }
+      });
+
+      // Add pulsing animation
+      let size = 6;
+      const pulseAnimation = () => {
+        size = size === 6 ? 8 : 6;
+        map.setPaintProperty('rat-points', 'circle-radius', size);
+        requestAnimationFrame(pulseAnimation);
+      };
+      pulseAnimation();
+    } else {
+      // Update existing source
+      map.getSource('rat-locations').setData({
+        type: 'FeatureCollection',
+        features: ratLocations
+      });
+    }
+
+    return () => {
+      if (map.getLayer('rat-points')) map.removeLayer('rat-points');
+      if (map.getLayer('rat-points-glow')) map.removeLayer('rat-points-glow');
+      if (map.getSource('rat-locations')) map.removeSource('rat-locations');
+    };
+  }, [map, ratLocations]);
+
+  return null;
 };
 
 export default MastomysTracker;

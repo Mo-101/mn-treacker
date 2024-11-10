@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import DetectionMap from './DetectionMap';
 import DetectionTimeSeries from './DetectionTimeSeries';
 
-const RodentDetectionPanel = ({ isOpen, onToggle, detections = [] }) => {
+const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
   const [expandedDetection, setExpandedDetection] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
@@ -90,62 +90,72 @@ const RodentDetectionPanel = ({ isOpen, onToggle, detections = [] }) => {
           className="bg-white/20 border-none text-yellow-400 placeholder-yellow-400/50"
         />
 
-        {Array.isArray(detections) && detections.length > 0 ? (
-          <div className="space-y-2">
-            {detections.map((detection, index) => (
-              <Card key={index} className="bg-white/10">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <p className="font-bold text-yellow-400">ID: #{detection.id}</p>
-                      <p className="text-sm text-yellow-400/80">
-                        {detection.timestamp ? formatTimestamp(detection.timestamp) : 'No timestamp'}
-                      </p>
-                    </div>
-                    {detection.confidence && (
-                      <div 
-                        className={`${getSeverityColor(detection.confidence)} w-3 h-3 rounded-full`} 
-                        title={`Confidence: ${detection.confidence}%`} 
-                      />
+        <Card className="bg-white/10">
+          <CardHeader>
+            <CardTitle className="text-lg text-yellow-400">Detection Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetectionMap detections={detections} />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/10">
+          <CardHeader>
+            <CardTitle className="text-lg text-yellow-400">Confidence Timeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetectionTimeSeries detections={detections} />
+          </CardContent>
+        </Card>
+
+        <div className="space-y-2">
+          {detections.map((detection, index) => (
+            <Card key={index} className="bg-white/10">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <p className="font-bold text-yellow-400">ID: #{detection.id}</p>
+                    <p className="text-sm text-yellow-400/80">{formatTimestamp(detection.timestamp)}</p>
+                  </div>
+                  <div className={`${getSeverityColor(detection.confidence)} w-3 h-3 rounded-full`} 
+                       title={`Confidence: ${detection.confidence}%`} />
+                </div>
+
+                <Progress 
+                  value={detection.confidence} 
+                  className="mt-2"
+                  indicatorClassName={getSeverityColor(detection.confidence)}
+                />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 w-full text-yellow-400"
+                  onClick={() => setExpandedDetection(expandedDetection === index ? null : index)}
+                >
+                  {expandedDetection === index ? <ChevronUp /> : <ChevronDown />}
+                  {expandedDetection === index ? 'Less' : 'More'} Details
+                </Button>
+
+                {expandedDetection === index && (
+                  <div className="mt-2 space-y-2 bg-black/20 p-2 rounded text-yellow-400">
+                    <p>Location: {detection.location}</p>
+                    <p>Coordinates: {detection.coordinates?.join(', ')}</p>
+                    <p>Environmental Data: {detection.environmentalData}</p>
+                    {detection.confidence > 80 && (
+                      <div className="flex items-center text-red-400">
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        High Risk Area
+                      </div>
                     )}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-                  {detection.confidence && (
-                    <Progress 
-                      value={detection.confidence} 
-                      className="mt-2"
-                      indicatorClassName={getSeverityColor(detection.confidence)}
-                    />
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-2 w-full text-yellow-400"
-                    onClick={() => setExpandedDetection(expandedDetection === index ? null : index)}
-                  >
-                    {expandedDetection === index ? <ChevronUp /> : <ChevronDown />}
-                    {expandedDetection === index ? 'Less' : 'More'} Details
-                  </Button>
-
-                  {expandedDetection === index && (
-                    <div className="mt-2 space-y-2 bg-black/20 p-2 rounded text-yellow-400">
-                      <p>Location: {detection.location || 'N/A'}</p>
-                      <p>Coordinates: {detection.coordinates ? detection.coordinates.join(', ') : 'N/A'}</p>
-                      <p>Environmental Data: {detection.environmentalData || 'N/A'}</p>
-                      {detection.confidence > 80 && (
-                        <div className="flex items-center text-red-400">
-                          <AlertTriangle className="w-4 h-4 mr-2" />
-                          High Risk Area
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
+        {detections.length === 0 && (
           <p className="text-center text-yellow-400/60">No detections found</p>
         )}
       </CardContent>

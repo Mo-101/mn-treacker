@@ -1,7 +1,6 @@
 import React from 'react';
 import { Sun, Wind, CloudRain, Map } from 'lucide-react';
 import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
 
 const WeatherLayerToggle = ({ activeLayer, onLayerChange }) => {
   const layers = [
@@ -20,12 +19,7 @@ const WeatherLayerToggle = ({ activeLayer, onLayerChange }) => {
             key={id}
             onClick={() => onLayerChange(id)}
             variant={activeLayer === id ? 'default' : 'outline'}
-            className={cn(
-              "p-2 transition-colors",
-              activeLayer === id 
-                ? "bg-yellow-400 hover:bg-yellow-500 text-black" 
-                : "bg-gray-500/50 hover:bg-gray-600/50 text-white"
-            )}
+            className="p-2 bg-opacity-90 hover:bg-opacity-100"
             title={label}
           >
             <Icon className="w-5 h-5" />

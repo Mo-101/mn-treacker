@@ -31,11 +31,43 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
 
       if (!visible) return;
 
-      // Add new source and layer
+      // Special handling for wind particles
+      if (layerType === 'wind') {
+        // Add wind particle source if it doesn't exist
+        if (!map.getSource('wind-particles')) {
+          map.addSource('wind-particles', {
+            type: 'raster',
+            tiles: [`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+            tileSize: 256
+          });
+        }
+
+        // Add wind particle layer
+        map.addLayer({
+          id: layerId,
+          type: 'raster',
+          source: 'wind-particles',
+          paint: {
+            'raster-opacity': opacity,
+            'raster-fade-duration': 0,
+            'raster-contrast': 0.6,
+            'raster-saturation': 0.4,
+            'raster-hue-rotate': 0
+          }
+        });
+
+        toast({
+          title: "Wind Layer Updated",
+          description: "Wind particle layer has been loaded",
+        });
+        return;
+      }
+
+      // Handle other weather layers
       map.addSource(sourceId, {
         type: 'raster',
-        tiles: [`https://tile.openweathermap.org/map/${layerType}/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-        tileSize: 512,
+        tiles: [`https://tile.openweathermap.org/map/${layerType}_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+        tileSize: 256,
         attribution: '© OpenWeatherMap'
       });
 
@@ -44,8 +76,7 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         type: 'raster',
         source: sourceId,
         paint: {
-          'raster-opacity': opacity,
-          'raster-resampling': 'linear'
+          'raster-opacity': opacity
         }
       });
 

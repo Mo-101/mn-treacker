@@ -45,11 +45,6 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         }
       });
 
-      toast({
-        title: "Weather Layer Added",
-        description: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} layer has been loaded`,
-      });
-
     } catch (error) {
       console.error(`Error setting up ${layerType} layer:`, error);
       toast({

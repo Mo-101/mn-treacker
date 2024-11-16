@@ -8,17 +8,17 @@ import { Input } from './ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useToast } from './ui/use-toast';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const weatherLayers = [
     { 
-      id: 'precipitation', 
-      name: 'Precipitation', 
-      icon: Droplet,
-      description: 'Shows rainfall intensity and distribution',
-      color: 'text-blue-500'
+      id: 'vegetation', 
+      name: 'Vegetation', 
+      icon: Leaf,
+      description: 'Shows vegetation coverage',
+      color: 'text-green-500'
     },
     { 
       id: 'temperature', 
@@ -28,26 +28,34 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       color: 'text-red-500'
     },
     { 
+      id: 'precipitation', 
+      name: 'Precipitation', 
+      icon: Droplet,
+      description: 'Shows rainfall intensity',
+      color: 'text-blue-500'
+    },
+    { 
       id: 'clouds', 
       name: 'Clouds', 
       icon: Cloud,
       description: 'Shows cloud coverage',
       color: 'text-gray-500'
     },
-    { 
-      id: 'wind', 
-      name: 'Wind Speed', 
-      icon: Wind,
-      description: 'Shows wind patterns',
-      color: 'text-cyan-500'
-    },
   ];
+
+  const handleLayerToggle = (layerId) => {
+    onLayerToggle(layerId);
+    toast({
+      title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+      description: activeLayers.includes(layerId) ? "Layer disabled" : "Layer enabled",
+    });
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
     toast({
-      title: "Searching",
-      description: `Looking for: ${searchQuery}`,
+      title: "Search",
+      description: `Searching for: ${searchQuery}`,
     });
   };
 
@@ -58,7 +66,12 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
       className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-30 overflow-y-auto shadow-2xl"
     >
-      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4 hover:bg-white/10 transition-colors">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onClose} 
+        className="absolute top-4 right-4 hover:bg-white/10 transition-colors"
+      >
         <X className="h-5 w-5" />
       </Button>
 
@@ -82,12 +95,10 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
           >
             <Search className="h-4 w-4" />
           </Button>
-          <div className="absolute inset-0 border border-white/10 rounded-lg group-hover:border-blue-500/50 
-                        transition-colors pointer-events-none" />
         </div>
       </form>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         <TooltipProvider>
           {weatherLayers.map((layer) => (
             <motion.div
@@ -99,26 +110,30 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 
-                                  transition-colors cursor-pointer group">
+                    <div 
+                      className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 
+                                transition-colors cursor-pointer group"
+                      onClick={() => handleLayerToggle(layer.id)}
+                    >
                       <span className="flex items-center gap-3">
                         <layer.icon className={`h-5 w-5 ${layer.color} transition-transform group-hover:scale-110`} />
                         <span className="font-medium">{layer.name}</span>
                       </span>
                       <Switch
                         checked={activeLayers.includes(layer.id)}
-                        onCheckedChange={() => onLayerToggle(layer.id)}
+                        onCheckedChange={() => handleLayerToggle(layer.id)}
                         className="data-[state=checked]:bg-blue-500"
                       />
                     </div>
-                    <Slider
-                      defaultValue={[100]}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                      onValueChange={(value) => onOpacityChange(value[0] / 100)}
-                      disabled={!activeLayers.includes(layer.id)}
-                    />
+                    {activeLayers.includes(layer.id) && (
+                      <Slider
+                        defaultValue={[100]}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                        onValueChange={(value) => onOpacityChange(layer.id, value[0] / 100)}
+                      />
+                    )}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -128,15 +143,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
             </motion.div>
           ))}
         </TooltipProvider>
-      </div>
-
-      <div className="mt-8">
-        <Button
-          onClick={() => toast({ title: "Layers", description: `Active Layers: ${activeLayers.join(', ')}` })}
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg"
-        >
-          Show Active Layers
-        </Button>
       </div>
     </motion.div>
   );

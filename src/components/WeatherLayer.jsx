@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from './ui/use-toast';
-import { Slider } from './ui/slider';
+import WindControls from './WindControls';
+import { getLayerConfig } from '../utils/layerConfigs';
 
 const WeatherLayer = ({ map, layerType, visible, opacity }) => {
   const { toast } = useToast();
@@ -92,22 +93,7 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         return;
       }
 
-      const layerConfig = {
-        precipitation: {
-          tiles: [`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-          paint: { 'raster-opacity': opacity }
-        },
-        temp_new: {
-          tiles: [`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-          paint: { 'raster-opacity': opacity }
-        },
-        clouds_new: {
-          tiles: [`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-          paint: { 'raster-opacity': opacity }
-        }
-      };
-
-      const config = layerConfig[layerType];
+      const config = getLayerConfig(layerType, opacity, OPENWEATHER_API_KEY);
       if (!config) {
         console.error(`Unsupported layer type: ${layerType}`);
         return;
@@ -153,52 +139,16 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
 
   if (layerType === 'wind' && visible) {
     return (
-      <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm p-4 rounded-lg space-y-4 text-white">
-        <div>
-          <label className="block text-sm mb-2">Particle Count ({particleCount})</label>
-          <Slider
-            value={[particleCount]}
-            onValueChange={(value) => setParticleCount(value[0])}
-            min={1}
-            max={4096}
-            step={1}
-            className="w-48"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-2">Opacity Factor ({fadeOpacityFactor.toFixed(2)})</label>
-          <Slider
-            value={[fadeOpacityFactor * 100]}
-            onValueChange={(value) => setFadeOpacityFactor(value[0] / 100)}
-            min={0}
-            max={100}
-            step={1}
-            className="w-48"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-2">Reset Rate ({resetRateFactor.toFixed(2)})</label>
-          <Slider
-            value={[resetRateFactor * 100]}
-            onValueChange={(value) => setResetRateFactor(value[0] / 100)}
-            min={0}
-            max={100}
-            step={1}
-            className="w-48"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-2">Speed Factor ({speedFactor.toFixed(2)})</label>
-          <Slider
-            value={[speedFactor * 100]}
-            onValueChange={(value) => setSpeedFactor(value[0] / 100)}
-            min={0}
-            max={100}
-            step={1}
-            className="w-48"
-          />
-        </div>
-      </div>
+      <WindControls
+        particleCount={particleCount}
+        setParticleCount={setParticleCount}
+        fadeOpacityFactor={fadeOpacityFactor}
+        setFadeOpacityFactor={setFadeOpacityFactor}
+        resetRateFactor={resetRateFactor}
+        setResetRateFactor={setResetRateFactor}
+        speedFactor={speedFactor}
+        setSpeedFactor={setSpeedFactor}
+      />
     );
   }
 

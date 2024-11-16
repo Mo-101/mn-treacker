@@ -8,12 +8,22 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!map || !OPENWEATHER_API_KEY) return;
+    if (!map || !OPENWEATHER_API_KEY) {
+      if (!OPENWEATHER_API_KEY) {
+        toast({
+          title: "Configuration Error",
+          description: "OpenWeather API key is missing",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
 
     const layerId = `${layerType}-layer`;
     const sourceId = `${layerType}-source`;
 
     try {
+      // Remove existing layer and source if they exist
       if (map.getLayer(layerId)) {
         map.removeLayer(layerId);
       }
@@ -39,10 +49,12 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         paint: {
           'raster-opacity': opacity,
           ...layerConfig.paint
-        },
-        layout: {
-          visibility: visible ? 'visible' : 'none'
         }
+      });
+
+      toast({
+        title: "Weather Layer Updated",
+        description: `${layerType} layer has been loaded`,
       });
 
     } catch (error) {
@@ -72,34 +84,30 @@ const getLayerConfig = (layerType) => {
     temperature: {
       tileUrl: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       paint: {
-        'raster-contrast': 0.8,
-        'raster-saturation': 0.6
+        'raster-opacity': 0.8
       }
     },
     precipitation: {
       tileUrl: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       paint: {
-        'raster-contrast': 0.7,
-        'raster-saturation': 0.5
+        'raster-opacity': 0.7
       }
     },
     wind: {
       tileUrl: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       paint: {
-        'raster-contrast': 0.6,
-        'raster-saturation': 0.4
+        'raster-opacity': 0.6
       }
     },
     clouds: {
       tileUrl: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
       paint: {
-        'raster-contrast': 0.5,
-        'raster-saturation': 0.3
+        'raster-opacity': 0.5
       }
     }
   };
 
-  return configs[layerType];
+  return configs[layerType] || configs.temperature;
 };
 
 export default WeatherLayer;

@@ -21,12 +21,6 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
           title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
           description: isEnabled ? "Layer enabled" : "Layer disabled",
         });
-      } else {
-        toast({
-          title: "Error",
-          description: `Failed to toggle ${layerId} layer`,
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error(`Failed to toggle ${layerId} layer:`, error);
@@ -38,22 +32,9 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
     }
   };
 
-  const handleOpacityChange = async (opacity) => {
-    setLayerOpacity(opacity);
-    for (const layerId of activeLayers) {
-      try {
-        const result = await onOpacityChange(layerId, opacity / 100);
-        if (!result.success) {
-          toast({
-            title: "Error",
-            description: `Failed to set opacity for ${layerId} layer`,
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to set opacity for ${layerId} layer:`, error);
-      }
-    }
+  const handleOpacityChange = (value) => {
+    setLayerOpacity(value);
+    onOpacityChange(value / 100);
   };
 
   const getLayerIcon = (layerId) => {

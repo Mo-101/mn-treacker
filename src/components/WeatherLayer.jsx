@@ -1,9 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from './ui/use-toast';
-import mapboxgl from 'mapbox-gl';
+import { Slider } from './ui/slider';
 
 const WeatherLayer = ({ map, layerType, visible, opacity }) => {
   const { toast } = useToast();
+  const [particleCount, setParticleCount] = useState(2048);
+  const [fadeOpacityFactor, setFadeOpacityFactor] = useState(0.8);
+  const [resetRateFactor, setResetRateFactor] = useState(0.4);
+  const [speedFactor, setSpeedFactor] = useState(0.4);
   const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
   useEffect(() => {
@@ -22,7 +26,6 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
     const sourceId = `${layerType}-source`;
 
     try {
-      // Remove existing layer and source if they exist
       if (map.getLayer(layerId)) {
         map.removeLayer(layerId);
       }
@@ -33,24 +36,22 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
       if (!visible) return;
 
       if (layerType === 'wind') {
-        // Add wind raster array source
         map.addSource(sourceId, {
           type: 'raster-array',
           url: 'mapbox://rasterarrayexamples.gfs-winds',
           tileSize: 512
         });
 
-        // Add wind particle layer
         map.addLayer({
           id: layerId,
           type: 'raster-particle',
           source: sourceId,
           'source-layer': '10winds',
           paint: {
-            'raster-particle-speed-factor': 0.4,
-            'raster-particle-fade-opacity-factor': 0.8,
-            'raster-particle-reset-rate-factor': 0.4,
-            'raster-particle-count': 2048,
+            'raster-particle-speed-factor': speedFactor,
+            'raster-particle-fade-opacity-factor': fadeOpacityFactor,
+            'raster-particle-reset-rate-factor': resetRateFactor,
+            'raster-particle-count': particleCount,
             'raster-particle-max-speed': 70,
             'raster-particle-color': [
               'interpolate',
@@ -88,14 +89,9 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
           }
         });
 
-        toast({
-          title: "Wind Layer Updated",
-          description: "Wind particle visualization has been loaded",
-        });
         return;
       }
 
-      // Handle other weather layers
       const layerConfig = {
         precipitation: {
           tiles: [`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
@@ -153,7 +149,58 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         map.removeSource(sourceId);
       }
     };
-  }, [map, layerType, visible, opacity, OPENWEATHER_API_KEY]);
+  }, [map, layerType, visible, opacity, particleCount, fadeOpacityFactor, resetRateFactor, speedFactor]);
+
+  if (layerType === 'wind' && visible) {
+    return (
+      <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm p-4 rounded-lg space-y-4 text-white">
+        <div>
+          <label className="block text-sm mb-2">Particle Count ({particleCount})</label>
+          <Slider
+            value={[particleCount]}
+            onValueChange={(value) => setParticleCount(value[0])}
+            min={1}
+            max={4096}
+            step={1}
+            className="w-48"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-2">Opacity Factor ({fadeOpacityFactor.toFixed(2)})</label>
+          <Slider
+            value={[fadeOpacityFactor * 100]}
+            onValueChange={(value) => setFadeOpacityFactor(value[0] / 100)}
+            min={0}
+            max={100}
+            step={1}
+            className="w-48"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-2">Reset Rate ({resetRateFactor.toFixed(2)})</label>
+          <Slider
+            value={[resetRateFactor * 100]}
+            onValueChange={(value) => setResetRateFactor(value[0] / 100)}
+            min={0}
+            max={100}
+            step={1}
+            className="w-48"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-2">Speed Factor ({speedFactor.toFixed(2)})</label>
+          <Slider
+            value={[speedFactor * 100]}
+            onValueChange={(value) => setSpeedFactor(value[0] / 100)}
+            min={0}
+            max={100}
+            step={1}
+            className="w-48"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return null;
 };

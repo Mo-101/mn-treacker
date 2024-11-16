@@ -4,37 +4,27 @@ import { Slider } from './ui/slider';
 import { useToast } from './ui/use-toast';
 import { CloudRain, Thermometer, Cloud, Wind } from 'lucide-react';
 
-const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
+const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity }) => {
   const { toast } = useToast();
 
-  const handleLayerToggle = async (layerId) => {
-    try {
-      const isEnabled = !activeLayers.includes(layerId);
-      const result = await onLayerToggle(layerId, isEnabled);
+  const handleLayerToggle = (layerId) => {
+    setActiveLayers(prev => {
+      const isEnabled = !prev.includes(layerId);
+      const newLayers = isEnabled 
+        ? [...prev, layerId] 
+        : prev.filter(id => id !== layerId);
       
-      if (result.success) {
-        setActiveLayers(prev => 
-          isEnabled ? [...prev, layerId] : prev.filter(id => id !== layerId)
-        );
-        
-        toast({
-          title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
-          description: isEnabled ? "Layer enabled" : "Layer disabled",
-        });
-      }
-    } catch (error) {
-      console.error(`Failed to toggle ${layerId} layer:`, error);
       toast({
-        title: "Error",
-        description: "Failed to toggle layer",
-        variant: "destructive",
+        title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+        description: isEnabled ? "Layer enabled" : "Layer disabled",
       });
-    }
+      
+      return newLayers;
+    });
   };
 
   const handleOpacityChange = (value) => {
     setLayerOpacity(value);
-    onOpacityChange(value / 100);
   };
 
   const getLayerIcon = (layerId) => {
@@ -66,7 +56,7 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
             <Switch
               checked={activeLayers.includes(layer.id)}
               onCheckedChange={() => handleLayerToggle(layer.id)}
-              className="data-[state=checked]:bg-yellow-400 data-[state=unchecked]:bg-gray-600"
+              className="data-[state=checked]:bg-yellow-400"
             />
           </div>
           {activeLayers.includes(layer.id) && (
@@ -74,7 +64,7 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
               <label className="text-sm text-gray-400 mb-1 block">Opacity</label>
               <Slider
                 value={[layerOpacity]}
-                onValueChange={(value) => handleOpacityChange(value[0])}
+                onValueChange={([value]) => handleOpacityChange(value)}
                 max={100}
                 step={1}
                 className="slider-yellow"

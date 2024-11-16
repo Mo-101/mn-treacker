@@ -1,57 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useToast } from "./ui/use-toast";
+import { fetchRatLocations } from '../utils/dataFetching';
 
 const MastomysTracker = ({ map }) => {
   const [ratLocations, setRatLocations] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRatLocations = async () => {
+    const loadRatLocations = async () => {
       try {
-        // Use mock data if in development or if API is not available
-        if (import.meta.env.DEV || !import.meta.env.VITE_API_URL) {
-          const mockData = {
-            features: [
-              {
-                geometry: {
-                  coordinates: [3.3792, 6.5244], // Lagos coordinates
-                  type: "Point"
-                },
-                properties: {
-                  timestamp: new Date().toISOString(),
-                  confidence: 0.95
-                }
-              }
-            ]
-          };
-          setRatLocations(mockData.features);
-          return;
-        }
-
-        const response = await fetch('/api/rat-locations');
-        if (!response.ok) {
-          throw new Error('Failed to fetch rat locations');
-        }
-        const data = await response.json();
-        setRatLocations(data.features);
+        const data = await fetchRatLocations();
+        setRatLocations(data.map(location => ({
+          geometry: {
+            coordinates: [location.longitude, location.latitude],
+            type: "Point"
+          },
+          properties: {
+            timestamp: new Date().toISOString(),
+            confidence: 0.95
+          }
+        })));
       } catch (error) {
         console.error('Error fetching rat locations:', error);
         toast({
           title: "Warning",
-          description: "Using sample data - couldn't fetch real rat locations",
+          description: "Couldn't fetch rat locations from database",
           variant: "warning",
         });
       }
     };
 
-    fetchRatLocations();
+    loadRatLocations();
   }, [toast]);
 
   useEffect(() => {
     if (!map || !ratLocations.length) return;
 
-    // Add rat locations to the map
     if (!map.getSource('rat-locations')) {
       map.addSource('rat-locations', {
         type: 'geojson',
@@ -61,7 +46,6 @@ const MastomysTracker = ({ map }) => {
         }
       });
 
-      // Add glow effect layer
       map.addLayer({
         id: 'rat-points-glow',
         type: 'circle',
@@ -74,7 +58,6 @@ const MastomysTracker = ({ map }) => {
         }
       });
 
-      // Add main point layer
       map.addLayer({
         id: 'rat-points',
         type: 'circle',
@@ -82,25 +65,10 @@ const MastomysTracker = ({ map }) => {
         paint: {
           'circle-radius': 6,
           'circle-color': '#B42222',
-          'circle-opacity': 0.7,
-          // Add pulsing animation
-          'circle-radius-transition': {
-            duration: 2000,
-            delay: 0
-          }
+          'circle-opacity': 0.7
         }
       });
-
-      // Add pulsing animation
-      let size = 6;
-      const pulseAnimation = () => {
-        size = size === 6 ? 8 : 6;
-        map.setPaintProperty('rat-points', 'circle-radius', size);
-        requestAnimationFrame(pulseAnimation);
-      };
-      pulseAnimation();
     } else {
-      // Update existing source
       map.getSource('rat-locations').setData({
         type: 'FeatureCollection',
         features: ratLocations

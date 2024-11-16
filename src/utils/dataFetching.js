@@ -1,52 +1,52 @@
-import { toast } from '../components/ui/use-toast';
+import { supabase } from './supabase';
 
-export const fetchRatData = async () => {
-  try {
-    const response = await fetch('/api/rat-locations');
-    if (!response.ok) {
-      throw new Error('Failed to fetch rat data');
-    }
-    const data = await response.json();
-    console.log('Fetched rat data:', data);
-    return data;
-  } catch (error) {
-    console.error('Error fetching rat data:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch rat data. Please try again later.",
-      variant: "destructive",
-    });
-    return { type: 'FeatureCollection', features: [] };
-  }
+export const fetchRatLocations = async () => {
+  const { data, error } = await supabase
+    .from('rat_locations')
+    .select('*');
+  
+  if (error) throw error;
+  return data;
 };
 
-export const fetchLassaFeverCases = async () => {
-  try {
-    const response = await fetch('/api/cases');
-    if (!response.ok) {
-      throw new Error('Failed to fetch Lassa Fever cases');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching Lassa Fever cases:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch Lassa Fever cases. Please try again later.",
-      variant: "destructive",
-    });
-    return [];
-  }
+export const fetchLocationData = async () => {
+  const { data, error } = await supabase
+    .from('lf_data')
+    .select('*');
+  
+  if (error) throw error;
+  return data;
 };
 
-export const fetchTrainingProgress = async () => {
-  try {
-    const response = await fetch('/api/training-progress');
-    if (!response.ok) {
-      throw new Error('Failed to fetch training progress');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching training progress:', error);
-    return { progress: 0, is_training: false };
-  }
+export const insertRatLocation = async (locationData) => {
+  const { data, error } = await supabase
+    .from('rat_locations')
+    .insert([{
+      locality_community: locationData.locality,
+      country_country: locationData.country,
+      state_province: locationData.state,
+      latitude: locationData.latitude,
+      longitude: locationData.longitude
+    }]);
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateLocationData = async (id, locationData) => {
+  const { data, error } = await supabase
+    .from('lf_data')
+    .update({
+      street: locationData.street,
+      address_ward: locationData.ward,
+      address_lga: locationData.lga,
+      address_state: locationData.state,
+      city: locationData.city,
+      longitude: locationData.longitude,
+      latitude: locationData.latitude
+    })
+    .eq('id', id);
+  
+  if (error) throw error;
+  return data;
 };

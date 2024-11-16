@@ -1,6 +1,6 @@
 const openWeatherApiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
-export const getOpenWeatherLayer = (layer) => {
+export const getWeatherLayer = (layer) => {
   const baseUrl = 'https://tile.openweathermap.org/map';
   return {
     type: 'raster',
@@ -11,5 +11,5 @@ export const getOpenWeatherLayer = (layer) => {
 };
 
 export const getOpenWeatherTemperatureLayer = () => {
-  return getOpenWeatherLayer('temp_new');
+  return getWeatherLayer('temp_new');
 };

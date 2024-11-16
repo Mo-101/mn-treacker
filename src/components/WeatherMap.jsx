@@ -4,9 +4,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
-import RightSidePanel from './RightSidePanel';
-import FloatingInsightsBar from './FloatingInsightsButton';
-import { toggleLayer } from './MapLayers';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -17,24 +14,56 @@ const WeatherMap = () => {
   const [activeLayers, setActiveLayers] = useState([]);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
+      style: 'mapbox://styles/mapbox/dark-v10',
       center: [mapState.lng, mapState.lat],
       zoom: mapState.zoom
     });
 
     map.current.on('load', () => {
-      console.log('Map loaded');
+      // Add base layers
+      addBaseLayers(map.current);
+      console.log('Map and base layers loaded');
     });
 
     return () => map.current && map.current.remove();
   }, []);
+
+  const addBaseLayers = (map) => {
+    const layers = [
+      {
+        id: 'satellite',
+        source: {
+          type: 'raster',
+          url: 'mapbox://mapbox.satellite'
+        }
+      },
+      {
+        id: 'terrain',
+        source: {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1'
+        }
+      }
+    ];
+
+    layers.forEach(layer => {
+      if (!map.getSource(layer.id)) {
+        map.addSource(layer.id, layer.source);
+        map.addLayer({
+          id: layer.id,
+          type: 'raster',
+          source: layer.id,
+          layout: { visibility: 'none' }
+        });
+      }
+    });
+  };
 
   const handleLayerToggle = (layerId) => {
     setActiveLayers(prev => {
@@ -43,18 +72,18 @@ const WeatherMap = () => {
         ? prev.filter(id => id !== layerId)
         : [...prev, layerId];
       
-      if (map.current) {
-        toggleLayer(map.current, layerId, !isLayerActive);
+      if (map.current && map.current.getLayer(layerId)) {
+        const visibility = isLayerActive ? 'none' : 'visible';
+        map.current.setLayoutProperty(layerId, 'visibility', visibility);
+        
+        toast({
+          title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+          description: isLayerActive ? "Layer disabled" : "Layer enabled",
+        });
       }
       
       return newLayers;
     });
-  };
-
-  const handleOpacityChange = (layerId, opacity) => {
-    if (map.current && map.current.getLayer(layerId)) {
-      map.current.setPaintProperty(layerId, 'raster-opacity', opacity);
-    }
   };
 
   return (
@@ -73,12 +102,7 @@ const WeatherMap = () => {
           onClose={() => setLeftPanelOpen(false)}
           activeLayers={activeLayers}
           onLayerToggle={handleLayerToggle}
-          onOpacityChange={handleOpacityChange}
         />
-
-        <div className="pointer-events-auto">
-          <FloatingInsightsBar />
-        </div>
       </div>
     </div>
   );

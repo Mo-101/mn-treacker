@@ -1,63 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Thermometer, Droplet, Wind, Search, Leaf, Eye } from 'lucide-react';
+import { X, Layers, Mountain } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
-import { Slider } from './ui/slider';
-import { Input } from './ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { useToast } from './ui/use-toast';
+import { TooltipProvider } from './ui/tooltip';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
-
-  const weatherLayers = [
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle }) => {
+  const baseLayers = [
     { 
-      id: 'vegetation', 
-      name: 'Vegetation', 
-      icon: Leaf,
-      description: 'Shows vegetation coverage',
-      color: 'text-green-500'
-    },
-    { 
-      id: 'temperature', 
-      name: 'Temperature', 
-      icon: Thermometer,
-      description: 'Displays temperature variations',
-      color: 'text-red-500'
-    },
-    { 
-      id: 'precipitation', 
-      name: 'Precipitation', 
-      icon: Droplet,
-      description: 'Shows rainfall intensity',
+      id: 'satellite', 
+      name: 'Satellite', 
+      icon: Layers,
+      description: 'Satellite imagery',
       color: 'text-blue-500'
     },
     { 
-      id: 'clouds', 
-      name: 'Clouds', 
-      icon: Cloud,
-      description: 'Shows cloud coverage',
-      color: 'text-gray-500'
-    },
+      id: 'terrain', 
+      name: 'Terrain', 
+      icon: Mountain,
+      description: 'Terrain elevation',
+      color: 'text-green-500'
+    }
   ];
-
-  const handleLayerToggle = (layerId) => {
-    onLayerToggle(layerId);
-    toast({
-      title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
-      description: activeLayers.includes(layerId) ? "Layer disabled" : "Layer enabled",
-    });
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    toast({
-      title: "Search",
-      description: `Searching for: ${searchQuery}`,
-    });
-  };
 
   return (
     <motion.div
@@ -75,71 +39,34 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
         <X className="h-5 w-5" />
       </Button>
 
-      <h2 className="text-2xl font-bold mb-6">Weather Layers</h2>
-
-      <form onSubmit={handleSearch} className="mb-6">
-        <div className="relative group">
-          <Input
-            type="text"
-            placeholder="Search layers or locations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border-white/10 focus:border-blue-500/50 transition-all duration-300
-                     text-white placeholder-white/50 rounded-lg pr-10"
-          />
-          <Button 
-            type="submit" 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-white/10"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-        </div>
-      </form>
+      <h2 className="text-2xl font-bold mb-6">Map Layers</h2>
 
       <div className="space-y-4">
         <TooltipProvider>
-          {weatherLayers.map((layer) => (
+          {baseLayers.map((layer) => (
             <motion.div
               key={layer.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="relative"
             >
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="space-y-2">
-                    <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 
-                                transition-colors cursor-pointer group"
-                      onClick={() => handleLayerToggle(layer.id)}
-                    >
-                      <span className="flex items-center gap-3">
-                        <layer.icon className={`h-5 w-5 ${layer.color} transition-transform group-hover:scale-110`} />
-                        <span className="font-medium">{layer.name}</span>
-                      </span>
-                      <Switch
-                        checked={activeLayers.includes(layer.id)}
-                        onCheckedChange={() => handleLayerToggle(layer.id)}
-                        className="data-[state=checked]:bg-blue-500"
-                      />
-                    </div>
-                    {activeLayers.includes(layer.id) && (
-                      <Slider
-                        defaultValue={[100]}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                        onValueChange={(value) => onOpacityChange(layer.id, value[0] / 100)}
-                      />
-                    )}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{layer.description}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div className="space-y-2">
+                <div 
+                  className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 
+                            transition-colors cursor-pointer group"
+                  onClick={() => onLayerToggle(layer.id)}
+                >
+                  <span className="flex items-center gap-3">
+                    <layer.icon className={`h-5 w-5 ${layer.color} transition-transform group-hover:scale-110`} />
+                    <span className="font-medium">{layer.name}</span>
+                  </span>
+                  <Switch
+                    checked={activeLayers.includes(layer.id)}
+                    onCheckedChange={() => onLayerToggle(layer.id)}
+                    className="data-[state=checked]:bg-blue-500"
+                  />
+                </div>
+              </div>
             </motion.div>
           ))}
         </TooltipProvider>

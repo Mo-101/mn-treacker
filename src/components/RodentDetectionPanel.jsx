@@ -49,7 +49,7 @@ const RodentDetectionPanel = ({ isOpen, onToggle, detections }) => {
       initial={{ x: '100%' }}
       animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed right-0 top-0 h-full w-96 bg-black/70 backdrop-blur-lg text-yellow-400 p-4 overflow-y-auto"
+      className="fixed right-0 top-0 h-full w-80 lg:w-96 bg-black/90 backdrop-blur-lg text-yellow-400 p-4 overflow-y-auto z-43"
     >
       <Button
         variant="ghost"

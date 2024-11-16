@@ -29,7 +29,7 @@ const PredictionPanel = ({ isOpen, onClose, onDetailView }) => {
       initial={{ x: '100%' }}
       animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed right-0 top-0 h-full w-112 bg-gray-900 text-white p-6 overflow-y-auto z-50 shadow-lg"
+      className="fixed right-0 top-0 h-full w-80 lg:w-112 bg-gray-900/95 backdrop-blur-md text-white p-6 overflow-y-auto z-45 shadow-lg"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2">
         X

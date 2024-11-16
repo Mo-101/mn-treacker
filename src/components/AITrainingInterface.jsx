@@ -81,7 +81,7 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-gray-900 text-white overflow-hidden z-50 flex flex-col"
+      className="fixed inset-0 bg-gray-900/95 text-white overflow-hidden z-45"
     >
       <TopNavigationBar 
         navItems={navItems} 
@@ -171,7 +171,6 @@ const AITrainingInterface = ({ isOpen, onClose, addToConsoleLog }) => {
       </AnimatePresence>
     </motion.div>
   );
-
 };
 
 export default AITrainingInterface;

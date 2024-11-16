@@ -56,7 +56,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       initial={{ x: '-100%' }}
       animate={{ x: isOpen ? 0 : '-100%' }}
       transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
-      className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-30 overflow-y-auto shadow-2xl"
+      className="fixed left-0 top-0 h-full w-64 md:w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-40 overflow-y-auto shadow-2xl"
     >
       <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4 hover:bg-white/10 transition-colors">
         <X className="h-5 w-5" />
@@ -116,7 +116,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
                       max={100}
                       step={1}
                       className="w-full"
-                      onValueChange={(value) => onOpacityChange(value[0] / 100)}
+                      onValueChange={(value) => onOpacityChange(layer.id, value[0])}
                       disabled={!activeLayers.includes(layer.id)}
                     />
                   </div>
@@ -128,15 +128,6 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
             </motion.div>
           ))}
         </TooltipProvider>
-      </div>
-
-      <div className="mt-8">
-        <Button
-          onClick={() => toast({ title: "Layers", description: `Active Layers: ${activeLayers.join(', ')}` })}
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg"
-        >
-          Show Active Layers
-        </Button>
       </div>
     </motion.div>
   );

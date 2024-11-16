@@ -20,7 +20,7 @@ const AnimatedIcon = ({ children }) => (
 
 const TopNavigationBar = ({ onLayerToggle, onAITrainingToggle, onPredictionToggle }) => {
   return (
-    <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 p-2 z-20 flex justify-between items-center">
+    <div className="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-2 z-50 flex justify-between items-center">
       <div className="flex items-center space-x-2">
         <img src="/placeholder.svg" alt="Logo" className="h-8 w-8 md:h-10 md:w-10" />
         <h1 className="text-sm md:text-lg font-bold text-yellow-400 hidden sm:block">Mastomys Habitat & Risk Assessment</h1>

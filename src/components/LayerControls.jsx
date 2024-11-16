@@ -2,7 +2,7 @@ import React from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { useToast } from './ui/use-toast';
-import { CloudRain, Thermometer, Cloud, Wind } from 'lucide-react';
+import { CloudRain, Thermometer, Cloud, Wind, Radio } from 'lucide-react';
 
 const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity }) => {
   const { toast } = useToast();
@@ -37,6 +37,8 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
         return <Cloud className="h-5 w-5 text-gray-500" />;
       case 'wind':
         return <Wind className="h-5 w-5 text-cyan-500" />;
+      case 'radar':
+        return <Radio className="h-5 w-5 text-purple-500" />;
       default:
         return null;
     }
@@ -44,7 +46,13 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
 
   return (
     <div className="space-y-4 p-4 bg-gray-900/90 backdrop-blur-md rounded-lg">
-      {layers.map((layer) => (
+      {[
+        { id: 'radar', name: 'Radar' },
+        { id: 'precipitation', name: 'Precipitation' },
+        { id: 'temperature', name: 'Temperature' },
+        { id: 'clouds', name: 'Clouds' },
+        { id: 'wind', name: 'Wind' }
+      ].map((layer) => (
         <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg border border-gray-800">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2">

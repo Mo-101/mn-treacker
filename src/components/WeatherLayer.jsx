@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useToast } from './ui/use-toast';
+import mapboxgl from 'mapbox-gl';
 
 const WeatherLayer = ({ map, layerType, visible, opacity }) => {
   const { toast } = useToast();
@@ -31,57 +32,61 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
 
       if (!visible) return;
 
-      // Special handling for wind particles
-      if (layerType === 'wind') {
-        // Add wind particle source if it doesn't exist
-        if (!map.getSource('wind-particles')) {
-          map.addSource('wind-particles', {
-            type: 'raster',
-            tiles: [`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-            tileSize: 256
-          });
-        }
-
-        // Add wind particle layer
-        map.addLayer({
-          id: layerId,
-          type: 'raster',
-          source: 'wind-particles',
+      // Configure layer based on type
+      const layerConfig = {
+        wind: {
+          tiles: [`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
           paint: {
             'raster-opacity': opacity,
             'raster-fade-duration': 0,
-            'raster-contrast': 0.6,
-            'raster-saturation': 0.4,
-            'raster-hue-rotate': 0
+            'raster-brightness-min': 0.2,
+            'raster-brightness-max': 1
           }
-        });
+        },
+        precipitation: {
+          tiles: [`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+          paint: {
+            'raster-opacity': opacity
+          }
+        },
+        temp_new: {
+          tiles: [`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+          paint: {
+            'raster-opacity': opacity
+          }
+        },
+        clouds_new: {
+          tiles: [`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+          paint: {
+            'raster-opacity': opacity
+          }
+        }
+      };
 
-        toast({
-          title: "Wind Layer Updated",
-          description: "Wind particle layer has been loaded",
-        });
+      const config = layerConfig[layerType];
+      if (!config) {
+        console.error(`Unsupported layer type: ${layerType}`);
         return;
       }
 
-      // Handle other weather layers
+      // Add source
       map.addSource(sourceId, {
         type: 'raster',
-        tiles: [`https://tile.openweathermap.org/map/${layerType}_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
+        tiles: config.tiles,
         tileSize: 256,
         attribution: '© OpenWeatherMap'
       });
 
+      // Add layer
       map.addLayer({
         id: layerId,
         type: 'raster',
         source: sourceId,
-        paint: {
-          'raster-opacity': opacity
-        }
+        paint: config.paint
       });
 
       toast({
-        title: "Weather Layer Updated",
+        title: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} Layer Updated`,
         description: `${layerType} layer has been loaded`,
       });
 
@@ -94,6 +99,7 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
       });
     }
 
+    // Cleanup function
     return () => {
       if (map.getLayer(layerId)) {
         map.removeLayer(layerId);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Cloud, Thermometer, Droplet, Wind, Search, Leaf, Eye } from 'lucide-react';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useToast } from './ui/use-toast';
 
-const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers, selectAll, onSelectAllLayers }) => {
+const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacityChange, layers }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
@@ -21,18 +21,18 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       color: 'text-blue-500'
     },
     { 
-      id: 'temp', 
+      id: 'temperature', 
       name: 'Temperature', 
       icon: Thermometer,
       description: 'Displays temperature variations',
       color: 'text-red-500'
     },
     { 
-      id: 'vegetation', 
-      name: 'Vegetation', 
-      icon: Leaf,
-      description: 'Shows vegetation density',
-      color: 'text-green-500'
+      id: 'clouds', 
+      name: 'Clouds', 
+      icon: Cloud,
+      description: 'Shows cloud coverage',
+      color: 'text-gray-500'
     },
     { 
       id: 'wind', 
@@ -58,20 +58,11 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
       transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
       className="fixed left-0 top-0 h-full w-80 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 z-30 overflow-y-auto shadow-2xl"
     >
-      <div className="absolute top-0 left-0 w-full h-full bg-blue-500/5 pointer-events-none" />
-      
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={onClose} 
-        className="absolute top-4 right-4 hover:bg-white/10 transition-colors"
-      >
+      <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4 hover:bg-white/10 transition-colors">
         <X className="h-5 w-5" />
       </Button>
 
-      <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-        Weather Layers
-      </h2>
+      <h2 className="text-2xl font-bold mb-6">Weather Layers</h2>
 
       <form onSubmit={handleSearch} className="mb-6">
         <div className="relative group">
@@ -125,7 +116,7 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
                       max={100}
                       step={1}
                       className="w-full"
-                      onValueChange={(value) => onOpacityChange(layer.id, value[0])}
+                      onValueChange={(value) => onOpacityChange(value[0] / 100)}
                       disabled={!activeLayers.includes(layer.id)}
                     />
                   </div>
@@ -139,47 +130,13 @@ const LeftSidePanel = ({ isOpen, onClose, activeLayers, onLayerToggle, onOpacity
         </TooltipProvider>
       </div>
 
-      <motion.div
-        className="mt-8 pt-4 border-t border-white/10"
-        whileHover={{ scale: 1.02 }}
-      >
+      <div className="mt-8">
         <Button
-          onClick={onSelectAllLayers}
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600
-                   text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg
-                   hover:shadow-blue-500/25"
+          onClick={() => toast({ title: "Layers", description: `Active Layers: ${activeLayers.join(', ')}` })}
+          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg"
         >
-          {selectAll ? 'Deselect All Layers' : 'Select All Layers'}
+          Show Active Layers
         </Button>
-      </motion.div>
-
-      <div className="mt-8 space-y-4 p-4 bg-white/5 rounded-lg">
-        <h3 className="font-semibold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-          Environmental Trends
-        </h3>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="flex items-center gap-2">
-              <Thermometer className="h-4 w-4 text-red-400" />
-              Temperature
-            </span>
-            <span className="text-red-400">+2.5°C</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="flex items-center gap-2">
-              <Droplet className="h-4 w-4 text-blue-400" />
-              Moisture
-            </span>
-            <span className="text-blue-400">-5%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="flex items-center gap-2">
-              <Leaf className="h-4 w-4 text-green-400" />
-              Vegetation
-            </span>
-            <span className="text-green-400">+10%</span>
-          </div>
-        </div>
       </div>
     </motion.div>
   );

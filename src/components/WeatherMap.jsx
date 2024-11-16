@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { AnimatePresence } from 'framer-motion';
 import { useToast } from './ui/use-toast';
 import TopNavigationBar from './TopNavigationBar';
 import LeftSidePanel from './LeftSidePanel';
@@ -39,15 +38,23 @@ const WeatherMap = () => {
   }, []);
 
   const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => 
-      prev.includes(layerId) 
+    setActiveLayers(prev => {
+      const isLayerActive = prev.includes(layerId);
+      const newLayers = isLayerActive
         ? prev.filter(id => id !== layerId)
-        : [...prev, layerId]
-    );
+        : [...prev, layerId];
+      
+      toast({
+        title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+        description: isLayerActive ? "Layer disabled" : "Layer enabled",
+      });
+      
+      return newLayers;
+    });
   };
 
   const handleOpacityChange = (opacity) => {
-    setLayerOpacity(opacity / 100);
+    setLayerOpacity(opacity);
   };
 
   return (
@@ -90,18 +97,14 @@ const WeatherMap = () => {
           />
         </div>
         
-        <AnimatePresence>
-          {leftPanelOpen && (
-            <LeftSidePanel
-              isOpen={leftPanelOpen}
-              onClose={() => setLeftPanelOpen(false)}
-              activeLayers={activeLayers}
-              onLayerToggle={handleLayerToggle}
-              onOpacityChange={handleOpacityChange}
-              layers={['temperature', 'precipitation', 'wind', 'clouds']}
-            />
-          )}
-        </AnimatePresence>
+        <LeftSidePanel
+          isOpen={leftPanelOpen}
+          onClose={() => setLeftPanelOpen(false)}
+          activeLayers={activeLayers}
+          onLayerToggle={handleLayerToggle}
+          onOpacityChange={handleOpacityChange}
+          layers={['temperature', 'precipitation', 'wind', 'clouds']}
+        />
 
         <div className="pointer-events-auto">
           <FloatingInsightsBar />

@@ -12,7 +12,7 @@ const WeatherMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapState, setMapState] = useState({ lng: 8, lat: 10, zoom: 5 });
-  const [activeLayers, setActiveLayers] = useState([]);
+  const [activeLayers, setActiveLayers] = useState(['precipitation', 'temp_new', 'clouds_new', 'wind_new']);
   const [layerOpacity, setLayerOpacity] = useState(80);
   const { toast } = useToast();
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
@@ -36,8 +36,8 @@ const WeatherMap = () => {
 
     map.current.on('load', () => {
       toast({
-        title: "Map Loaded",
-        description: "Weather layers are ready to be displayed",
+        title: "Weather Map Loaded",
+        description: "All weather layers are now visible",
       });
     });
 
@@ -53,7 +53,7 @@ const WeatherMap = () => {
           key={layer.id}
           map={map.current}
           layerType={layer.id}
-          visible={activeLayers.includes(layer.id)}
+          visible={true}
           opacity={layerOpacity / 100}
         />
       ))}

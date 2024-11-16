@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import Map, { NavigationControl } from 'react-map-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import MapControls from '../components/MapControls';
-import { useToast } from '../components/ui/use-toast';
+import { useState } from "react";
+import Map, { NavigationControl } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g';
+const MAPBOX_TOKEN = "pk.eyJ1IjoiYWthbmltbzEiLCJhIjoiY2x4czNxbjU2MWM2eTJqc2gwNGIwaWhkMSJ9.jSwZdyaPa1dOHepNU5P71g";
 
 const STYLES = {
-  vegetation: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m',
-  temperature: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+  vegetation: "mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m",
+  temperature: "mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7"
 };
 
 const Index = () => {
-  const [activeLayer, setActiveLayer] = useState('vegetation');
+  const [activeLayer, setActiveLayer] = useState("vegetation");
   const { toast } = useToast();
 
   const handleLayerChange = (layer) => {
@@ -28,9 +29,9 @@ const Index = () => {
     <div className="relative w-screen h-screen">
       <Map
         initialViewState={{
-          longitude: -100,
-          latitude: 40,
-          zoom: 3.5,
+          longitude: 8,
+          latitude: 10,
+          zoom: 5,
         }}
         mapboxAccessToken={MAPBOX_TOKEN}
         mapStyle={STYLES[activeLayer]}
@@ -38,7 +39,27 @@ const Index = () => {
       >
         <NavigationControl position="bottom-right" />
       </Map>
-      <MapControls activeLayer={activeLayer} onLayerChange={handleLayerChange} />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute top-4 right-4 p-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg z-10 space-y-2"
+      >
+        <Button
+          variant={activeLayer === "vegetation" ? "default" : "outline"}
+          className="w-full transition-all duration-300"
+          onClick={() => handleLayerChange("vegetation")}
+        >
+          Vegetation Layer
+        </Button>
+        <Button
+          variant={activeLayer === "temperature" ? "default" : "outline"}
+          className="w-full transition-all duration-300"
+          onClick={() => handleLayerChange("temperature")}
+        >
+          Temperature Layer
+        </Button>
+      </motion.div>
     </div>
   );
 };

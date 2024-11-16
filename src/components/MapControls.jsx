@@ -1,27 +1,43 @@
 import React from 'react';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
+import { Input } from './ui/input';
 
-const MapControls = ({ activeLayer, onLayerChange }) => {
+const MapControls = ({ activeLayer, onLayerChange, onSearch }) => {
   return (
-    <Card className="layer-controls fixed top-4 right-4 p-4 z-10">
-      <div className="space-y-2">
-        <Button
-          variant={activeLayer === 'vegetation' ? 'default' : 'outline'}
-          className="w-full"
-          onClick={() => onLayerChange('vegetation')}
-        >
-          Vegetation Layer
-        </Button>
-        <Button
-          variant={activeLayer === 'temperature' ? 'default' : 'outline'}
-          className="w-full"
-          onClick={() => onLayerChange('temperature')}
-        >
-          Temperature Layer
-        </Button>
+    <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg flex flex-col space-y-2">
+      <Button 
+        onClick={() => onLayerChange('default')}
+        variant={activeLayer === 'default' ? 'default' : 'outline'}
+        className="w-full"
+      >
+        Default
+      </Button>
+      <Button 
+        onClick={() => onLayerChange('temperature')}
+        variant={activeLayer === 'temperature' ? 'default' : 'outline'}
+        className="w-full"
+      >
+        Temperature
+      </Button>
+      <Button 
+        onClick={() => onLayerChange('wind')}
+        variant={activeLayer === 'wind' ? 'default' : 'outline'}
+        className="w-full"
+      >
+        Wind
+      </Button>
+      <Button 
+        onClick={() => onLayerChange('precipitation')}
+        variant={activeLayer === 'precipitation' ? 'default' : 'outline'}
+        className="w-full"
+      >
+        Precipitation
+      </Button>
+      <div className="flex space-x-2 mt-4">
+        <Input placeholder="Search for rat sightings..." />
+        <Button onClick={onSearch}>Search</Button>
       </div>
-    </Card>
+    </div>
   );
 };
 

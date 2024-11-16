@@ -1,44 +1,71 @@
 import React from 'react';
-import { Button } from './ui/button';
+import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { useToast } from './ui/use-toast';
-import { CloudRain, Thermometer, Cloud, Wind, Radio } from 'lucide-react';
+import { CloudRain, Thermometer, Cloud, Wind } from 'lucide-react';
 
-const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity }) => {
+const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
   const { toast } = useToast();
 
-  const handleLayerToggle = (layerId) => {
-    setActiveLayers(prev => {
-      const isEnabled = !prev.includes(layerId);
-      const newLayers = isEnabled 
-        ? [...prev, layerId] 
-        : prev.filter(id => id !== layerId);
+  const handleLayerToggle = async (layerId) => {
+    try {
+      const isEnabled = !activeLayers.includes(layerId);
+      const result = await onLayerToggle(layerId, isEnabled);
       
+      if (result.success) {
+        setActiveLayers(prev => 
+          isEnabled ? [...prev, layerId] : prev.filter(id => id !== layerId)
+        );
+        
+        toast({
+          title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
+          description: isEnabled ? "Layer enabled" : "Layer disabled",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to toggle ${layerId} layer`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to toggle ${layerId} layer:`, error);
       toast({
-        title: `${layerId.charAt(0).toUpperCase() + layerId.slice(1)} Layer`,
-        description: isEnabled ? "Layer enabled" : "Layer disabled",
+        title: "Error",
+        description: "Failed to toggle layer",
+        variant: "destructive",
       });
-      
-      return newLayers;
-    });
+    }
   };
 
-  const handleOpacityChange = (value) => {
-    setLayerOpacity(value);
+  const handleOpacityChange = async (opacity) => {
+    setLayerOpacity(opacity);
+    for (const layerId of activeLayers) {
+      try {
+        const result = await onOpacityChange(layerId, opacity / 100);
+        if (!result.success) {
+          toast({
+            title: "Error",
+            description: `Failed to set opacity for ${layerId} layer`,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to set opacity for ${layerId} layer:`, error);
+      }
+    }
   };
 
   const getLayerIcon = (layerId) => {
     switch (layerId) {
       case 'precipitation':
-        return <CloudRain className="h-5 w-5" />;
+        return <CloudRain className="h-5 w-5 text-blue-500" />;
       case 'temperature':
-        return <Thermometer className="h-5 w-5" />;
+        return <Thermometer className="h-5 w-5 text-red-500" />;
       case 'clouds':
-        return <Cloud className="h-5 w-5" />;
+        return <Cloud className="h-5 w-5 text-gray-500" />;
       case 'wind':
-        return <Wind className="h-5 w-5" />;
-      case 'radar':
-        return <Radio className="h-5 w-5" />;
+        return <Wind className="h-5 w-5 text-cyan-500" />;
       default:
         return null;
     }
@@ -46,42 +73,35 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
 
   return (
     <div className="space-y-4 p-4 bg-gray-900/90 backdrop-blur-md rounded-lg">
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { id: 'radar', name: 'Radar' },
-          { id: 'precipitation', name: 'Precipitation' },
-          { id: 'temperature', name: 'Temperature' },
-          { id: 'clouds', name: 'Clouds' },
-          { id: 'wind', name: 'Wind' }
-        ].map((layer) => (
-          <Button
-            key={layer.id}
-            variant={activeLayers.includes(layer.id) ? "default" : "outline"}
-            onClick={() => handleLayerToggle(layer.id)}
-            className={`flex items-center gap-2 w-full justify-start ${
-              activeLayers.includes(layer.id) 
-                ? 'bg-yellow-400 text-black hover:bg-yellow-500' 
-                : 'text-gray-400 hover:text-yellow-400'
-            }`}
-          >
-            <span className={activeLayers.includes(layer.id) ? 'text-black' : 'text-yellow-400'}>
+      {layers.map((layer) => (
+        <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg border border-gray-800">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
               {getLayerIcon(layer.id)}
+              <span className={activeLayers.includes(layer.id) ? 'text-yellow-400' : 'text-gray-400'}>
+                {layer.name}
+              </span>
             </span>
-            {layer.name}
-          </Button>
-        ))}
-      </div>
-      
-      <div className="mt-4">
-        <label className="text-sm text-gray-400 mb-1 block">Layer Opacity</label>
-        <Slider
-          value={[layerOpacity]}
-          onValueChange={([value]) => handleOpacityChange(value)}
-          max={100}
-          step={1}
-          className="slider-yellow"
-        />
-      </div>
+            <Switch
+              checked={activeLayers.includes(layer.id)}
+              onCheckedChange={() => handleLayerToggle(layer.id)}
+              className="data-[state=checked]:bg-yellow-400 data-[state=unchecked]:bg-gray-600"
+            />
+          </div>
+          {activeLayers.includes(layer.id) && (
+            <div className="mt-2">
+              <label className="text-sm text-gray-400 mb-1 block">Opacity</label>
+              <Slider
+                value={[layerOpacity]}
+                onValueChange={(value) => handleOpacityChange(value[0])}
+                max={100}
+                step={1}
+                className="slider-yellow"
+              />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };

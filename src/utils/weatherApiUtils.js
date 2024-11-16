@@ -1,27 +1,47 @@
-const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+import AerisWeather from '@aerisweather/javascript-sdk';
+
+const aeris = new AerisWeather(import.meta.env.VITE_XWEATHER_ID, import.meta.env.VITE_XWEATHER_SECRET);
+const openWeatherApiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 export const getWeatherLayer = async (layer) => {
-  return {
-    type: 'raster',
-    tiles: [`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-    tileSize: 512,
-    maxzoom: 18
-  };
+  try {
+    const aerisLayer = await getAerisLayer(layer);
+    if (aerisLayer) return aerisLayer;
+  } catch (error) {
+    console.error('Aeris API error:', error);
+  }
+
+  return getOpenWeatherLayer(layer);
 };
 
-export const fetchWeatherData = async (lat, lon) => {
-  const response = await fetch(`/api/openweather?lat=${lat}&lon=${lon}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch weather data');
+const getAerisLayer = async (layer) => {
+  try {
+    const response = await fetch(`/api/aeris-weather?layer=${layer}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Aeris weather data');
+    }
+    const data = await response.json();
+    return {
+      type: 'raster',
+      tiles: [data.tileUrl],
+      tileSize: 256
+    };
+  } catch (error) {
+    console.error('Error fetching Aeris layer:', error);
+    return null;
   }
-  return response.json();
+};
+
+const getOpenWeatherLayer = (layer) => {
+  const baseUrl = 'https://tile.openweathermap.org/map';
+  const intensityParam = '&opacity=0.8&fill_bound=true';
+  return {
+    type: 'raster',
+    tiles: [`${baseUrl}/${layer}/{z}/{x}/{y}.png?appid=${openWeatherApiKey}${intensityParam}`],
+    tileSize: 256
+  };
 };
 
 export const getOpenWeatherTemperatureLayer = () => {
-  return {
-    type: 'raster',
-    tiles: [`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`],
-    tileSize: 512,
-    maxzoom: 18
-  };
+  return getOpenWeatherLayer('temp_new');
 };

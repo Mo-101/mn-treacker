@@ -1,27 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { useToast } from './ui/use-toast';
-import WindControls from './WindControls';
-import { getLayerConfig } from '../utils/layerConfigs';
+
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 const WeatherLayer = ({ map, layerType, visible, opacity }) => {
   const { toast } = useToast();
-  const [particleCount, setParticleCount] = useState(2048);
-  const [fadeOpacityFactor, setFadeOpacityFactor] = useState(0.8);
-  const [resetRateFactor, setResetRateFactor] = useState(0.4);
-  const [speedFactor, setSpeedFactor] = useState(0.4);
-  const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
   useEffect(() => {
-    if (!map || !OPENWEATHER_API_KEY) {
-      if (!OPENWEATHER_API_KEY) {
-        toast({
-          title: "Configuration Error",
-          description: "OpenWeather API key is missing",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
+    if (!map || !OPENWEATHER_API_KEY) return;
 
     const layerId = `${layerType}-layer`;
     const sourceId = `${layerType}-source`;
@@ -36,72 +23,11 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
 
       if (!visible) return;
 
-      if (layerType === 'wind') {
-        map.addSource(sourceId, {
-          type: 'raster-array',
-          url: 'mapbox://rasterarrayexamples.gfs-winds',
-          tileSize: 512
-        });
-
-        map.addLayer({
-          id: layerId,
-          type: 'raster-particle',
-          source: sourceId,
-          'source-layer': '10winds',
-          paint: {
-            'raster-particle-speed-factor': speedFactor,
-            'raster-particle-fade-opacity-factor': fadeOpacityFactor,
-            'raster-particle-reset-rate-factor': resetRateFactor,
-            'raster-particle-count': particleCount,
-            'raster-particle-max-speed': 70,
-            'raster-particle-color': [
-              'interpolate',
-              ['linear'],
-              ['raster-particle-speed'],
-              1.5, ['rgb', 134, 163, 171],
-              2.5, ['rgb', 134, 163, 171],
-              4.63, ['rgb', 110, 143, 208],
-              6.17, ['rgb', 15, 147, 167],
-              7.72, ['rgb', 15, 147, 167],
-              9.26, ['rgb', 57, 163, 57],
-              10.29, ['rgb', 57, 163, 57],
-              11.83, ['rgb', 194, 134, 62],
-              13.37, ['rgb', 194, 134, 63],
-              14.92, ['rgb', 200, 66, 13],
-              16.46, ['rgb', 200, 66, 13],
-              18.0, ['rgb', 210, 0, 50],
-              20.06, ['rgb', 215, 0, 50],
-              21.6, ['rgb', 175, 80, 136],
-              23.66, ['rgb', 175, 80, 136],
-              25.21, ['rgb', 117, 74, 147],
-              27.78, ['rgb', 117, 74, 147],
-              29.32, ['rgb', 68, 105, 141],
-              31.89, ['rgb', 68, 105, 141],
-              33.44, ['rgb', 194, 251, 119],
-              42.18, ['rgb', 194, 251, 119],
-              43.72, ['rgb', 241, 255, 109],
-              48.87, ['rgb', 241, 255, 109],
-              50.41, ['rgb', 255, 255, 255],
-              57.61, ['rgb', 255, 255, 255],
-              59.16, ['rgb', 255, 255, 255],
-              68.93, ['rgb', 255, 255, 255],
-              69.44, ['rgb', 255, 37, 255]
-            ]
-          }
-        });
-
-        return;
-      }
-
-      const config = getLayerConfig(layerType, opacity, OPENWEATHER_API_KEY);
-      if (!config) {
-        console.error(`Unsupported layer type: ${layerType}`);
-        return;
-      }
-
+      const layerConfig = getLayerConfig(layerType);
+      
       map.addSource(sourceId, {
         type: 'raster',
-        tiles: config.tiles,
+        tiles: [layerConfig.tileUrl],
         tileSize: 256,
         attribution: '© OpenWeatherMap'
       });
@@ -110,12 +36,13 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         id: layerId,
         type: 'raster',
         source: sourceId,
-        paint: config.paint
-      });
-
-      toast({
-        title: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} Layer Updated`,
-        description: `${layerType} layer has been loaded`,
+        paint: {
+          'raster-opacity': opacity,
+          ...layerConfig.paint
+        },
+        layout: {
+          visibility: visible ? 'visible' : 'none'
+        }
       });
 
     } catch (error) {
@@ -135,24 +62,44 @@ const WeatherLayer = ({ map, layerType, visible, opacity }) => {
         map.removeSource(sourceId);
       }
     };
-  }, [map, layerType, visible, opacity, particleCount, fadeOpacityFactor, resetRateFactor, speedFactor]);
-
-  if (layerType === 'wind' && visible) {
-    return (
-      <WindControls
-        particleCount={particleCount}
-        setParticleCount={setParticleCount}
-        fadeOpacityFactor={fadeOpacityFactor}
-        setFadeOpacityFactor={setFadeOpacityFactor}
-        resetRateFactor={resetRateFactor}
-        setResetRateFactor={setResetRateFactor}
-        speedFactor={speedFactor}
-        setSpeedFactor={setSpeedFactor}
-      />
-    );
-  }
+  }, [map, layerType, visible, opacity]);
 
   return null;
+};
+
+const getLayerConfig = (layerType) => {
+  const configs = {
+    temperature: {
+      tileUrl: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
+      paint: {
+        'raster-contrast': 0.8,
+        'raster-saturation': 0.6
+      }
+    },
+    precipitation: {
+      tileUrl: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
+      paint: {
+        'raster-contrast': 0.7,
+        'raster-saturation': 0.5
+      }
+    },
+    wind: {
+      tileUrl: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
+      paint: {
+        'raster-contrast': 0.6,
+        'raster-saturation': 0.4
+      }
+    },
+    clouds: {
+      tileUrl: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`,
+      paint: {
+        'raster-contrast': 0.5,
+        'raster-saturation': 0.3
+      }
+    }
+  };
+
+  return configs[layerType];
 };
 
 export default WeatherLayer;

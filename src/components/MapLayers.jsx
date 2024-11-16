@@ -16,26 +16,38 @@ const addLayer = (map, id, source, type, paint, layout = {}) => {
 };
 
 export const addCustomLayers = (map) => {
-  addTemperatureLayer(map);
   addVegetationLayer(map);
+  addTemperatureLayer(map);
   addPrecipitationLayer(map);
   addCloudsLayer(map);
   addRadarLayer(map);
   addAdminBoundariesLayer(map);
 };
 
-const addTemperatureLayer = (map) => {
-  // Using OpenWeatherMap temperature layer
-  const temperatureSource = {
+const addVegetationLayer = (map) => {
+  map.addSource('vegetation', {
     type: 'raster',
-    tiles: [
-      `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${import.meta.env.VITE_OPENWEATHER_API_KEY}`
-    ],
-    tileSize: 256,
-    attribution: '© OpenWeatherMap'
-  };
+    url: 'mapbox://styles/akanimo1/cm10t9lw001cs01pbc93la79m'
+  });
 
-  map.addSource('temperature', temperatureSource);
+  map.addLayer({
+    id: 'vegetation',
+    type: 'raster',
+    source: 'vegetation',
+    paint: { 
+      'raster-opacity': 0.7,
+      'raster-fade-duration': 0
+    },
+    layout: { visibility: 'none' }
+  });
+};
+
+const addTemperatureLayer = (map) => {
+  map.addSource('temperature', {
+    type: 'raster',
+    url: 'mapbox://styles/akanimo1/cld5h233p000q01qat06k4qw7'
+  });
+
   map.addLayer({
     id: 'temperature',
     type: 'raster',
@@ -46,41 +58,6 @@ const addTemperatureLayer = (map) => {
     },
     layout: { visibility: 'none' }
   });
-
-  // Add temperature legend
-  const legend = document.createElement('div');
-  legend.className = 'temperature-legend hidden';
-  legend.innerHTML = `
-    <div class="bg-black/70 p-2 rounded-lg text-white text-sm">
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-red-500"></div>
-        <span>Hot (>30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-yellow-500"></div>
-        <span>Warm (20-30°C)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 bg-blue-500"></div>
-        <span>Cool (<20°C)</span>
-      </div>
-    </div>
-  `;
-  map.getContainer().appendChild(legend);
-
-  // Show/hide legend based on layer visibility
-  map.on('layout', (e) => {
-    if (e.layer.id === 'temperature') {
-      legend.classList.toggle('hidden', e.layout.visibility === 'none');
-    }
-  });
-};
-
-const addVegetationLayer = (map) => {
-  addLayer(map, 'vegetation', {
-    type: 'raster',
-    url: 'mapbox://mapbox.terrain-rgb'
-  }, 'raster', { 'raster-opacity': 0.7 });
 };
 
 const addPrecipitationLayer = (map) => {
@@ -115,8 +92,8 @@ const addAdminBoundariesLayer = (map) => {
     source: 'admin-boundaries',
     'source-layer': 'admin',
     paint: {
-      'line-color': 'rgba(0, 0, 0, 0.5)',  // Black with 50% opacity
-      'line-width': 1  // Reduced stroke width
+      'line-color': 'rgba(0, 0, 0, 0.5)',
+      'line-width': 1
     },
     layout: { visibility: 'visible' }
   });

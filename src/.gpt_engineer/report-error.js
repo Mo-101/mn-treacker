@@ -1,20 +1,12 @@
 // Function to safely extract data from a Request object
 function extractRequestData(request) {
   if (request instanceof Request) {
-    try {
-      return {
-        url: request.url,
-        method: request.method,
-        // Only extract safe-to-clone headers
-        headers: Object.fromEntries([...request.headers].filter(([key]) => {
-          // Only include safe headers that don't contain sensitive data
-          const safeHeaders = ['content-type', 'accept', 'content-length'];
-          return safeHeaders.includes(key.toLowerCase());
-        }))
-      };
-    } catch (err) {
-      return `Request to ${request.url || 'unknown URL'}`;
-    }
+    return {
+      url: request.url,
+      method: request.method,
+      // Only include headers that can be safely cloned
+      headers: Object.fromEntries([...request.headers])
+    };
   }
   return String(request);
 }
@@ -22,10 +14,9 @@ function extractRequestData(request) {
 // Function to extract relevant error information
 function extractErrorInfo(error) {
   return {
-    message: error?.message || String(error),
-    stack: error?.stack,
-    type: error?.name || 'Error',
-    timestamp: new Date().toISOString()
+    message: String(error.message),
+    stack: String(error.stack),
+    type: String(error.name)
   };
 }
 
@@ -40,7 +31,9 @@ function postMessage(message) {
     
     // Safely handle error data
     if (message.error) {
-      safeMessage.error = extractErrorInfo(message.error);
+      safeMessage.error = typeof message.error === 'object' 
+        ? extractErrorInfo(message.error)
+        : String(message.error);
     }
     
     // Safely handle request data
@@ -51,12 +44,11 @@ function postMessage(message) {
     // Post the sanitized message
     window.parent.postMessage(safeMessage, '*');
   } catch (error) {
-    console.error('Error in postMessage:', error);
     // Fallback error message
     window.parent.postMessage({
       type: 'error',
       error: {
-        message: 'Failed to send error report',
+        message: 'Failed to send message: ' + String(error),
         timestamp: new Date().toISOString()
       }
     }, '*');
@@ -71,30 +63,8 @@ function reportHTTPError(error) {
     timestamp: new Date().toISOString()
   };
   
-  if (error.request) {
-    errorDetails.request = extractRequestData(error.request);
-  }
-  
   postMessage(errorDetails);
 }
 
-// Wrap fetch to handle errors
-const originalFetch = window.fetch;
-window.fetch = async function(...args) {
-  try {
-    const response = await originalFetch.apply(this, args);
-    if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
-      error.request = args[0];
-      reportHTTPError(error);
-      throw error;
-    }
-    return response;
-  } catch (error) {
-    error.request = args[0];
-    reportHTTPError(error);
-    throw error;
-  }
-};
-
+// Export functions
 export { postMessage, reportHTTPError };

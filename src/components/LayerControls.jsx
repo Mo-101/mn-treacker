@@ -2,6 +2,7 @@ import React from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { useToast } from './ui/use-toast';
+import { Button } from './ui/button';
 import { CloudRain, Thermometer, Cloud, Wind } from 'lucide-react';
 
 const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, setLayerOpacity, onLayerToggle, onOpacityChange }) => {
@@ -59,13 +60,13 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
   const getLayerIcon = (layerId) => {
     switch (layerId) {
       case 'precipitation':
-        return <CloudRain className="h-5 w-5 text-blue-500" />;
+        return <CloudRain className="h-5 w-5" />;
       case 'temperature':
-        return <Thermometer className="h-5 w-5 text-red-500" />;
+        return <Thermometer className="h-5 w-5" />;
       case 'clouds':
-        return <Cloud className="h-5 w-5 text-gray-500" />;
+        return <Cloud className="h-5 w-5" />;
       case 'wind':
-        return <Wind className="h-5 w-5 text-cyan-500" />;
+        return <Wind className="h-5 w-5" />;
       default:
         return null;
     }
@@ -73,35 +74,39 @@ const LayerControls = ({ layers, activeLayers, setActiveLayers, layerOpacity, se
 
   return (
     <div className="space-y-4 p-4 bg-gray-900/90 backdrop-blur-md rounded-lg">
-      {layers.map((layer) => (
-        <div key={layer.id} className="space-y-2 bg-black/40 p-3 rounded-lg border border-gray-800">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              {getLayerIcon(layer.id)}
-              <span className={activeLayers.includes(layer.id) ? 'text-yellow-400' : 'text-gray-400'}>
-                {layer.name}
-              </span>
-            </span>
-            <Switch
-              checked={activeLayers.includes(layer.id)}
-              onCheckedChange={() => handleLayerToggle(layer.id)}
-              className="data-[state=checked]:bg-yellow-400 data-[state=unchecked]:bg-gray-600"
-            />
-          </div>
-          {activeLayers.includes(layer.id) && (
-            <div className="mt-2">
-              <label className="text-sm text-gray-400 mb-1 block">Opacity</label>
-              <Slider
-                value={[layerOpacity]}
-                onValueChange={(value) => handleOpacityChange(value[0])}
-                max={100}
-                step={1}
-                className="slider-yellow"
-              />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+        {layers.map((layer) => (
+          <div key={layer.id} className="bg-black/40 p-3 rounded-lg border border-gray-800">
+            <div className="flex flex-col space-y-2">
+              <Button
+                variant={activeLayers.includes(layer.id) ? "default" : "secondary"}
+                onClick={() => handleLayerToggle(layer.id)}
+                className={`w-full justify-start gap-2 transition-all duration-200 ${
+                  activeLayers.includes(layer.id) 
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
+                    : 'bg-gray-800 hover:bg-gray-700'
+                }`}
+              >
+                {getLayerIcon(layer.id)}
+                <span className="font-medium">{layer.name}</span>
+              </Button>
+              
+              {activeLayers.includes(layer.id) && (
+                <div className="mt-2 px-1">
+                  <label className="text-sm text-gray-400 mb-1 block">Opacity</label>
+                  <Slider
+                    value={[layerOpacity]}
+                    onValueChange={(value) => handleOpacityChange(value[0])}
+                    max={100}
+                    step={1}
+                    className="slider-yellow"
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
